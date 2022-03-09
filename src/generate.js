@@ -78,9 +78,9 @@ function generateNginxConfig(slaPlans, oasDoc){
 
   var limitsDefinition = "";
   var locationDefinitions = "";
-  var api_server_url = oasDoc.servers[0].url;
+  var api_server_url = oasDoc.servers[0].url; // TODO: optional in OAS - must throw error if missing
 
-  for (var plans in slaPlans){
+  for (var plans in slaPlans){ // TODO: "free" endpoints should be taken from OAS as they're missing from SLA
     for (var endpoint in slaPlans[plans]["rates"]){ // TODO: quotas
 
       /////////////// LIMITS
@@ -149,7 +149,7 @@ function generateConfigHandle(file, type, outFile) {
 
   // Load SLA (from OAS)
   var basePath = file.substring(0, file.lastIndexOf('/'));
-  var partialSlaPath = oasDoc["info"]["x-sla"]["$ref"] // TODO: the path could be relative but absolute too
+  var partialSlaPath = oasDoc["info"]["x-sla"]["$ref"] // TODO: optional in OAS - must throw error if missing (the path could be relative but absolute too)
   var slaPath = path.join(basePath, partialSlaPath);
   var sla = fs.readFileSync(path.join('', slaPath), 'utf8');
 

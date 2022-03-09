@@ -10,7 +10,9 @@ program
   .requiredOption('-t, --type <proxyType>',
                   'Proxy for which the configuration should be generated.') //.choices(['nginx']) // TODO: how to achieve: enum + mandatory?
   .requiredOption('-o, --outFile <configFile>',
-                  'Config output file')
+                  'Config output file.')
+  .requiredOption('--customTemplate <customTemplate>',
+                  'Custom proxy configuration template.')
   .action(function(file, cmd) {
     generate.generateConfigHandle(file, cmd.type, cmd.outFile);
   })

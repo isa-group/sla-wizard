@@ -6,23 +6,36 @@
 Usage: sla4oai-tools <OAS v3 file in JSON or YAML> <options>
 
 Options:
-  -t, --type <proxyType>      Proxy for which the configuration should be generated
-  -o, --outFile <configFile>  Config output file
-  -h, --help                  display help for command
+  -t, --type <proxyType>             Proxy for which the configuration should be generated.
+  -o, --outFile <configFile>         Config output file.
+  --customTemplate <customTemplate>  Custom proxy configuration template.
+  -h, --help                         display help for command.
 ```
 
 ## Workflow
 
-### 1. Create proxy config
-
-**Note**: currently only NGINX is supported.
-
-The NGINX configuration file is generated using both the OAS and its SLA definition YAML files:
+Dependencies must be installed prior to using the tool:
 
 ```bash
 npm install
+```
+
+The following steps indicate how to create proxy configuration files and validate they work as expected. SLA4OAI-tools uses both the API's OAS and SLA definitions for that.
+
+### 1. Create proxy config
+
+#### NGINX
+
+```bash
 node src/index.js test/specs/simple_api_oas.yaml --type nginx --outFile test/nginx-auto.conf
 ```
+
+#### HAProxy
+
+```bash
+# TODO
+```
+
 
 ### 2. Spin up two containers: proxy and API
 
