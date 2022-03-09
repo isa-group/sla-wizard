@@ -4,7 +4,7 @@ var program = require('commander');
 var generate = require('./generate');
 
 program
-  .name('proxy-manager')
+  .name('sla4oai-tools')
   .usage('<OAS v3 file in JSON or YAML> <options>')
   .arguments('<file>')
   .requiredOption('-t, --type <proxyType>',
