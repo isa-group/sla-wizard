@@ -60,6 +60,17 @@ apipecker 4 3 60000 http://localhost/twice-per-minute-endpoint # half should fai
 
 Source: https://www.artillery.io/
 
+* `count`: number of virtual users
+* `num`: number of requests that should be made per user
+
 ```bash
+
 # TODO
+
+artillery quick --count 1 --num 10 http://localhost/open-endpoint
+
+artillery quick --count 1 --num 10 http://localhost/once-per-second-endpoint
+
+artillery quick --count 1 --num 10 http://localhost/twice-per-minute-endpoint
+
 ```
