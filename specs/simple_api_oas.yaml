@@ -1,0 +1,50 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://api:9999'
+info:
+  x-sla:
+    $ref: ./sla.yaml
+  version: 1.0.0
+  title: Valid specification file
+paths:
+  /open-endpoint:
+    get:
+      summary: There's no restriction on this endpoint
+      responses:
+        '200':
+          description: Just a static response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleObj"
+  /once-per-second-endpoint:
+    get:
+      summary: This endpoint accepts requests only once per second
+      responses:
+        '200':
+          description: Just a static response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleObj"
+  /twice-per-minute-endpoint:
+    get:
+      summary: This endpoint accepts requests only twice per minute
+      responses:
+        '200':
+          description: Just a static response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleObj"
+components:
+  schemas:
+    SampleObj:
+      required:
+        - endpoint
+        - description
+      properties:
+        endpoint:
+          type: string
+        description:
+          type: string

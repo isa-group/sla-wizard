@@ -1,0 +1,19 @@
+{
+  "name": "proxy-manager",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "commander": "^9.0.0",
+    "js-yaml": "^4.1.0",
+    "nginx-conf": "^2.0.0",
+    "winston": "^3.6.0",
+    "z-schema": "^5.0.2"
+  }
+}
