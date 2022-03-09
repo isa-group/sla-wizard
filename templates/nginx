@@ -1,11 +1,11 @@
 events {}
 http {
 
-    LIMIT_REQ_ZONE_PH
+    %%LIMIT_REQ_ZONE_PH%%
 
     server {
 
-      LOCATIONS_PH
+      %%LOCATIONS_PH%%
 
     }
 }

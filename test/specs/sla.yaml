@@ -9,10 +9,10 @@ metrics:
     description: "Number of requests"
 plans:
   standardPlan:
-    rates: # TODO: or quotas ?
+    rates:
       /once-per-second-endpoint:
         get:
-          requests: # TODO: why is this an array?
+          requests:
             - max: 1
               period: second
       /twice-per-minute-endpoint:
@@ -20,8 +20,3 @@ plans:
           requests:
             - max: 2
               period: minute
-      #/open-endpoint: # TODO: paths w/o limits?
-      #  get:
-      #    requests:
-      #      - max:
-      #        period:

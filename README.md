@@ -21,7 +21,7 @@ The NGINX configuration file is generated using both the OAS and its SLA definit
 
 ```bash
 npm install
-node src/index.js specs/simple_api_oas.yaml --type nginx --outFile test/nginx-auto.conf
+node src/index.js test/specs/simple_api_oas.yaml --type nginx --outFile test/nginx-auto.conf
 ```
 
 ### 2. Spin up two containers: proxy and API

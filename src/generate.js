@@ -110,8 +110,8 @@ function generateNginxConfig(slaPlans, oasDoc){
   }
 
   return nginxTemplate
-            .replace('LIMIT_REQ_ZONE_PH', limitsDefinition)
-            .replace('LOCATIONS_PH', locationDefinitions);
+            .replace('%%LIMIT_REQ_ZONE_PH%%', limitsDefinition)
+            .replace('%%LOCATIONS_PH%%', locationDefinitions);
 }
 
 
