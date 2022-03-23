@@ -3,7 +3,9 @@ servers:
   - url: 'http://api:9999'
 info:
   x-sla:
-    $ref: ./sla.yaml
+    $ref:
+     - ./sla1.yaml
+     - ./sla2.yaml
   version: 1.0.0
   title: Valid specification file
 paths:

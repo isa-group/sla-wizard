@@ -1,0 +1,14 @@
+version: "3.3"
+services:
+  api:
+    build: ../simple_api/
+    expose: # only exposed to other containers (services)
+      - "9999"
+  proxy:
+    image: haproxytech/haproxy-alpine # haproxy #:1.7
+    depends_on:
+            - api
+    volumes:
+      - ${CFG_PATH}:/usr/local/etc/haproxy/haproxy.cfg
+    ports:
+     - "80:80"

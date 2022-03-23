@@ -1,4 +1,4 @@
-sla: 1.0.0
+sla: 1.0.0 # TODO
 context:
   id: simple-api
   api:
@@ -10,11 +10,6 @@ metrics:
 plans:
   standardPlan:
     rates:
-      /once-per-second-endpoint:
-        get:
-          requests:
-            - max: 1
-              period: second
       /twice-per-minute-endpoint:
         get:
           requests:

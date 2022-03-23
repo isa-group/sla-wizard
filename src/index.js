@@ -1,23 +1,34 @@
 #!/usr/bin/env node
 
-var program = require('commander');
 var generate = require('./generate');
+var commander = require('commander');
+var program = new commander.Command();
 
+// General details
 program
   .name('sla4oai-tools')
-  .usage('<OAS v3 file in JSON or YAML> <options>')
-  .arguments('<file>')
-  .requiredOption('-t, --type <proxyType>',
-                  'Proxy for which the configuration should be generated.') //.choices(['nginx']) // TODO: how to achieve: enum + mandatory?
+  .usage('<arguments> <options>');
+
+// CLI arguments
+program
+  .addArgument(new commander.Argument('<file>', 'Path to a OAS v3 file'))
+  .addArgument(new commander.Argument('<proxy>', 'Proxy for which the configuration should be generated.')
+    .choices(['nginx','haproxy','traefik','envoy']));
+
+// CLI options
+program
   .requiredOption('-o, --outFile <configFile>',
                   'Config output file.')
-  .requiredOption('--customTemplate <customTemplate>',
-                  'Custom proxy configuration template.')
-  .action(function(file, cmd) {
-    generate.generateConfigHandle(file, cmd.type, cmd.outFile);
-  })
-  .parse(process.argv);
+  .option('--customTemplate <customTemplate>',
+                  'Custom proxy configuration template.');
 
-if (process.argv.length < 3) {
-  program.help();
-}
+// Program action
+program
+  .action(function(file, proxy, options) {
+    // TODO: user provided CLI parameters must be sanitized
+    generate.generateConfigHandle(file, proxy, options.outFile);
+  })
+
+// Program parse
+program
+  .parse(process.argv);
