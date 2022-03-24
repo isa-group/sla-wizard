@@ -1,0 +1,17 @@
+sla: 1.0.0 # TODO
+context:
+  id: simple-api
+  api:
+    $ref: ./simple_api_oas.yaml
+metrics:
+  requests:
+    type: "int64"
+    description: "Number of requests"
+plans:
+  standardPlan:
+    rates:
+      /twice-per-minute-endpoint:
+        get:
+          requests:
+            - max: 2
+              period: minute

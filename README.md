@@ -17,6 +17,67 @@ Options:
   -h, --help                         display help for command
 ```
 
+### SLA reference in OAS
+
+The following are supported:
+
+```yaml
+info:
+  x-sla:
+    $ref:
+     - ./sla.yaml
+```
+
+```yaml
+info:
+  x-sla:
+    $ref:
+     - ./sla1.yaml
+     - ./sla2.yaml
+```
+
+```yaml
+info:
+  x-sla:
+    $ref:
+     - ./slas1Dir/
+```
+
+```yaml
+info:
+  x-sla:
+    $ref:
+    - ./slasDir1/
+    - ./slasDir2/
+```
+
+```yaml
+info:
+  x-sla:
+    $ref:
+    - http://server.example/slas
+```
+```yaml
+info:
+  x-sla:
+    $ref:
+    - http://server.example/slas1
+    - http://server.example/slas2
+```
+
+Also combinations:
+
+```yaml
+info:
+  x-sla:
+    $ref:
+    - ./sla1.yaml
+    - ./slasDir1/
+    - ./slasDir2/
+    - http://server.example/slas1
+```
+
+
 ## Workflow
 
 Dependencies must be installed prior to using the tool:

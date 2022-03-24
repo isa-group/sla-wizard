@@ -4,6 +4,40 @@ var jsyaml = require('js-yaml');
 var ZSchema = require("z-schema");
 var url = require("url");
 var configs = require("./configs");
+var https = require('https')
+
+
+/**
+ * Given a URL, makes a GET request to get an array of SLAs.
+ * @param {string} slasURL - A URL.
+ */
+ function getSLAsFromURL(slasURL){ // TODO: this is async
+   http.get(slasURL, function(res) {
+     // Buffer the body entirely for processing as a whole.
+     var bodyChunks = [];
+     res.on('data', function(chunk) {
+       // You can process streamed parts here...
+       bodyChunks.push(chunk);
+     }).on('end', function() {
+       var body = Buffer.concat(bodyChunks);
+       return body
+     })
+   });
+ }
+
+
+/**
+ * Given a string, checks if it's a valid URL.
+ * @param {string} potentialURL - A potential URL.
+ */
+function isAValidUrl(potentialURL){
+  try {
+    new url.URL(s);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
 
 
 /**
@@ -18,21 +52,24 @@ function getLimitPeriod(period, proxy){
       periodMap = {
         'second': 's',
         'minute': 'm'
-      }
+      };
+      break;
     case 'haproxy': // HAProxy does not support month and year
       periodMap = {
         'second': 's',
         'minute': 'm',
         'hour': 'h',
         'day': 'd'
-      }
+      };
+      break;
     case 'traefik': // Traefik does not support month and year
       periodMap = {
         'second': 's',
         'minute': 'm',
         'hour': 'h',
         'day': 'd'
-      }
+      };
+      break;
     case 'envoy':
       periodMap = {
         'second': '1s',
@@ -41,9 +78,10 @@ function getLimitPeriod(period, proxy){
         'day': '86400s',
         'month': '2592000s',
         'year': '31536000s'
-      }
-    return periodMap[period];
+      };
+      break;
   }
+  return periodMap[period];
 }
 
 
@@ -150,6 +188,8 @@ function generateEnvoyConfig(SLAs, oasDoc){
  */
 function generateTraefikConfig(SLAs, oasDoc){
 
+  var traefikTemplate = jsyaml.load(fs.readFileSync(
+            path.join(__dirname, '../templates/traefik.yaml'), 'utf8'));
   var routersDefinition = {};
   var middlewaresDefinition = {};
   var limitedPaths = [];
@@ -198,23 +238,9 @@ function generateTraefikConfig(SLAs, oasDoc){
       }
     }
   }
-  var traefikTemplate = {
-    "http": {
-      "services": {
-        "main-service": {
-          "loadBalancer": {
-            "servers": [
-              {
-                "url": api_server_url
-              }
-            ]
-          }
-        }
-      },
-      "routers": routersDefinition,
-      "middlewares": middlewaresDefinition
-    }
-  }
+  traefikTemplate.http.services["main-service"].loadBalancer.servers[0].url = api_server_url
+  traefikTemplate.http.routers = routersDefinition
+  traefikTemplate.http.middlewares = middlewaresDefinition
   return jsyaml.dump(traefikTemplate)
 }
 
@@ -386,11 +412,12 @@ function generateConfigHandle(file, type, outFile) {
     //return;  //TODO: validation fails but works at https://editor.swagger.io/
   }
 
-  // Get SLA(s) path(s) from OAS
+  // Get SLA(s) path(s) from OAS - TODO: the SLAs should be validated
   var SLApaths = [];
   var oasLocation = file.substring(0, file.lastIndexOf('/'));
-  try { // TODO - the path(s) could be relative but absolute too?
-    var partialSlaPath = oasDoc["info"]["x-sla"]["$ref"] // string or array
+  try {
+    var partialSlaPath = oasDoc["info"]["x-sla"]["$ref"]
+
     if(typeof partialSlaPath === "string" ){
       SLApaths.push(partialSlaPath);
     } else {
@@ -401,11 +428,23 @@ function generateConfigHandle(file, type, outFile) {
     process.exit();
   }
 
-  // Load all SLA path(s) - TODO for each, check that: sla.context.type == "instance"
+  // Load all SLA path(s) - TODO: paths must be relative? https://swagger.io/docs/specification/using-ref/
   var SLAs = [];
-  SLApaths.forEach(element => {
-    var slaPath = path.join(oasLocation, element); // add base path to SLA paths
-    SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
+  SLApaths.forEach(element => { // TODO for each, check that: sla.context.type == "instance" and add try/cath
+    if (element.isDirectory()) { // TODO: test these 3 below
+      // FOLDER
+      fs.readdirSync(element).forEach(file => {
+        var slaPath = path.join(oasLocation, file); // add base path to SLA paths
+        SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
+      });
+    } else if (element.isAValidUrl()){
+      // URL
+      SLAs.concat(getSLAsFromURL(element)); // document that the URL must return an array even if it's just one
+    } else {
+      // FILE
+      var slaPath = path.join(oasLocation, element); // add base path to SLA paths
+      SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
+    }
   });
 
   // Generate proxy config according to SLA

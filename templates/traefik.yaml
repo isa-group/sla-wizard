@@ -1,0 +1,8 @@
+http:
+  services:
+    main-service:
+      loadBalancer:
+        servers:
+          - url:
+  routers:
+  middlewares:
