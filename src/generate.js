@@ -11,7 +11,7 @@ var https = require('https')
  * Given a URL, makes a GET request to get an array of SLAs.
  * @param {string} slasURL - A URL.
  */
- function getSLAsFromURL(slasURL){ // TODO: this is async
+function getSLAsFromURL(slasURL){ // TODO: this is async
    http.get(slasURL, function(res) {
      // Buffer the body entirely for processing as a whole.
      var bodyChunks = [];
@@ -23,7 +23,7 @@ var https = require('https')
        return body
      })
    });
- }
+}
 
 
 /**
@@ -90,24 +90,20 @@ function getLimitPeriod(period, proxy){
  * according to the limitations it defines.
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
- */
-function generateEnvoyConfig(SLAs, oasDoc){
+ * @param {string} api_server_url - API server url.
+*/
+function generateEnvoyConfig(SLAs, oasDoc, api_server_url){
 
   var envoyTemplate = jsyaml.load(fs.readFileSync(
             path.join(__dirname, '../templates/envoy.yaml'), 'utf8'));
   var routesDefinition = [];
   var limitedPaths = [];
-  try {
-    var api_server_url = url.parse(oasDoc.servers[0].url); // TODO: it's an array
-  } catch {
-    configs.logger.error("OAS' servers property missing");
-    process.exit();
-  }
+  api_server_url = url.parse(api_server_url)
 
   for (var subSLA of SLAs){
     var slaPlans = subSLA["plans"]; // TODO:
     for (var plans in slaPlans){
-      for (var endpoint in slaPlans[plans]["rates"]){ // TODO: quotas
+      for (var endpoint in slaPlans[plans]["rates"]){
         limitedPaths.push(endpoint);
 
         for (var method in slaPlans[plans]["rates"][endpoint]){
@@ -185,25 +181,20 @@ function generateEnvoyConfig(SLAs, oasDoc){
  * according to the limitations it defines.
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
+ * @param {string} api_server_url - API server url.
  */
-function generateTraefikConfig(SLAs, oasDoc){
+function generateTraefikConfig(SLAs, oasDoc, api_server_url){
 
   var traefikTemplate = jsyaml.load(fs.readFileSync(
             path.join(__dirname, '../templates/traefik.yaml'), 'utf8'));
   var routersDefinition = {};
   var middlewaresDefinition = {};
   var limitedPaths = [];
-  try {
-    var api_server_url = oasDoc.servers[0].url; // TODO: it's an array
-  } catch {
-    configs.logger.error("OAS' servers property missing");
-    process.exit();
-  }
 
   for (var subSLA of SLAs){
     var slaPlans = subSLA["plans"]; // TODO:
     for (var plans in slaPlans){
-      for (var endpoint in slaPlans[plans]["rates"]){ // TODO: quotas
+      for (var endpoint in slaPlans[plans]["rates"]){
         limitedPaths.push(endpoint);
 
         for (var method in slaPlans[plans]["rates"][endpoint]){
@@ -250,8 +241,9 @@ function generateTraefikConfig(SLAs, oasDoc){
  * to the limitations it defines.
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
+ * @param {string} api_server_url - API server url.
  */
-function generateHAproxyConfig(SLAs, oasDoc){ // https://www.haproxy.com/blog/four-examples-of-haproxy-rate-limiting/
+function generateHAproxyConfig(SLAs, oasDoc, api_server_url){ // https://www.haproxy.com/blog/four-examples-of-haproxy-rate-limiting/
 
   var haproxyTemplate = fs
                 .readFileSync(path.join(__dirname, '../templates/haproxy.cfg')) // TODO: allow custom
@@ -260,17 +252,11 @@ function generateHAproxyConfig(SLAs, oasDoc){ // https://www.haproxy.com/blog/fo
   var frontendDefinition = "";
   var backendDefinition = "";
   var limitedPaths = [];
-  try {
-    var api_server_url = oasDoc.servers[0].url; // TODO: it's an array
-  } catch {
-    configs.logger.error("OAS' servers property missing");
-    process.exit();
-  }
 
   for (var subSLA of SLAs){
     var slaPlans = subSLA["plans"]; // TODO:
     for (var plans in slaPlans){
-      for (var endpoint in slaPlans[plans]["rates"]){ // TODO: quotas
+      for (var endpoint in slaPlans[plans]["rates"]){
         limitedPaths.push(endpoint);
 
         for (var method in slaPlans[plans]["rates"][endpoint]){
@@ -317,8 +303,9 @@ function generateHAproxyConfig(SLAs, oasDoc){ // https://www.haproxy.com/blog/fo
  * to the limitations it defines.
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
+ * @param {string} api_server_url - API server url.
  */
-function generateNginxConfig(SLAs, oasDoc){
+function generateNginxConfig(SLAs, oasDoc, api_server_url){
   var nginxTemplate = fs
                 .readFileSync(path.join(__dirname, '../templates/nginx')) // TODO: allow custom
                 .toString();
@@ -326,17 +313,11 @@ function generateNginxConfig(SLAs, oasDoc){
   var limitsDefinition = "";
   var locationDefinitions = "";
   var limitedPaths = [];
-  try {
-    var api_server_url = oasDoc.servers[0].url; // TODO: it's an array
-  } catch {
-    configs.logger.error("OAS' servers property missing");
-    process.exit();
-  }
 
   for (var subSLA of SLAs){
     var slaPlans = subSLA["plans"]; // TODO:
     for (var plans in slaPlans){
-      for (var endpoint in slaPlans[plans]["rates"]){ // TODO: quotas
+      for (var endpoint in slaPlans[plans]["rates"]){
         limitedPaths.push(endpoint);
 
         /////////////// LIMITS
@@ -439,7 +420,7 @@ function generateConfigHandle(file, type, outFile) {
       });
     } else if (element.isAValidUrl()){
       // URL
-      SLAs.concat(getSLAsFromURL(element)); // document that the URL must return an array even if it's just one
+      SLAs.concat(getSLAsFromURL(element)); // TODO: these could be yaml and json
     } else {
       // FILE
       var slaPath = path.join(oasLocation, element); // add base path to SLA paths
@@ -447,20 +428,28 @@ function generateConfigHandle(file, type, outFile) {
     }
   });
 
+  // Get server url
+  try {
+    var api_server_url = oasDoc.servers[0].url;
+  } catch {
+    configs.logger.error("OAS' servers property missing");
+    process.exit();
+  }
+
   // Generate proxy config according to SLA
-  var proxyType = type // TODO: make enum
+  var proxyType = type
   switch (proxyType) {
     case 'nginx':
-      var proxyConf = generateNginxConfig(SLAs, oasDoc);
+      var proxyConf = generateNginxConfig(SLAs, oasDoc, api_server_url);
       break;
     case 'haproxy':
-      var proxyConf = generateHAproxyConfig(SLAs, oasDoc);
+      var proxyConf = generateHAproxyConfig(SLAs, oasDoc, api_server_url);
       break;
     case 'traefik':
-      var proxyConf = generateTraefikConfig(SLAs, oasDoc);
+      var proxyConf = generateTraefikConfig(SLAs, oasDoc, api_server_url);
       break;
     case 'envoy':
-      var proxyConf = generateEnvoyConfig(SLAs, oasDoc);
+      var proxyConf = generateEnvoyConfig(SLAs, oasDoc, api_server_url);
       break;
   }
 

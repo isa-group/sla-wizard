@@ -17,6 +17,19 @@ Options:
   -h, --help                         display help for command
 ```
 
+### URL reference in OAS
+
+While it is possible to specify multiple servers in the OAS' `servers` section, SLA4OAI-tools will use only the first one.
+For example, in the following example only `http://server1:8080` is considered:
+
+```yaml
+openapi: 3.0.0
+servers:
+  - url: 'http://server1:8080'
+  - url: 'http://server2:8080'
+  - url: 'http://server3:8080'
+```
+
 ### SLA reference in OAS
 
 The following are supported:
@@ -54,7 +67,7 @@ info:
 ```yaml
 info:
   x-sla:
-    $ref:
+    $ref: # TODO document that the URL must return an array even if it's just one. 
     - http://server.example/slas
 ```
 ```yaml
