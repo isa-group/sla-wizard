@@ -4,85 +4,8 @@ var jsyaml = require('js-yaml');
 var ZSchema = require("z-schema");
 var url = require("url");
 var configs = require("./configs");
+var utils = require("./utils");
 var https = require('https')
-
-
-/**
- * Given a URL, makes a GET request to get an array of SLAs.
- * @param {string} slasURL - A URL.
- */
-function getSLAsFromURL(slasURL){ // TODO: this is async
-   http.get(slasURL, function(res) {
-     // Buffer the body entirely for processing as a whole.
-     var bodyChunks = [];
-     res.on('data', function(chunk) {
-       // You can process streamed parts here...
-       bodyChunks.push(chunk);
-     }).on('end', function() {
-       var body = Buffer.concat(bodyChunks);
-       return body
-     })
-   });
-}
-
-
-/**
- * Given a string, checks if it's a valid URL.
- * @param {string} potentialURL - A potential URL.
- */
-function isAValidUrl(potentialURL){
-  try {
-    new url.URL(s);
-    return true;
-  } catch (err) {
-    return false;
-  }
-};
-
-
-/**
- * Given a SLA-like period, returns the equivalent proxy time period.
- * @param {string} proxy - One of: nginx, haproxy, traefik and envoy.
- * @param {string} period - One of: second, minute, hour, day, month and year.
- */
-function getLimitPeriod(period, proxy){
-  var periodMap = null;
-  switch (proxy) {
-    case 'nginx': // NGINX only accepts second and minute
-      periodMap = {
-        'second': 's',
-        'minute': 'm'
-      };
-      break;
-    case 'haproxy': // HAProxy does not support month and year
-      periodMap = {
-        'second': 's',
-        'minute': 'm',
-        'hour': 'h',
-        'day': 'd'
-      };
-      break;
-    case 'traefik': // Traefik does not support month and year
-      periodMap = {
-        'second': 's',
-        'minute': 'm',
-        'hour': 'h',
-        'day': 'd'
-      };
-      break;
-    case 'envoy':
-      periodMap = {
-        'second': '1s',
-        'minute': '60s',
-        'hour': '3600s',
-        'day': '86400s',
-        'month': '2592000s',
-        'year': '31536000s'
-      };
-      break;
-  }
-  return periodMap[period];
-}
 
 
 /**
@@ -91,63 +14,62 @@ function getLimitPeriod(period, proxy){
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
  * @param {string} api_server_url - API server url.
+ * @param {string} configTemplatePath - Path to proxy config template.
 */
-function generateEnvoyConfig(SLAs, oasDoc, api_server_url){
+function generateEnvoyConfig(SLAs, oasDoc, api_server_url, configTemplatePath = 'templates/envoy.yaml'){
 
-  var envoyTemplate = jsyaml.load(fs.readFileSync(
-            path.join(__dirname, '../templates/envoy.yaml'), 'utf8'));
+  var envoyTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
+
   var routesDefinition = [];
   var limitedPaths = [];
   api_server_url = url.parse(api_server_url)
 
   for (var subSLA of SLAs){
-    var slaPlans = subSLA["plans"]; // TODO:
-    for (var plans in slaPlans){
-      for (var endpoint in slaPlans[plans]["rates"]){
+    var subSLARates = subSLA["rates"];
+
+      for (var endpoint in subSLARates){
         limitedPaths.push(endpoint);
 
-        for (var method in slaPlans[plans]["rates"][endpoint]){
-          if (method == "get"){ // TODO: other methods
-            var method_specs = slaPlans[plans]["rates"][endpoint][method];
-            var max = method_specs["requests"][0]["max"];
-            var period = method_specs["requests"][0]["period"];
-            period = getLimitPeriod(period,"envoy");
-            routesDefinition.push({
-              "match": {
-                "prefix": endpoint
-              },
-              "route": {
-                "cluster": "main-cluster"
-              },
-              "typed_per_filter_config": {
-                "envoy.filters.http.local_ratelimit": {
-                  "@type": "type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit",
-                  "stat_prefix": "route_rate_limit",
-                  "token_bucket": {
-                    "max_tokens": max,
-                    "fill_interval": period
-                  },
-                  "filter_enabled": {
-                    "runtime_key": "route_limit_enabled",
-                    "default_value": {
-                      "numerator": 100,
-                      "denominator": "HUNDRED"
-                    }
-                  },
-                  "filter_enforced": {
-                    "runtime_key": "route_limit_enforced",
-                    "default_value": {
-                      "numerator": 100,
-                      "denominator": "HUNDRED"
-                    }
+        for (var method in subSLARates[endpoint]){
+          var method_specs = subSLARates[endpoint][method];
+          var max = method_specs["requests"][0]["max"];
+          var period = method_specs["requests"][0]["period"];
+          period = utils.getLimitPeriod(period,"envoy");
+          routesDefinition.push({
+            "match": {
+              "prefix": endpoint
+            },
+            "route": {
+              "cluster": "main-cluster"
+            },
+            "typed_per_filter_config": {
+              "envoy.filters.http.local_ratelimit": {
+                "@type": "type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit",
+                "stat_prefix": "route_rate_limit",
+                "token_bucket": {
+                  "max_tokens": max,
+                  "fill_interval": period
+                },
+                "filter_enabled": {
+                  "runtime_key": "route_limit_enabled",
+                  "default_value": {
+                    "numerator": 100,
+                    "denominator": "HUNDRED"
+                  }
+                },
+                "filter_enforced": {
+                  "runtime_key": "route_limit_enforced",
+                  "default_value": {
+                    "numerator": 100,
+                    "denominator": "HUNDRED"
                   }
                 }
               }
-            });
-          }
+            }
+          });
         }
       }
-    }
+
   }
 
   for (var endpoint in oasDoc.paths){
@@ -182,48 +104,48 @@ function generateEnvoyConfig(SLAs, oasDoc, api_server_url){
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
  * @param {string} api_server_url - API server url.
+ * @param {string} configTemplatePath - Path to proxy config template.
  */
-function generateTraefikConfig(SLAs, oasDoc, api_server_url){
+function generateTraefikConfig(SLAs, oasDoc, api_server_url, configTemplatePath = 'templates/traefik.yaml'){
 
-  var traefikTemplate = jsyaml.load(fs.readFileSync(
-            path.join(__dirname, '../templates/traefik.yaml'), 'utf8'));
+  var traefikTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
+
   var routersDefinition = {};
   var middlewaresDefinition = {};
   var limitedPaths = [];
 
   for (var subSLA of SLAs){
-    var slaPlans = subSLA["plans"]; // TODO:
-    for (var plans in slaPlans){
-      for (var endpoint in slaPlans[plans]["rates"]){
+    var subSLARates = subSLA["rates"];
+
+      for (var endpoint in subSLARates){
         limitedPaths.push(endpoint);
 
-        for (var method in slaPlans[plans]["rates"][endpoint]){
-          if (method == "get"){ // TODO: other methods
-            var method_specs = slaPlans[plans]["rates"][endpoint][method];
-            var max = method_specs["requests"][0]["max"];
-            var period = method_specs["requests"][0]["period"];
-            period = getLimitPeriod(period,"traefik");
-            routersDefinition[endpoint.replace(/\//g, '')] = {
-              rule: `PathPrefix(\`${endpoint}\`)`,
-              service: "main-service",
-              middlewares: [endpoint.replace(/\//g, '')]
-            }
-            middlewaresDefinition[endpoint.replace(/\//g, '')] = {
-              rateLimit: {
-                average: max,
-                period: `1${period}`,
-                burst: max
-              }
+        for (var method in subSLARates[endpoint]){
+          var method_specs = subSLARates[endpoint][method];
+          var max = method_specs["requests"][0]["max"];
+          var period = method_specs["requests"][0]["period"];
+          var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+          period = utils.getLimitPeriod(period,"traefik");
+          routersDefinition[sanitized_endpoint] = {
+            rule: `PathPrefix(\`${endpoint}\`)`,
+            service: "main-service",
+            middlewares: [sanitized_endpoint]
+          }
+          middlewaresDefinition[sanitized_endpoint] = {
+            rateLimit: {
+              average: max,
+              period: `1${period}`,
+              burst: max
             }
           }
         }
       }
-    }
+
   }
 
   for (var endpoint in oasDoc.paths){ // "free" endpoints are taken from OAS as they're missing from SLA
     if (!limitedPaths.includes(endpoint)){
-      routersDefinition[endpoint.replace(/\//g, '')] = {
+      routersDefinition[sanitized_endpoint] = {
         rule: `PathPrefix(\`${endpoint}\`)`,
         service: "main-service"
       }
@@ -242,32 +164,31 @@ function generateTraefikConfig(SLAs, oasDoc, api_server_url){
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
  * @param {string} api_server_url - API server url.
+ * @param {string} configTemplatePath - Path to proxy config template.
  */
-function generateHAproxyConfig(SLAs, oasDoc, api_server_url){ // https://www.haproxy.com/blog/four-examples-of-haproxy-rate-limiting/
+function generateHAproxyConfig(SLAs, oasDoc, api_server_url, configTemplatePath = 'templates/haproxy.cfg'){
 
-  var haproxyTemplate = fs
-                .readFileSync(path.join(__dirname, '../templates/haproxy.cfg')) // TODO: allow custom
-                .toString();
+  var haproxyTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
 
   var frontendDefinition = "";
   var backendDefinition = "";
   var limitedPaths = [];
 
   for (var subSLA of SLAs){
-    var slaPlans = subSLA["plans"]; // TODO:
-    for (var plans in slaPlans){
-      for (var endpoint in slaPlans[plans]["rates"]){
-        limitedPaths.push(endpoint);
+    var subSLARates = subSLA["rates"];
 
-        for (var method in slaPlans[plans]["rates"][endpoint]){
-          if (method == "get"){ // TODO: other methods
-            frontendDefinition += `use_backend ${endpoint.replace(/\//g, '')} if { path_beg ${endpoint} } \n    `
-            var method_specs = slaPlans[plans]["rates"][endpoint][method];
-            var max = method_specs["requests"][0]["max"];
-            var period = method_specs["requests"][0]["period"];
-            period = getLimitPeriod(period,"haproxy");
-            backendDefinition +=
-`backend ${endpoint.replace(/\//g, '')}
+      for (var endpoint in subSLARates){
+        limitedPaths.push(endpoint);
+        var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+
+        for (var method in subSLARates[endpoint]){
+          frontendDefinition += `use_backend ${sanitized_endpoint} if { path_beg ${endpoint} } \n    `
+          var method_specs = subSLARates[endpoint][method];
+          var max = method_specs["requests"][0]["max"];
+          var period = method_specs["requests"][0]["period"];
+          period = utils.getLimitPeriod(period,"haproxy");
+          backendDefinition +=
+`backend ${sanitized_endpoint}
     mode http
     stick-table type binary len 20 size 100k expire 1${period} store http_req_rate(1${period})
     http-request track-sc0 base32+src
@@ -275,11 +196,10 @@ function generateHAproxyConfig(SLAs, oasDoc, api_server_url){ // https://www.hap
     http-request set-var(req.request_rate) base32+src,table_http_req_rate()
     acl rate_abuse var(req.rate_limit),sub(req.request_rate) lt 0
     http-request deny deny_status 429 if rate_abuse
-    server ${endpoint.replace(/\//g, '')} ${api_server_url.replace("http://","")} \n\n` // protocol not allowed here
-          }
+    server ${sanitized_endpoint} ${api_server_url.replace("http://","")} \n\n` // protocol not allowed here
         }
       }
-    }
+
   }
 
   for (var endpoint in oasDoc.paths){
@@ -304,35 +224,33 @@ function generateHAproxyConfig(SLAs, oasDoc, api_server_url){ // https://www.hap
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
  * @param {string} api_server_url - API server url.
+ * @param {string} configTemplatePath - Path to proxy config template.
  */
-function generateNginxConfig(SLAs, oasDoc, api_server_url){
-  var nginxTemplate = fs
-                .readFileSync(path.join(__dirname, '../templates/nginx')) // TODO: allow custom
-                .toString();
+function generateNginxConfig(SLAs, oasDoc, api_server_url, configTemplatePath = 'templates/nginx.conf'){
+
+  var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
 
   var limitsDefinition = "";
   var locationDefinitions = "";
   var limitedPaths = [];
 
   for (var subSLA of SLAs){
-    var slaPlans = subSLA["plans"]; // TODO:
-    for (var plans in slaPlans){
-      for (var endpoint in slaPlans[plans]["rates"]){
+    var subSLARates = subSLA["rates"];
+
+      for (var endpoint in subSLARates){
         limitedPaths.push(endpoint);
 
         /////////////// LIMITS
-        for (var method in slaPlans[plans]["rates"][endpoint]){
-          if (method == "get"){ // TODO: other methods
-            var method_specs = slaPlans[plans]["rates"][endpoint][method];
-            var max = method_specs["requests"][0]["max"];
-            var period = method_specs["requests"][0]["period"];
-            var zone_name = endpoint.replace('/',''); // TODO: sanitize
-            var zone_size = "10m" // 1 megabyte = 16k IPs
-            period = getLimitPeriod(period,"nginx");
-            var limit = `limit_req_zone $binary_remote_addr ` +
-                    `zone=${zone_name}:${zone_size} rate=${max}r/${period};\n    `
-            limitsDefinition += limit;
-          }
+        for (var method in subSLARates[endpoint]){
+          var method_specs = subSLARates[endpoint][method];
+          var max = method_specs["requests"][0]["max"];
+          var period = method_specs["requests"][0]["period"];
+          var zone_name = utils.sanitizeEndpoint(endpoint);
+          var zone_size = "10m" // 1 megabyte = 16k IPs
+          period = utils.getLimitPeriod(period,"nginx");
+          var limit = `limit_req_zone $binary_remote_addr ` +
+                  `zone=${zone_name}:${zone_size} rate=${max}r/${period};\n    `
+          limitsDefinition += limit;
         }
 
         /////////////// LOCATIONS
@@ -344,7 +262,7 @@ function generateNginxConfig(SLAs, oasDoc, api_server_url){
         locationDefinitions += location;
 
       };
-    }
+
   }
 
   for (var endpoint in oasDoc.paths){
@@ -369,8 +287,9 @@ function generateNginxConfig(SLAs, oasDoc, api_server_url){
  * @param {string} file - Path to the OAS description.
  * @param {string} type - Proxy type.
  * @param {string} outFile - Path where to save the produced proxy configuration.
+ * @param {string} customTemplate - Path to custom proxy config template.
  */
-function generateConfigHandle(file, type, outFile) {
+function generateConfigHandle(file, type, outFile, customTemplate) {
 
   // Load OAS
   try {
@@ -383,23 +302,27 @@ function generateConfigHandle(file, type, outFile) {
   }
 
   // Validate OAS
-  var oas_schema = jsyaml.load(fs.readFileSync(
-            path.join(__dirname, '../schemas/oas-3.0.yaml'), 'utf8'));
-  var validator = new ZSchema();
+  var oas_schema = jsyaml.load(fs.readFileSync(path.join(__dirname, '../schemas/openapi-3.0.yaml'), 'utf8'));
+  const validator = new ZSchema({
+    ignoreUnresolvableReferences: true,
+    ignoreUnknownFormats: true,
+    breakOnFirstError: false,
+  });
   var err = validator.validate(oasDoc, oas_schema);
   if (err == false) {
-    configs.logger.info('oasDoc is not valid');
-    //configs.logger.error('oasDoc is not valid: ' + JSON.stringify(validator.getLastErrors()));
-    //return;  //TODO: validation fails but works at https://editor.swagger.io/
+    configs.logger.error('oasDoc is not valid: ' + JSON.stringify(validator.getLastErrors()));
+    return;
   }
 
-  // Get SLA(s) path(s) from OAS - TODO: the SLAs should be validated
+  // Get SLA(s) path(s) from OAS
   var SLApaths = [];
   var oasLocation = file.substring(0, file.lastIndexOf('/'));
   try {
     var partialSlaPath = oasDoc["info"]["x-sla"]["$ref"]
-
-    if(typeof partialSlaPath === "string" ){
+    if (partialSlaPath == undefined ){
+      configs.logger.error("OAS' info.x-sla property missing value");
+      process.exit();
+    } else if (typeof partialSlaPath === "string" ){
       SLApaths.push(partialSlaPath);
     } else {
       SLApaths = partialSlaPath;
@@ -409,24 +332,40 @@ function generateConfigHandle(file, type, outFile) {
     process.exit();
   }
 
-  // Load all SLA path(s) - TODO: paths must be relative? https://swagger.io/docs/specification/using-ref/
+  // Load all SLA path(s)
   var SLAs = [];
-  SLApaths.forEach(element => { // TODO for each, check that: sla.context.type == "instance" and add try/cath
-    if (element.isDirectory()) { // TODO: test these 3 below
-      // FOLDER
-      fs.readdirSync(element).forEach(file => {
-        var slaPath = path.join(oasLocation, file); // add base path to SLA paths
-        SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
-      });
-    } else if (element.isAValidUrl()){
-      // URL
-      SLAs.concat(getSLAsFromURL(element)); // TODO: these could be yaml and json
-    } else {
-      // FILE
-      var slaPath = path.join(oasLocation, element); // add base path to SLA paths
-      SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
+  SLApaths.forEach(element => {
+    try{
+      if (utils.isAValidUrl(element)) { // URL
+        configs.logger.debug(`URL: ${element}`);
+        SLAs.concat(utils.getSLAsFromURL(element));
+      }
+      else {
+        if (path.isAbsolute(element)){ // info.x-sla.$ref can be absolute
+          var elementPath = element;
+        } else {
+          var elementPath = path.join(oasLocation, element);
+        }
+        if (fs.lstatSync(elementPath).isDirectory()) { // FOLDER
+          fs.readdirSync(elementPath).forEach(file => {
+            var slaPath = path.join(elementPath, file); // add base path to SLA paths
+            configs.logger.debug(`File in directory: ${slaPath}`);
+            SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
+          });
+        } else { // FILE
+          configs.logger.debug(`File: ${element}`);
+          var slaPath = elementPath; // add base path to SLA paths
+          SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
+        }
+      }
+    } catch (err) {
+      configs.logger.error(`Error with SLA(s) ${element}: ${err}. Quitting`);
+      process.exit();
     }
   });
+
+  // Validate SLAs
+  var SLAsFiltered = utils.validateSLAs(SLAs);
 
   // Get server url
   try {
@@ -440,16 +379,28 @@ function generateConfigHandle(file, type, outFile) {
   var proxyType = type
   switch (proxyType) {
     case 'nginx':
-      var proxyConf = generateNginxConfig(SLAs, oasDoc, api_server_url);
+      var proxyConf = generateNginxConfig(SLAsFiltered,
+                                          oasDoc,
+                                          api_server_url,
+                                          customTemplate);
       break;
     case 'haproxy':
-      var proxyConf = generateHAproxyConfig(SLAs, oasDoc, api_server_url);
+      var proxyConf = generateHAproxyConfig(SLAsFiltered,
+                                            oasDoc,
+                                            api_server_url,
+                                            customTemplate);
       break;
     case 'traefik':
-      var proxyConf = generateTraefikConfig(SLAs, oasDoc, api_server_url);
+      var proxyConf = generateTraefikConfig(SLAsFiltered,
+                                            oasDoc,
+                                            api_server_url,
+                                            customTemplate);
       break;
     case 'envoy':
-      var proxyConf = generateEnvoyConfig(SLAs, oasDoc, api_server_url);
+      var proxyConf = generateEnvoyConfig(SLAsFiltered,
+                                            oasDoc,
+                                            api_server_url,
+                                            customTemplate);
       break;
   }
 

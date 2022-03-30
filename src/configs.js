@@ -31,7 +31,7 @@ function createNewLogger() {
   winston.addColors(customLevels.colors);
   const transports = [
     new winston.transports.Console({
-      level: "info",
+      level: process.env.LOGGER_LEVEL || 'debug',
       handleExceptions: true,
       json: false,
       format: winston.format.combine(

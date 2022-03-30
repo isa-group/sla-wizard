@@ -4,9 +4,12 @@ servers:
 info:
   x-sla:
     $ref:
-     #- ./sla1.yaml
-     #- ./sla2.yaml
+     - ./slas/sla1.yaml
+     - ./slas/sla1_copy.yaml
+     - ./slas/sla2.yaml
+     - /data/universidad/master/tfm/SLA4OAI-tools/test/specs/slas/sla2.yaml
      - ./slas/
+     - /data/universidad/master/tfm/SLA4OAI-tools/test/specs/slas/
      #- http://localhost/array_of_slas
   version: 1.0.0
   title: Valid specification file

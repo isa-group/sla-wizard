@@ -26,7 +26,7 @@ program
 program
   .action(function(file, proxy, options) {
     // TODO: user provided CLI parameters must be sanitized
-    generate.generateConfigHandle(file, proxy, options.outFile);
+    generate.generateConfigHandle(file, proxy, options.outFile, options.customTemplate);
   })
 
 // Program parse

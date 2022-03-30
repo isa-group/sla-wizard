@@ -17,6 +17,16 @@ Options:
   -h, --help                         display help for command
 ```
 
+To control log levels define the environment variable `LOGGER_LEVEL` prior to the run. The possible values are error, warn, custom, info and debug.
+
+### SLA types
+
+TODO: document if any of the provided SLAs is not valid (does not conform to schema or is not of type instance), the execution will stop. Aditionally, duplicated SLAs will be ignored.
+
+SLA4OAI-tools only works with SLAs of type `instance`.
+If the provided OAS references SLA(s) of type `plan` then those would not be contemplated for the proxy configuration.
+
+
 ### URL reference in OAS
 
 While it is possible to specify multiple servers in the OAS' `servers` section, SLA4OAI-tools will use only the first one.
@@ -67,7 +77,7 @@ info:
 ```yaml
 info:
   x-sla:
-    $ref: # TODO document that the URL must return an array even if it's just one. 
+    $ref: # TODO document that the URL must return an array even if it's just one.
     - http://server.example/slas
 ```
 ```yaml
