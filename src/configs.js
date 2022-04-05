@@ -23,7 +23,7 @@ function createNewLogger() {
       error: "red",
       warn: "yellow",
       custom: "magenta",
-      info: "white",
+      info: "green", // "white",
       debug: "blue",
     },
   };

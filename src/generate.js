@@ -337,7 +337,7 @@ function generateConfigHandle(file, type, outFile, customTemplate) {
   SLApaths.forEach(element => {
     try{
       if (utils.isAValidUrl(element)) { // URL
-        configs.logger.debug(`URL: ${element}`);
+        configs.logger.debug(`Getting SLAs from ${element}...`);
         SLAs.concat(utils.getSLAsFromURL(element));
       }
       else {

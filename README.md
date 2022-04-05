@@ -21,9 +21,9 @@ To control log levels define the environment variable `LOGGER_LEVEL` prior to th
 
 ### SLA types
 
-TODO: document if any of the provided SLAs is not valid (does not conform to schema or is not of type instance), the execution will stop. Aditionally, duplicated SLAs will be ignored.
+TODO: document if any of the provided SLAs is not valid (does not conform to schema or is not of type agreement), the execution will stop. Aditionally, duplicated SLAs will be ignored.
 
-SLA4OAI-tools only works with SLAs of type `instance`.
+SLA4OAI-tools only works with SLAs of type `agreement`.
 If the provided OAS references SLA(s) of type `plan` then those would not be contemplated for the proxy configuration.
 
 

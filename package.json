@@ -11,7 +11,9 @@
   "license": "ISC",
   "dependencies": {
     "commander": "^9.0.0",
+    "express": "^4.17.3",
     "js-yaml": "^4.1.0",
+    "jsonschema": "^1.4.0",
     "validator": "^13.7.0",
     "winston": "^3.6.0",
     "z-schema": "^5.0.2"

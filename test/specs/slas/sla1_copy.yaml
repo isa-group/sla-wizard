@@ -1,7 +1,7 @@
-sla: 1.0.0 # TODO
+sla4oai: 1.0.0
 context:
   id: 1perSecond
-  type: instance
+  type: agreement
   api:
     $ref: ./simple_api_oas.yaml
 metrics:

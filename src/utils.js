@@ -2,9 +2,11 @@ var jsyaml = require('js-yaml');
 var fs = require('fs');
 var path = require('path');
 var ZSchema = require("z-schema");
+var url = require("url");
 var nameValidator = require('validator');
 var configs = require("./configs");
 var assert = require("assert");
+var child_process = require('child_process');
 
 
 /**
@@ -37,7 +39,7 @@ function sanitizeEndpoint(input) {
 /**
  * Validates an array of SLA. For each SLA, it checks:
  *     - It conforms to the SLA schema
- *     - Its type is 'instance'
+ *     - Its type is 'agreement'
  * If any of the SLAs in the array does not conform to those two requirements,
  * the execution stops. Additionally, if the array contains duplicated SLAs, those
  * will be ignored.
@@ -55,13 +57,13 @@ function validateSLAs(SLAsToValidate){
   configs.logger.debug("SLAs to validate:");
   configs.logger.debug(JSON.stringify(SLAsToValidate));
   SLAsToValidate.forEach(element => {
-    var err = validator.validate(element, SLAschema);
+    var err = validator.validate(element, SLAschema); // TODO: not working as expected, does not validate wron SLAs (i.e, 'rates' is string or the SLA object has extra properties, such as 'foo')
     if (err == false) {
       configs.logger.error(`SLA with id ${element.context.id} is not valid ${JSON.stringify(validator.getLastErrors())}, quitting`);
       process.exit();
     }
-    else if (element.context.type != "instance"){
-      configs.logger.error(`SLA with id ${element.context.id} is not of type 'instance', quitting`);
+    else if (element.context.type != "agreement"){
+      configs.logger.error(`SLA with id ${element.context.id} is not of type 'agreement', quitting`);
       process.exit();
     }
 
@@ -87,7 +89,7 @@ function validateSLAs(SLAsToValidate){
  * Given a URL, makes a GET request to get an array of SLAs.
  * @param {string} slasURL - A URL.
  */
-function getSLAsFromURL(slasURL){ // TODO: this is async
+function asyncGetSLAsFromURL(slasURL){
    http.get(slasURL, function(res) {
      // Buffer the body entirely for processing as a whole.
      var bodyChunks = [];
@@ -103,12 +105,29 @@ function getSLAsFromURL(slasURL){ // TODO: this is async
 
 
 /**
+ * Given a URL, makes a GET request to get an array of SLAs.
+ * @param {string} slasURL - A URL.
+ * @param {number} timeOut - Seconds to wait before stopping curl.
+ */
+function getSLAsFromURL(slasURL,timeOut=10){ // TODO: improve
+  try {
+    var code = child_process.execSync(`curl -s -m ${timeOut} ${slasURL}`);
+    configs.logger.debug("SLAs returned by URL:" + code.toString());
+    return jsyaml.load(code.toString())
+  } catch (err) {
+    configs.logger.error(`Error getting SLAs from ${slasURL}: ${err}. Quitting`);
+    process.exit();
+  }
+}
+
+
+/**
  * Given a string, checks if it's a valid URL.
  * @param {string} potentialURL - A potential URL.
  */
 function isAValidUrl(potentialURL){
   try {
-    new url.URL(s);
+    new url.URL(potentialURL);
     return true;
   } catch (err) {
     return false;
