@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var jsyaml = require('js-yaml');
-var ZSchema = require("z-schema");
+var jsonschema = require('jsonschema');
 var url = require("url");
 var configs = require("./configs");
 var utils = require("./utils");
@@ -303,15 +303,11 @@ function generateConfigHandle(file, type, outFile, customTemplate) {
 
   // Validate OAS
   var oas_schema = jsyaml.load(fs.readFileSync(path.join(__dirname, '../schemas/openapi-3.0.yaml'), 'utf8'));
-  const validator = new ZSchema({
-    ignoreUnresolvableReferences: true,
-    ignoreUnknownFormats: true,
-    breakOnFirstError: false,
-  });
+  var validator = new jsonschema.Validator()
   var err = validator.validate(oasDoc, oas_schema);
-  if (err == false) {
-    configs.logger.error('oasDoc is not valid: ' + JSON.stringify(validator.getLastErrors()));
-    return;
+  if (err.valid == false) {
+    configs.logger.error(`oasDoc is not valid: ${err.errors}, quitting`);
+    process.exit();
   }
 
   // Get SLA(s) path(s) from OAS

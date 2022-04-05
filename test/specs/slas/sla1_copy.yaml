@@ -2,6 +2,8 @@ sla4oai: 1.0.0
 context:
   id: 1perSecond
   type: agreement
+  provider: someProvider
+  consumer: me
   api:
     $ref: ./simple_api_oas.yaml
 metrics:

@@ -7,10 +7,10 @@ info:
      - ./slas/sla1.yaml
      - ./slas/sla1_copy.yaml
      - ./slas/sla2.yaml
-     - /data/universidad/master/tfm/SLA4OAI-tools/test/specs/slas/sla2.yaml
+     - /home/ipelu/Desktop/SLA4OAI-tools/test/specs/slas/sla2.yaml #/data/universidad/master/tfm/SLA4OAI-tools/test/specs/slas/sla2.yaml
      - ./slas/
-     - /data/universidad/master/tfm/SLA4OAI-tools/test/specs/slas/
-     - http://localhost:8989/array-of-slas
+     - /home/ipelu/Desktop/SLA4OAI-tools/test/specs/slas/
+     #- http://localhost:8989/array-of-slas
   version: 1.0.0
   title: Valid specification file
 paths:

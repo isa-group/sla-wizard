@@ -1,7 +1,7 @@
 var jsyaml = require('js-yaml');
 var fs = require('fs');
 var path = require('path');
-var ZSchema = require("z-schema");
+var jsonschema = require('jsonschema');
 var url = require("url");
 var nameValidator = require('validator');
 var configs = require("./configs");
@@ -49,17 +49,13 @@ function validateSLAs(SLAsToValidate){
 
   var SLAsFiltered = [];
   var SLAschema = jsyaml.load(fs.readFileSync(path.join(__dirname, '../schemas/sla.json'), 'utf8')); // TODO: check schema conforms to https://github.com/isa-group/SLA4OAI-Specification/blob/main/versions/1.0.0-Draft.md
-  const validator = new ZSchema({
-    ignoreUnresolvableReferences: true,
-    ignoreUnknownFormats: true,
-    breakOnFirstError: false,
-  });
   configs.logger.debug("SLAs to validate:");
   configs.logger.debug(JSON.stringify(SLAsToValidate));
   SLAsToValidate.forEach(element => {
-    var err = validator.validate(element, SLAschema); // TODO: not working as expected, does not validate wron SLAs (i.e, 'rates' is string or the SLA object has extra properties, such as 'foo')
-    if (err == false) {
-      configs.logger.error(`SLA with id ${element.context.id} is not valid ${JSON.stringify(validator.getLastErrors())}, quitting`);
+    var validator = new jsonschema.Validator()
+    var err = validator.validate(element, SLAschema);
+    if (err.valid == false) {
+      configs.logger.error(`SLA with id ${element.context.id} is not valid: ${err.errors}, quitting`);
       process.exit();
     }
     else if (element.context.type != "agreement"){

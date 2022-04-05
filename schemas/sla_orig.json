@@ -22,11 +22,13 @@
       "plans": {
           "$ref": "#/definitions/Plans",
           "description": "A set of plans to define different service levels per plan.",
+          "id": "Plans",
           "title": "plans"
       },
       "rates": {
           "$ref": "#/definitions/Rates",
           "description": "Global rates, these are the default rates, but they could be overridden by each plan later.",
+          "id": "Rates",
           "title": "rates"
       },
       "sla4oai": {
@@ -45,6 +47,7 @@
   "definitions": {
       "Context": {
           "description": "Holds the main information of the SLA context",
+          "id": "Context",
           "properties": {
               "api": {
                   "description": "Indicates a URI (absolute or relative) describing the API, described in the OpenAPI format, to be instrumented.",
@@ -133,6 +136,7 @@
       },
       "Limit": {
           "description": "The allowed limits of the request.",
+          "id": "Limit",
           "properties": {
               "max": {
                   "anyOf": [
@@ -158,6 +162,7 @@
               "period": {
                   "$ref": "#/definitions/Period",
                   "description": "The period of the limit.",
+                  "id": "Period",
                   "title": "period"
               }
           },
@@ -166,6 +171,7 @@
       },
       "Metric": {
           "description": "Definitions of metrics with name, types and descriptions",
+          "id": "Metric",
           "properties": {
               "description": {
                   "description": "A brief description of the metric.",
@@ -261,6 +267,7 @@
               ]
           },
           "description": "A list of metrics to use in the context of the SLA.",
+          "id": "Metrics",
           "title": "Metrics",
           "type": "object"
       },
@@ -272,6 +279,7 @@
               "type": "array"
           },
           "description": "The operations attached to this path.",
+          "id": "Operation",
           "title": "Operation",
           "type": "object"
       },
@@ -280,11 +288,13 @@
               "$ref": "#/definitions/Operation"
           },
           "description": "Describes the API endpoint path quota or rate configurations.",
+          "id": "Path",
           "title": "Path",
           "type": "object"
       },
       "Period": {
           "description": "The period of the limit.",
+          "id": "Period",
           "title": "Period",
           "type": "string",
           "enum": [
@@ -296,6 +306,7 @@
       },
       "Plan": {
           "description": "Describes a usage plan for the API with its associate costs and availability.",
+          "id": "Plan",
           "properties": {
               "availability": {
                   "description": "Availability of the service for this plan expressed via time slots using the ISO 8601 time intervals format.",
@@ -309,16 +320,19 @@
               "pricing": {
                   "$ref": "#/definitions/Pricing",
                   "description": "Specific pricing data for this plan. Overrides default pricing data defined before.",
+                  "id": "Pricing",
                   "title": "pricing"
               },
               "quotas": {
                   "$ref": "#/definitions/Quotas",
                   "description": "Specific quotas data for this plan. Overrides default quotas data defined before.",
+                  "id": "Quotas",
                   "title": "quotas"
               },
               "rates": {
                   "$ref": "#/definitions/Rates",
                   "description": "Specific rates data for this plan. Overrides default rates data defined before.",
+                  "id": "Rates",
                   "title": "rates"
               }
           },
@@ -330,11 +344,13 @@
               "$ref": "#/definitions/Plan"
           },
           "description": "A set of plans to define different service levels per plan.",
+          "id": "Plans",
           "title": "Plans",
           "type": "object"
       },
       "Pricing": {
           "description": "Global pricing data.",
+          "id": "Pricing",
           "properties": {
               "cost": {
                   "anyOf": [
@@ -371,6 +387,7 @@
               "period": {
                   "$ref": "#/definitions/Period",
                   "description": "The period of the limit",
+                  "id": "Period",
                   "title": "period"
               }
           },
@@ -382,6 +399,7 @@
               "$ref": "#/definitions/Path"
           },
           "description": "Global quotas, these are the default quotas, but they could be overridden by each plan later.",
+          "id": "Quotas",
           "title": "Quotas",
           "type": "object"
       },
@@ -390,6 +408,7 @@
               "$ref": "#/definitions/Path"
           },
           "description": "Global rates, these are the default rates, but they could be overridden by each plan later.",
+          "id": "Rates",
           "title": "Rates",
           "type": "object"
       },
