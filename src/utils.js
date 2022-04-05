@@ -10,6 +10,17 @@ var child_process = require('child_process');
 
 
 /**
+ * Validates user provided (CLI) parameters.
+* @param {string} file - Path to the OAS description.
+ * @param {object} proxy - Proxy type.
+ * @param {object} options - CLI options.
+ */
+function validateParamsCLI(file, proxy, options){ // TODO
+  return file, proxy, options;
+}
+
+
+/**
  * Checks if an array contains an (complex) object.
  * @param {array} arrayOfObjects - An array of objects.
  * @param {object} objectToCheck - An SLA to validate.
@@ -191,5 +202,6 @@ module.exports = {
     getSLAsFromURL: getSLAsFromURL,
     isAValidUrl: isAValidUrl,
     getLimitPeriod: getLimitPeriod,
-    getProxyConfigTemplate: getProxyConfigTemplate
+    getProxyConfigTemplate: getProxyConfigTemplate,
+    validateParamsCLI: validateParamsCLI
 };

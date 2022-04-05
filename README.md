@@ -21,7 +21,8 @@ To control log levels define the environment variable `LOGGER_LEVEL` prior to th
 
 ### SLA types
 
-TODO: document if any of the provided SLAs is not valid (does not conform to schema or is not of type agreement), the execution will stop. Aditionally, duplicated SLAs will be ignored.
+TODO: document if any of the provided SLAs is not valid (does not conform to schema or is not of type agreement), the execution will stop. Additionally, duplicated SLAs will be ignored.
+TODO document that the URL must return an array even if it's just one.
 
 SLA4OAI-tools only works with SLAs of type `agreement`.
 If the provided OAS references SLA(s) of type `plan` then those would not be contemplated for the proxy configuration.
@@ -77,7 +78,7 @@ info:
 ```yaml
 info:
   x-sla:
-    $ref: # TODO document that the URL must return an array even if it's just one.
+    $ref:
     - http://server.example/slas
 ```
 ```yaml
@@ -207,8 +208,6 @@ Source: https://www.artillery.io/
 * `num`: number of requests that should be made per user
 
 ```bash
-
-# TODO
 
 artillery quick --count 1 --num 10 http://localhost/open-endpoint
 

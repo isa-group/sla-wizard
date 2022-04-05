@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 var generate = require('./generate');
+var utils = require('./utils');
 var commander = require('commander');
 var program = new commander.Command();
 
@@ -25,7 +26,7 @@ program
 // Program action
 program
   .action(function(file, proxy, options) {
-    // TODO: user provided CLI parameters must be sanitized
+    file, proxy, options = utils.validateParamsCLI(file, proxy, options);
     generate.generateConfigHandle(file, proxy, options.outFile, options.customTemplate);
   })
 
