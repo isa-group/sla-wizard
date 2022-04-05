@@ -2,6 +2,20 @@
 
 ## Usage
 
+Once the tool is published in npm, it will be possible to install it using `npm install ...` but until then, to get the tool clone the repository:
+
+```bash
+git clone https://github.com/isa-group/SLA4OAI-tools
+```
+
+Dependencies must be installed prior to using the tool:
+
+```bash
+npm install
+```
+
+Displayed below is the output of the `-h` option of SLA4OAI-tools' CLI:
+
 ```bash
 Usage: sla4oai-tools <arguments> <options>
 
@@ -19,14 +33,12 @@ Options:
 
 To control log levels define the environment variable `LOGGER_LEVEL` prior to the run. The possible values are error, warn, custom, info and debug.
 
+## Prerequisites
+
 ### SLA types
 
-TODO: document if any of the provided SLAs is not valid (does not conform to schema or is not of type agreement), the execution will stop. Additionally, duplicated SLAs will be ignored.
-TODO document that the URL must return an array even if it's just one.
-
-SLA4OAI-tools only works with SLAs of type `agreement`.
-If the provided OAS references SLA(s) of type `plan` then those would not be contemplated for the proxy configuration.
-
+SLA4OAI-tools only works with SLAs of type `agreement`. The provided SLA(s) will be validated according to a schema.
+If any of the provided SLAs is not valid (does not conform to schema or is not of type agreement), the execution will stop. Additionally, duplicated SLAs will be ignored.
 
 ### URL reference in OAS
 
@@ -43,66 +55,64 @@ servers:
 
 ### SLA reference in OAS
 
-The following are supported:
+The following are supported. Single file:
 
 ```yaml
-info:
-  x-sla:
     $ref:
      - ./sla.yaml
 ```
 
+Multiple files:
+
 ```yaml
-info:
-  x-sla:
     $ref:
      - ./sla1.yaml
      - ./sla2.yaml
 ```
 
+Single directory containing SLA(s):
+
 ```yaml
-info:
-  x-sla:
     $ref:
      - ./slas1Dir/
 ```
 
+Multiple directories containing SLA(s):
+
 ```yaml
-info:
-  x-sla:
     $ref:
     - ./slasDir1/
     - ./slasDir2/
 ```
 
+Single URL (GET to the URL must receive an array):
+
 ```yaml
-info:
-  x-sla:
     $ref:
     - http://server.example/slas
 ```
+
+Multiple URLs (GET to these URLs must receive arrays):
+
 ```yaml
-info:
-  x-sla:
     $ref:
     - http://server.example/slas1
     - http://server.example/slas2
 ```
 
-Also combinations:
+Also, combinations:
 
 ```yaml
-info:
-  x-sla:
     $ref:
     - ./sla1.yaml
     - ./slasDir1/
     - ./slasDir2/
     - http://server.example/slas1
+    - http://server.example/slas2
 ```
 
 
-## Workflow
+## Test
 
 Dependencies must be installed prior to using the tool:
 
