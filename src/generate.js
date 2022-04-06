@@ -115,6 +115,7 @@ function generateTraefikConfig(SLAs, oasDoc, api_server_url, configTemplatePath 
   var limitedPaths = [];
 
   for (var subSLA of SLAs){
+    console.log(subSLA)
     var subSLARates = subSLA["rates"];
 
       for (var endpoint in subSLARates){
@@ -145,7 +146,7 @@ function generateTraefikConfig(SLAs, oasDoc, api_server_url, configTemplatePath 
 
   for (var endpoint in oasDoc.paths){ // "free" endpoints are taken from OAS as they're missing from SLA
     if (!limitedPaths.includes(endpoint)){
-      routersDefinition[sanitized_endpoint] = {
+      routersDefinition[utils.sanitizeEndpoint(endpoint)] = {
         rule: `PathPrefix(\`${endpoint}\`)`,
         service: "main-service"
       }

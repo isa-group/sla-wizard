@@ -9,7 +9,7 @@ services:
     depends_on:
             - api
     volumes:
-      - ${CFG_PATH}:/etc/traefik/traefik.toml
+      - ${CFG_PATH}:/etc/traefik/traefik.yaml
       - ${D_CFG_PATH}:/etc/traefik/traefik-dynamic-cfg.yaml
     ports:
      - "80:80"

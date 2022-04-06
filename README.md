@@ -111,6 +111,32 @@ Also, combinations:
     - http://server.example/slas2
 ```
 
+## Supported proxies
+
+### Envoy
+
+
+### HAProxy
+
+
+### NGINX
+
+
+### Traefik
+
+TODO: document that in this case two files are needed: the main configuration (which sla4oai-tools should be able to create, following a CLI parameter) and the dynamic config file. The main config should look like this:
+
+```yaml
+entryPoints:
+  http:
+    address: ':80'
+  https:
+    address: ':443'
+providers:
+  file:
+    filename: /etc/traefik/traefik-dynamic-cfg.yaml
+```
+
 
 ## Test
 
@@ -177,7 +203,7 @@ sudo CFG_PATH=../proxy-configuration docker-compose --file test/haproxy/docker-c
 In the case of Traefik, the file that SLA4OAI-tools writes is the dynamic configuration file, in the command below provided with the variable `D_CFG_PATH`.
 
 ```bash
-sudo D_CFG_PATH=../proxy-configuration CFG_PATH=./traefik.toml docker-compose --file test/traefik/docker-compose-traefik.yaml up
+sudo D_CFG_PATH=../proxy-configuration CFG_PATH=./traefik.yaml docker-compose --file test/traefik/docker-compose-traefik.yaml up
 ```
 
 #### Envoy
