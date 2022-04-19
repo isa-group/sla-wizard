@@ -1,0 +1,8 @@
+entryPoints:
+  http:
+    address: ':80'
+  https:
+    address: ':443'
+providers:
+  file:
+    filename: /etc/traefik/traefik-dynamic-cfg.yaml

@@ -4,9 +4,9 @@ var path = require('path');
 var jsonschema = require('jsonschema');
 var url = require("url");
 var nameValidator = require('validator');
-var configs = require("./configs");
 var assert = require("assert");
-var child_process = require('child_process');
+var configs = require("./configs");
+var generate = require("./generate");
 
 
 /**
@@ -93,42 +93,6 @@ function validateSLAs(SLAsToValidate){
 
 
 /**
- * Given a URL, makes a GET request to get an array of SLAs.
- * @param {string} slasURL - A URL.
- */
-function asyncGetSLAsFromURL(slasURL){
-   http.get(slasURL, function(res) {
-     // Buffer the body entirely for processing as a whole.
-     var bodyChunks = [];
-     res.on('data', function(chunk) {
-       // You can process streamed parts here...
-       bodyChunks.push(chunk);
-     }).on('end', function() {
-       var body = Buffer.concat(bodyChunks);
-       return body
-     })
-   });
-}
-
-
-/**
- * Given a URL, makes a GET request to get an array of SLAs.
- * @param {string} slasURL - A URL.
- * @param {number} timeOut - Seconds to wait before stopping curl.
- */
-function getSLAsFromURL(slasURL,timeOut=10){ // TODO: improve
-  try {
-    var code = child_process.execSync(`curl -s -m ${timeOut} ${slasURL}`);
-    configs.logger.debug("SLAs returned by URL:" + code.toString());
-    return jsyaml.load(code.toString())
-  } catch (err) {
-    configs.logger.error(`Error getting SLAs from ${slasURL}: ${err}. Quitting`);
-    process.exit();
-  }
-}
-
-
-/**
  * Given a string, checks if it's a valid URL.
  * @param {string} potentialURL - A potential URL.
  */
@@ -199,7 +163,6 @@ function getProxyConfigTemplate(configTemplatePath){
 module.exports = {
     sanitizeEndpoint: sanitizeEndpoint,
     validateSLAs: validateSLAs,
-    getSLAsFromURL: getSLAsFromURL,
     isAValidUrl: isAValidUrl,
     getLimitPeriod: getLimitPeriod,
     getProxyConfigTemplate: getProxyConfigTemplate,

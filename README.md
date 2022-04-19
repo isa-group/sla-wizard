@@ -43,7 +43,7 @@ If any of the provided SLAs is not valid (does not conform to schema or is not o
 ### URL reference in OAS
 
 While it is possible to specify multiple servers in the OAS' `servers` section, SLA4OAI-tools will use only the first one.
-For example, in the following example only `http://server1:8080` is considered:
+For instance, in the following example only `http://server1:8080` is considered:
 
 ```yaml
 openapi: 3.0.0
@@ -55,14 +55,16 @@ servers:
 
 ### SLA reference in OAS
 
-The following are supported. Single file:
+The following are supported:
+
+#### Single file
 
 ```yaml
     $ref:
      - ./sla.yaml
 ```
 
-Multiple files:
+#### Multiple files
 
 ```yaml
     $ref:
@@ -70,14 +72,14 @@ Multiple files:
      - ./sla2.yaml
 ```
 
-Single directory containing SLA(s):
+#### Single directory containing SLA(s)
 
 ```yaml
     $ref:
      - ./slas1Dir/
 ```
 
-Multiple directories containing SLA(s):
+#### Multiple directories containing SLA(s)
 
 ```yaml
     $ref:
@@ -85,30 +87,22 @@ Multiple directories containing SLA(s):
     - ./slasDir2/
 ```
 
-Single URL (GET to the URL must receive an array):
-
-```yaml
-    $ref:
-    - http://server.example/slas
-```
-
-Multiple URLs (GET to these URLs must receive arrays):
-
-```yaml
-    $ref:
-    - http://server.example/slas1
-    - http://server.example/slas2
-```
-
-Also, combinations:
+#### Combinations
 
 ```yaml
     $ref:
     - ./sla1.yaml
     - ./slasDir1/
     - ./slasDir2/
-    - http://server.example/slas1
-    - http://server.example/slas2
+```
+
+#### Single URL
+
+GET to the URL must receive an array. Unlike in the previous cases, here only one URL is allowed.
+
+```yaml
+    $ref:
+    - http://server.example/slas
 ```
 
 ## Supported proxies
@@ -215,40 +209,35 @@ sudo CFG_PATH=../proxy-configuration docker-compose --file test/envoy/docker-com
 
 ### 3. Validate that the proxy is properly configured
 
-#### APIPecker
+#### Artillery
 
-Source: https://www.npmjs.com/package/apipecker
-
+To install Artillery run the following command.
 
 ```bash
-
-# apipecker <concurrentUsers> <iterations> <delay in ms> <url> [-v]
-
-apipecker 5 10 500 http://localhost/open-endpoint # should succeed
-
-apipecker 1 5 1000 http://localhost/once-per-second-endpoint # should succeed
-
-apipecker 1 10 500 http://localhost/once-per-second-endpoint # half should fail
-
-apipecker 2 3 60000 http://localhost/twice-per-minute-endpoint # should succeed
-
-apipecker 4 3 60000 http://localhost/twice-per-minute-endpoint # half should fail
-
+npm install -g artillery
 ```
-
-#### Artillery
 
 Source: https://www.artillery.io/
 
-* `count`: number of virtual users
-* `num`: number of requests that should be made per user
+Once installed, Arillery's `quick` command can be used for rapid testing.
 
 ```bash
-
-artillery quick --count 1 --num 10 http://localhost/open-endpoint
-
-artillery quick --count 1 --num 10 http://localhost/once-per-second-endpoint
-
-artillery quick --count 1 --num 10 http://localhost/twice-per-minute-endpoint
-
+artillery quick --count <numberOfUsers> --num <requestsPerUser> <endpoint>
 ```
+
+Artillery offers a more robust and adviced approach.
+
+```bash
+npm test -- <pathToOas>
+```
+
+That will:
+
+1. Create a yaml file defining Artillery testing, based on the OAS and its SLA(s). For endpoints without limitations it will contain one test and for endpoints with limitations it will contain two tests:
+  - One that is below the limits: should succeed
+  - One that is above the limits: should fail
+2. Run Artillery
+3. Report the obtained results
+
+TODO: not possible to do scenarios per phase https://github.com/artilleryio/artillery/issues/774
+TODO: rate-limit testing with Mocha/Chai possible? otherwise APIPecker?

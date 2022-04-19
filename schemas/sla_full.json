@@ -206,7 +206,6 @@
                   "title": "period"
               }
           },
-          "required": ["max"],
           "title": "Limit",
           "type": "object"
       },
@@ -248,6 +247,23 @@
                   "title": "format",
                   "type": "string"
               },
+              "relatedMetrics": {
+                  "description": "Related metrics",
+                  "items": {
+                      "$ref": "#/definitions/Metric"
+                  },
+                  "title": "relatedMetrics",
+                  "type": "array"
+              },
+              "resolution": {
+                  "description": "Determine when this metric will be resolved. If value is check the metric will be sent before the calculation of SLA state, else if value is consumption the metric will be sent after consumption.",
+                  "enum": [
+                      "check",
+                      "consumption"
+                  ],
+                  "title": "resolution",
+                  "type": "string"
+              },
               "type": {
                   "description": "This is the metric type accordingly to the OAI spec format column.",
                   "enum": [
@@ -263,6 +279,15 @@
                       "boolean"
                   ],
                   "title": "type",
+                  "type": "string"
+              },
+              "unit": {
+                  "description": "The unit of the metric.",
+                  "examples": [
+                      "MB/s",
+                      "GB"
+                  ],
+                  "title": "unit",
                   "type": "string"
               }
           },
@@ -389,19 +414,10 @@
                   "title": "currency",
                   "type": "string"
               },
-              "billing": {
-                  "default": "monthly",
-                  "description": "Billing frequency",
-                  "title": "billing",
-                  "type": "string",
-                  "enum": [
-                    "onepay",
-                    "daily",
-                    "weekly",
-                    "monthly",
-                    "quarterly",
-                    "yearly"
-                  ]
+              "period": {
+                  "$ref": "#/definitions/Period",
+                  "description": "The period of the limit",
+                  "title": "period"
               }
           },
           "title": "Pricing",

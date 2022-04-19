@@ -1,0 +1,37 @@
+# TODO: not possible to do scenarios per phase https://github.com/artilleryio/artillery/issues/774
+config:
+  target: "http://localhost"
+  phases:
+
+    # open-endpoint
+    - duration: 1 # This is in seconds: what's the max? can it go to months?
+      arrivalCount: 10 # virtual users per second
+
+    # /once-per-second-endpoint (first succeeds, second fails)
+    - duration: 1 # This is in seconds: what's the max? can it go to months?
+      arrivalCount: 1 # virtual users per second
+    - duration: 1
+      arrivalCount: 2
+
+    # /twice-per-minute-endpoint (first succeeds, second fails)
+    - duration: 60
+      arrivalCount: 2
+    - duration: 60
+      arrivalCount: 3
+
+scenarios:
+
+  - name: "Open endpoint"
+    flow:
+      - get:
+          url: "/open-endpoint"
+
+  - name: "Once per second endpoint"
+    flow:
+      - get:
+          url: "/once-per-second-endpoint"
+
+  - name: "Twice per minute endpoint"
+    flow:
+      - get:
+          url: "/twice-per-minute-endpoint"
