@@ -66,12 +66,12 @@
       },
       "quotas": {
           "$ref": "#/definitions/Quotas",
-          "description": "Global quotas, these are the default rates, but they could be overridden by each plan later.",
+          "description": "Global quotas, these are the default quotas.",
           "title": "rates"
       },
       "rates": {
           "$ref": "#/definitions/Rates",
-          "description": "Global rates, these are the default rates, but they could be overridden by each plan later.",
+          "description": "Global rates, these are the default rates.",
           "title": "rates"
       },
       "sla4oai": {
@@ -100,7 +100,7 @@
                   "title": "api"
               },
               "consumer": {
-                  "description": "Consumer information, data about the entity that consumes the service. This field is required in case of the context type is agreement.",
+                  "description": "Consumer information, data about the entity that consumes the service. This field is required if the context type is agreement.",
                   "examples": [
                       "MyConsumer"
                   ],
@@ -116,7 +116,7 @@
                   "type": "string"
               },
               "provider": {
-                  "description": "Provider information: data about the owner/host of the API. This field is required in case of the context type is agreement.",
+                  "description": "Provider information: data about the owner/host of the API. This field is required if the context type is agreement.",
                   "examples": [
                       "MyProvider"
                   ],
@@ -209,7 +209,7 @@
                   "type": "string"
               },
               "format": {
-                  "description": "The extending format for the previously mentioned type. See Data Type Formats for further details.",
+                  "description": "The extending format for the previously mentioned type.",
                   "enum": [
                       "binary",
                       "byte",
@@ -318,17 +318,17 @@
               },
               "pricing": {
                   "$ref": "#/definitions/Pricing",
-                  "description": "Specific pricing data for this plan. Overrides default pricing data defined before.",
+                  "description": "Specific pricing data for this plan.",
                   "title": "pricing"
               },
               "quotas": {
                   "$ref": "#/definitions/Quotas",
-                  "description": "Specific quotas data for this plan. Overrides default quotas data defined before.",
+                  "description": "Specific quotas data for this plan.",
                   "title": "quotas"
               },
               "rates": {
                   "$ref": "#/definitions/Rates",
-                  "description": "Specific rates data for this plan. Overrides default rates data defined before.",
+                  "description": "Specific rates data for this plan.",
                   "title": "rates"
               }
           },
@@ -400,7 +400,7 @@
           "additionalProperties": {
               "$ref": "#/definitions/Path"
           },
-          "description": "Global quotas, these are the default quotas, but they could be overridden by each plan later.",
+          "description": "Global quotas, these are the default quotas.",
           "title": "Quotas",
           "type": "object"
       },
@@ -408,7 +408,7 @@
           "additionalProperties": {
               "$ref": "#/definitions/Path"
           },
-          "description": "Global rates, these are the default rates, but they could be overridden by each plan later.",
+          "description": "Global rates, these are the default rates.",
           "title": "Rates",
           "type": "object"
       },
