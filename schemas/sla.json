@@ -64,14 +64,14 @@
           "description": "A set of plans to define different service levels per plan.",
           "title": "plans"
       },
-      "rates": {
-          "$ref": "#/definitions/Rates",
-          "description": "Global rates, these are the default rates, but they could be overridden by each plan later.",
-          "title": "rates"
-      },
       "quotas": {
           "$ref": "#/definitions/Quotas",
           "description": "Global quotas, these are the default rates, but they could be overridden by each plan later.",
+          "title": "rates"
+      },
+      "rates": {
+          "$ref": "#/definitions/Rates",
+          "description": "Global rates, these are the default rates, but they could be overridden by each plan later.",
           "title": "rates"
       },
       "sla4oai": {
@@ -142,42 +142,29 @@
               "id",
               "type"
           ],
-          "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "plans"
-                  }
-                }
-              },
-              "then": {
-                "required": [
-                    "provider"
-                ]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "type": {
-                    "const": "agreement"
-                  }
-                }
-              },
-              "then": {
-                "required": [
-                    "provider",
-                    "consumer"
-                ]
+          "if": {
+            "properties": {
+              "type": {
+                "const": "plans"
               }
             }
-          ],
+          },
+          "then": {
+            "required": [
+                "provider"
+            ]
+          },
+          "else": {
+            "required": [
+                "provider",
+                "consumer"
+            ]
+          },
           "title": "Context",
           "type": "object"
       },
       "Limit": {
-          "description": "The allowed limits of the request.",
+          "description": "The allowed limits of the metric (e.g. requests).",
           "properties": {
               "max": {
                   "anyOf": [
@@ -312,7 +299,9 @@
             "second",
             "minute",
             "hour",
-            "day"
+            "day",
+            "month",
+            "year"
           ]
       },
       "Plan": {
@@ -391,7 +380,7 @@
               },
               "billing": {
                   "default": "monthly",
-                  "description": "Billing frequency",
+                  "description": "Billing frequency.",
                   "title": "billing",
                   "type": "string",
                   "enum": [
