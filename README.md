@@ -1,11 +1,11 @@
-# SLA4OAI-tools
+# SLA Wizard
 
 ## Usage
 
 Once the tool is published in npm, it will be possible to install it using `npm install ...` but until then, to get the tool clone the repository:
 
 ```bash
-git clone https://github.com/isa-group/SLA4OAI-tools
+git clone https://github.com/isa-group/sla-wizard
 ```
 
 Dependencies must be installed prior to using the tool:
@@ -17,7 +17,7 @@ npm install
 Displayed below is the output of the `-h` option of SLA4OAI-tools' CLI:
 
 ```bash
-Usage: sla4oai-tools <arguments> <options>
+Usage: sla-wizard <arguments> <options>
 
 Arguments:
   file                               Path to a OAS v3 file
@@ -37,7 +37,7 @@ To control log levels define the environment variable `LOGGER_LEVEL` prior to th
 
 ### SLA types
 
-SLA4OAI-tools only works with SLAs of type `agreement`. The provided SLA(s) will be validated according to a schema.
+SLA Wizard only works with SLAs of type `agreement`. The provided SLA(s) will be validated according to a schema.
 If any of the provided SLAs is not valid (does not conform to schema or is not of type agreement), the execution will stop. Additionally, duplicated SLAs will be ignored.
 
 ### URL reference in OAS
