@@ -144,10 +144,9 @@ The following steps indicate how to create proxy configuration files and validat
 
 ### Requirements:
 
-The following are optional properties in OAS v3. However, they are required for SLA4OAI:
+The following are optional properties in OAS v3. However, they are required when using sla-wizard:
 
 - `servers`
-- `info.x-sla`
 
 ### 1. Create proxy config
 
