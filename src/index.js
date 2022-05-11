@@ -7,8 +7,19 @@ var program = new commander.Command();
 
 // General details
 program
-  .name('sla4oai-tools')
+  .name('sla-wizard')
   .usage('<arguments> <options>');
+
+// Test command
+/*
+program.command('runTest')
+  .description('Run test with APIPecker.')
+  .option('--oas', 'Path to a OAS v3 file.')
+  .option('--specs', 'Path to a test config file.')
+  .action((str, options) => {
+    console.log("TODO");
+  });
+*/
 
 // CLI arguments
 program

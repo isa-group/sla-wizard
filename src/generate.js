@@ -169,6 +169,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
 
   var haproxyTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
 
+  var trackingQueryName = "apikey";
   var frontendDefinition = "";
   var backendDefinition = "";
   var limitedPaths = [];
@@ -190,15 +191,14 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
 `backend ${sanitized_endpoint}
     mode http
     stick-table type binary len 20 size 100k expire 1${period} store http_req_rate(1${period})
-    http-request track-sc0 base32+src
-    http-request set-var(req.rate_limit) int(${max})
-    http-request set-var(req.request_rate) base32+src,table_http_req_rate()
-    acl rate_abuse var(req.rate_limit),sub(req.request_rate) lt 0
-    http-request deny deny_status 429 if rate_abuse
+    acl has_token url_param(${trackingQueryName}) -m found
+    acl exceeds_limit url_param(${trackingQueryName}),table_http_req_rate() gt ${max}
+    http-request track-sc0 url_param(${trackingQueryName}) unless exceeds_limit
+    http-request deny deny_status 403 if !has_token
+    http-request deny deny_status 429 if exceeds_limit
     server ${sanitized_endpoint} ${apiServerURL.replace("http://","")} \n\n` // protocol not allowed here
         }
       }
-
   }
 
   for (var endpoint in oasDoc.paths){
@@ -230,7 +230,8 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
 
   var limitsDefinition = "";
-  var locationDefinitions = "";
+  var trackingHeaderName = "apikey";
+  var locationDefinitions = `    if ($http_${trackingHeaderName} = "") { return 403; }\n`;
   var limitedPaths = [];
 
   for (var subSLA of SLAs){
@@ -247,7 +248,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
           var zone_name = utils.sanitizeEndpoint(endpoint);
           var zone_size = "10m" // 1 megabyte = 16k IPs
           period = utils.getLimitPeriod(period,"nginx");
-          var limit = `limit_req_zone $binary_remote_addr ` +
+          var limit = `limit_req_zone $http_${trackingHeaderName} ` +
                   `zone=${zone_name}:${zone_size} rate=${max}r/${period};\n    `
           limitsDefinition += limit;
         }

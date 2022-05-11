@@ -4,12 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "node ./test/artillery/index.js",
+    "test": "node ./test/apipecker/index.js",
     "start": "node index.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "apipecker": "^1.3.1",
     "axios": "^0.26.1",
     "commander": "^9.0.0",
     "express": "^4.17.3",

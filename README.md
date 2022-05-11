@@ -1,11 +1,11 @@
-# SLA4OAI-tools
+# SLA Wizard
 
 ## Usage
 
 Once the tool is published in npm, it will be possible to install it using `npm install ...` but until then, to get the tool clone the repository:
 
 ```bash
-git clone https://github.com/isa-group/SLA4OAI-tools
+git clone https://github.com/isa-group/sla-wizard
 ```
 
 Dependencies must be installed prior to using the tool:
@@ -14,10 +14,10 @@ Dependencies must be installed prior to using the tool:
 npm install
 ```
 
-Displayed below is the output of the `-h` option of SLA4OAI-tools' CLI:
+Displayed below is the output of the `-h` option of sla-wizard' CLI:
 
 ```bash
-Usage: sla4oai-tools <arguments> <options>
+Usage: sla-wizard <arguments> <options>
 
 Arguments:
   file                               Path to a OAS v3 file
@@ -37,12 +37,12 @@ To control log levels define the environment variable `LOGGER_LEVEL` prior to th
 
 ### SLA types
 
-SLA4OAI-tools only works with SLAs of type `agreement`. The provided SLA(s) will be validated according to a schema.
+SLA Wizard only works with SLAs of type `agreement`. The provided SLA(s) will be validated according to a schema.
 If any of the provided SLAs is not valid (does not conform to schema or is not of type agreement), the execution will stop. Additionally, duplicated SLAs will be ignored.
 
 ### URL reference in OAS
 
-While it is possible to specify multiple servers in the OAS' `servers` section, SLA4OAI-tools will use only the first one.
+While it is possible to specify multiple servers in the OAS' `servers` section, sla-wizard will use only the first one.
 For instance, in the following example only `http://server1:8080` is considered:
 
 ```yaml
@@ -118,7 +118,7 @@ GET to the URL must receive an array. Unlike in the previous cases, here only on
 
 ### Traefik
 
-TODO: document that in this case two files are needed: the main configuration (which sla4oai-tools should be able to create, following a CLI parameter) and the dynamic config file. The main config should look like this:
+In this case two files are needed: the main configuration (which sla-wizard should be able to create, following a CLI parameter) and the dynamic config file. The main config should look like this:
 
 ```yaml
 entryPoints:
@@ -140,7 +140,7 @@ Dependencies must be installed prior to using the tool:
 npm install
 ```
 
-The following steps indicate how to create proxy configuration files and validate they work as expected. SLA4OAI-tools uses both the API's OAS and SLA definitions for that.
+The following steps indicate how to create proxy configuration files and validate they work as expected. sla-wizard uses both the API's OAS and SLA definitions for that.
 
 ### Requirements:
 
@@ -194,7 +194,7 @@ sudo CFG_PATH=../proxy-configuration docker-compose --file test/haproxy/docker-c
 
 #### Traefik
 
-In the case of Traefik, the file that SLA4OAI-tools writes is the dynamic configuration file, in the command below provided with the variable `D_CFG_PATH`.
+In the case of Traefik, the file that sla-wizard writes is the dynamic configuration file, in the command below provided with the variable `D_CFG_PATH`.
 
 ```bash
 sudo D_CFG_PATH=../proxy-configuration CFG_PATH=./traefik.yaml docker-compose --file test/traefik/docker-compose-traefik.yaml up
@@ -209,35 +209,18 @@ sudo CFG_PATH=../proxy-configuration docker-compose --file test/envoy/docker-com
 
 ### 3. Validate that the proxy is properly configured
 
-#### Artillery
+#### APIPecker
 
-To install Artillery run the following command.
-
-```bash
-npm install -g artillery
-```
-
-Source: https://www.artillery.io/
-
-Once installed, Arillery's `quick` command can be used for rapid testing.
+Source: https://www.npmjs.com/package/apipecker
 
 ```bash
-artillery quick --count <numberOfUsers> --num <requestsPerUser> <endpoint>
+
+# apipecker <concurrentUsers> <iterations> <delay in ms> <url> [-v]
+
+apipecker 5 10 500 http://localhost/open-endpoint -v # should succeed
+
+apipecker 1 5 1100 http://localhost/once-per-second-endpoint -v # should succeed
+
+apipecker 1 10 700 http://localhost/once-per-second-endpoint -v # half should fail
+
 ```
-
-Artillery offers a more robust and adviced approach.
-
-```bash
-npm test -- <pathToOas>
-```
-
-That will:
-
-1. Create a yaml file defining Artillery testing, based on the OAS and its SLA(s). For endpoints without limitations it will contain one test and for endpoints with limitations it will contain two tests:
-  - One that is below the limits: should succeed
-  - One that is above the limits: should fail
-2. Run Artillery
-3. Report the obtained results
-
-TODO: not possible to do scenarios per phase https://github.com/artilleryio/artillery/issues/774
-TODO: rate-limit testing with Mocha/Chai possible? otherwise APIPecker?
