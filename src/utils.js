@@ -11,12 +11,11 @@ var generate = require("./generate");
 
 /**
  * Validates user provided (CLI) parameters.
-* @param {string} file - Path to the OAS description.
  * @param {object} proxy - Proxy type.
  * @param {object} options - CLI options.
  */
-function validateParamsCLI(file, proxy, options){ // TODO
-  return file, proxy, options;
+function validateParamsCLI(proxy, options){ // TODO
+  return proxy, options;
 }
 
 

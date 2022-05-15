@@ -30,7 +30,7 @@ function customRequestBuilder(userId){
         options: {
             method: "GET",
             headers: {
-                'Api-Token': 'TOKEN-'+userId,
+                'Api-Token': 'TOKEN-'+userId, // TODO: take from SLA's consumer
                 'Content-Type': 'application/json',
                 'Content-Length': jsonData.length
             }
@@ -56,36 +56,24 @@ function customResultsHandler(results){
     configs.logger.info("Sucess: " + (100 - (deniedRequests / totalRequests * 100)) + "%");
 }
 
-// CLI options
-program
-  .requiredOption('--oas <oasPath>', 'Path to a OAS v3 file.')
-  .option('--testConfig <testConfig>', 'Test configuration.');
+function runTest(oasPath, testOptions){
+  if (options.testConfig === undefined){
+    configs.logger.info("Default test configurations will be used.");
+    // TODO: load performancetTest.json
+  }
+  else {
+    // TODO: load options.testConfig
+  }
 
-// Program action
-program
-  .action(function(options) {
+  //TODO: load OAS from oasPath
 
-    if (options.testConfig === undefined){
-      configs.logger.info("Default test configurations will be used.");
-      // TODO: load performancetTest.json
-    }
-    else {
-      // TODO: load options.testConfig
-    }
-
-    //TODO: load OAS from options.oas
-
-    apipecker.run({
-        concurrentUsers : 1,
-        iterations : 6,
-        delay : 1100, // in ms
-        verbose : true,
-        urlBuilder: customUrlBuilder,
-        requestBuilder : customRequestBuilder,
-        resultsHandler : customResultsHandler
-    });
-  })
-
-// Program parse
-program
-  .parse(process.argv);
+  apipecker.run({
+      concurrentUsers : 1,
+      iterations : 6,
+      delay : 1100, // in ms
+      verbose : true,
+      urlBuilder: customUrlBuilder,
+      requestBuilder : customRequestBuilder,
+      resultsHandler : customResultsHandler
+  });
+}

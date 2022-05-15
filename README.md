@@ -153,25 +153,25 @@ The following are optional properties in OAS v3. However, they are required when
 #### NGINX
 
 ```bash
-node src/index.js test/specs/simple_api_oas.yaml nginx --outFile test/proxy-configuration
+node src/index.js config nginx --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
 ```
 
 #### HAProxy
 
 ```bash
-node src/index.js test/specs/simple_api_oas.yaml haproxy --outFile test/proxy-configuration
+node src/index.js config haproxy --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
 ```
 
 #### Traefik
 
 ```bash
-node src/index.js test/specs/simple_api_oas.yaml traefik --outFile test/proxy-configuration
+node src/index.js config traefik --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
 ```
 
 #### Envoy
 
 ```bash
-node src/index.js test/specs/simple_api_oas.yaml envoy --outFile test/proxy-configuration
+node src/index.js config envoy --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
 ```
 
 

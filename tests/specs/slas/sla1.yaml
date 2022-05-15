@@ -3,7 +3,7 @@ context:
   id: 1perSecond
   type: agreement
   provider: someProvider
-  consumer: me
+  consumer: abcd1234
   api:
     $ref: ./simple_api_oas.yaml
 metrics:
