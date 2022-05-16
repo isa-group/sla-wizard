@@ -109,28 +109,53 @@ GET to the URL must receive an array. Unlike in the previous cases, here only on
 
 ### Envoy
 
+To create a configuration file for an Envoy proxy, use the argument `envoy` of the `config` command, for example:
+
+```bash
+node src/index.js config envoy --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
+```
+
+#### Custom Template
+
+TODO
+
+Refer to `templates/envoy.yaml`.
 
 ### HAProxy
 
+To create a configuration file for an HAProxy proxy, use the argument `haproxy` of the `config` command, for example:
+
+```bash
+node src/index.js config haproxy --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
+```
+
+#### Custom Template
+
+Refer to `templates/haproxy.cfg`.
 
 ### NGINX
 
+To create a configuration file for a NGINX proxy, use the argument `nginx` of the `config` command, for example:
+
+```bash
+node src/index.js config nginx --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
+```
+
+#### Custom Template
+
+Refer to `templates/nginx.conf`.
 
 ### Traefik
 
-In this case two files are needed: the main configuration (which sla-wizard should be able to create, following a CLI parameter) and the dynamic config file. The main config should look like this:
+Unlike in the other three proxies supported by sla-wizard, in the case of Traefik, besides the main configuration file a dynamic configuration file is needed. This dynamic configuration file is the one that sla-wizard creates. To do that, use the argument `traefik` of the `config` command, for example:
 
-```yaml
-entryPoints:
-  http:
-    address: ':80'
-  https:
-    address: ':443'
-providers:
-  file:
-    filename: /etc/traefik/traefik-dynamic-cfg.yaml
+```bash
+node src/index.js config traefik --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
 ```
 
+#### Custom Template
+
+Refer to `templates/traefik.yaml`.
 
 ## Test
 
@@ -150,29 +175,13 @@ The following are optional properties in OAS v3. However, they are required when
 
 ### 1. Create proxy config
 
-#### NGINX
+To create the config file of a proxy use the following command:
 
 ```bash
-node src/index.js config nginx --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
+node src/index.js config <proxy> --oas <pathToOAS> --outFile <destinationFile>
 ```
 
-#### HAProxy
-
-```bash
-node src/index.js config haproxy --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
-```
-
-#### Traefik
-
-```bash
-node src/index.js config traefik --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
-```
-
-#### Envoy
-
-```bash
-node src/index.js config envoy --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
-```
+For examples refer to the section [Supported proxies](#supported-proxies).
 
 
 ### 2. Spin up two containers: proxy and API
@@ -193,7 +202,20 @@ sudo CFG_PATH=../proxy-configuration docker-compose --file test/haproxy/docker-c
 
 #### Traefik
 
-In the case of Traefik, the file that sla-wizard writes is the dynamic configuration file, in the command below provided with the variable `D_CFG_PATH`.
+In the case of Traefik, the file that sla-wizard writes is the dynamic configuration file, The main configuration file should look like this:
+
+```yaml
+entryPoints:
+  http:
+    address: ':80'
+  https:
+    address: ':443'
+providers:
+  file:
+    filename: /etc/traefik/traefik-dynamic-cfg.yaml
+```
+
+Where `provider.file.filename` contains the path to the dynamic configuration file created by sla-wizard. When spinning up the containers as in the command below, the variable `D_CFG_PATH` indicates the path to the dynamic configuration file:
 
 ```bash
 sudo D_CFG_PATH=../proxy-configuration CFG_PATH=./traefik.yaml docker-compose --file test/traefik/docker-compose-traefik.yaml up
