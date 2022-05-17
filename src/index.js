@@ -2,7 +2,7 @@
 
 var generate = require('./generate');
 var utils = require('./utils');
-var tests = require('../tests/basic');
+var runTest = require('./runTest');
 var commander = require('commander');
 var program = new commander.Command();
 
@@ -27,10 +27,11 @@ program.command('config')
 // Test command
 program.command('runTest')
   .description('Run test with APIPecker.')
-  .requiredOption('--specs', 'Path to a test config file.')
-  .option('--oas', 'Path to a OAS v3 file.','specs/oas.yaml')
+  .requiredOption('--specs <testSpecs>', 'Path to a test config file.')
+  .option('--oas <pathToOAS>', 'Path to a OAS v3 file.','specs/oas.yaml')
+  .option('--json', 'Produces output as JSON.',false)
   .action((options) => {
-    tests.runTest(options.oas, options.specs);
+    runTest.runTest(options.oas, options.specs);
   });
 
 // Program parse

@@ -112,7 +112,7 @@ GET to the URL must receive an array. Unlike in the previous cases, here only on
 To create a configuration file for an Envoy proxy, use the argument `envoy` of the `config` command, for example:
 
 ```bash
-node src/index.js config envoy --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
+node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
 ```
 
 #### Custom Template
@@ -126,7 +126,7 @@ Refer to `templates/envoy.yaml`.
 To create a configuration file for an HAProxy proxy, use the argument `haproxy` of the `config` command, for example:
 
 ```bash
-node src/index.js config haproxy --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
+node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
 ```
 
 #### Custom Template
@@ -138,7 +138,7 @@ Refer to `templates/haproxy.cfg`.
 To create a configuration file for a NGINX proxy, use the argument `nginx` of the `config` command, for example:
 
 ```bash
-node src/index.js config nginx --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
+node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
 ```
 
 #### Custom Template
@@ -150,7 +150,7 @@ Refer to `templates/nginx.conf`.
 Unlike in the other three proxies supported by sla-wizard, in the case of Traefik, besides the main configuration file a dynamic configuration file is needed. This dynamic configuration file is the one that sla-wizard creates. To do that, use the argument `traefik` of the `config` command, for example:
 
 ```bash
-node src/index.js config traefik --oas test/specs/simple_api_oas.yaml --outFile test/proxy-configuration
+node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
 ```
 
 #### Custom Template
@@ -191,13 +191,13 @@ For this, docker-compose is used. The variable `CFG_PATH` should point to the co
 #### NGINX
 
 ```bash
-sudo CFG_PATH=../proxy-configuration docker-compose --file test/nginx/docker-compose-nginx.yaml up
+sudo CFG_PATH=../proxy-configuration docker-compose --file tests/nginx/docker-compose-nginx.yaml up
 ```
 
 #### HAProxy
 
 ```bash
-sudo CFG_PATH=../proxy-configuration docker-compose --file test/haproxy/docker-compose-haproxy.yaml up
+sudo CFG_PATH=../proxy-configuration docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up
 ```
 
 #### Traefik
@@ -218,13 +218,13 @@ providers:
 Where `provider.file.filename` contains the path to the dynamic configuration file created by sla-wizard. When spinning up the containers as in the command below, the variable `D_CFG_PATH` indicates the path to the dynamic configuration file:
 
 ```bash
-sudo D_CFG_PATH=../proxy-configuration CFG_PATH=./traefik.yaml docker-compose --file test/traefik/docker-compose-traefik.yaml up
+sudo D_CFG_PATH=../proxy-configuration CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up
 ```
 
 #### Envoy
 
 ```bash
-sudo CFG_PATH=../proxy-configuration docker-compose --file test/envoy/docker-compose-envoy.yaml up
+sudo CFG_PATH=../proxy-configuration docker-compose --file tests/envoy/docker-compose-envoy.yaml up
 ```
 
 

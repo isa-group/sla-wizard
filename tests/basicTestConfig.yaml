@@ -1,0 +1,7 @@
+duration: 36000
+clients:
+    - type: pro
+      count: 20
+      misbehaviour: 1
+    - type: free
+      count: 100
