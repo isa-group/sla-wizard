@@ -12,14 +12,9 @@ var apipecker = require("apipecker");
 var commander = require('commander');
 var program = new commander.Command();
 
-function customUrlBuilder(userId){
-    var url = "http://localhost/once-per-second-endpoint";
-    var url = "http://localhost/once-per-second-endpoint";
-    var url = "http://localhost/open-endpoint";
-    return url;
-}
 
 function customRequestBuilder(userId){
+    console.log(userId)
     var data = {
         user : userId
     };
@@ -55,16 +50,29 @@ function runTest(oasPath, testOptions){
   }
 
   //TODO: load OAS from oasPath
+  var oasDoc = utils.loadAndValidateOAS(oasPath);
 
-  apipecker.run({
-      concurrentUsers : 1,
-      iterations : 6,
-      delay : 1100, // in ms
-      verbose : true,
-      urlBuilder: customUrlBuilder,
-      requestBuilder : customRequestBuilder,
-      resultsHandler : customResultsHandler
-  });
+  for (var endpoint in oasDoc.paths){ // TODO: this should be done for each plan in testOptions (for 'npm test' it should be all the plans in the SLAs linked to the provided OAS)
+
+    function customUrlBuilder(userId){
+        //var url = "http://localhost/once-per-second-endpoint";
+        //var url = "http://localhost/once-per-second-endpoint";
+        //var url = "http://localhost/open-endpoint";
+        var url =  `http://localhost${endpoint}?apikey=${userId}`;
+        console.log("Got: " + url);
+        return url
+    }
+
+    apipecker.run({
+        concurrentUsers : 5,
+        iterations : 6,
+        delay : 1100, // in ms
+        verbose : true,
+        urlBuilder: customUrlBuilder,
+        requestBuilder : customRequestBuilder,
+        resultsHandler : customResultsHandler
+    });
+  }
 }
 
 module.exports = {

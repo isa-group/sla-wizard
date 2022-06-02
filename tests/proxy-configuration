@@ -10,9 +10,9 @@ frontend proxy
     bind :80
     mode http
     default_backend default-server
-    use_backend once-per-second-endpoint if { path_beg /once-per-second-endpoint } 
-    use_backend twice-per-minute-endpoint if { path_beg /twice-per-minute-endpoint } 
-    
+    use_backend once-per-second-endpoint if { path_beg /once-per-second-endpoint }
+    use_backend twice-per-minute-endpoint if { path_beg /twice-per-minute-endpoint }
+
 
 backend default-server
     mode http
@@ -21,21 +21,53 @@ backend default-server
 backend once-per-second-endpoint
     mode http
     stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
-    acl has_token url_param(apikey) -m found
-    acl exceeds_limit url_param(apikey),table_http_req_rate() gt 1
-    http-request track-sc0 url_param(apikey) unless exceeds_limit
-    http-request deny deny_status 403 if !has_token
+
+    # check for token parameter
+    acl has_token hdr(token) -m found
+
+    # check if token is valid
+    acl valid_token hdr(token) -m str apikey1 apikey2 apikey3
+
+    # check if exceeds limit
+    acl exceeds_limit hdr(token),table_http_req_rate() gt 1
+
+    # start tracking based on token parameter
+    http-request track-sc0 hdr(token) unless exceeds_limit
+
+    # Deny if missing token
+    http-request deny deny_status 401 if !has_token
+
+    # Deny if bad token
+    http-request deny deny_status 403 if !valid_token
+
+    # Deny if exceeds limit
     http-request deny deny_status 429 if exceeds_limit
-    server once-per-second-endpoint api:9999 
+
+    server once-per-second-endpoint api:9999
 
 backend twice-per-minute-endpoint
     mode http
     stick-table type binary len 20 size 100k expire 1m store http_req_rate(1m)
-    acl has_token url_param(apikey) -m found
-    acl exceeds_limit url_param(apikey),table_http_req_rate() gt 2
-    http-request track-sc0 url_param(apikey) unless exceeds_limit
-    http-request deny deny_status 403 if !has_token
+
+    # check for token parameter
+    acl has_token hdr(token) -m found
+
+    # check if token is valid
+    acl valid_token hdr(token) -m str apikey1 apikey2 apikey3
+
+    # check if exceeds limit
+    acl exceeds_limit hdr(token),table_http_req_rate() gt 2
+
+    # start tracking based on token parameter
+    http-request track-sc0 hdr(token) unless exceeds_limit
+
+    # Deny if missing token
+    http-request deny deny_status 401 if !has_token
+
+    # Deny if bad token
+    http-request deny deny_status 403 if !valid_token
+
+    # Deny if exceeds limit
     http-request deny deny_status 429 if exceeds_limit
-    server twice-per-minute-endpoint api:9999 
 
-
+    server twice-per-minute-endpoint api:9999

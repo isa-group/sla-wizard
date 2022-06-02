@@ -20,6 +20,35 @@ function validateParamsCLI(proxy, options){ // TODO
 
 
 /**
+ * Loads and validates an OAS document. In case it's valid, returns the
+ * OAS object.
+ * @param {string} file - Path to the OAS description.
+ */
+function loadAndValidateOAS(file){
+
+  // Load
+  try {
+    var spec = fs.readFileSync(path.join('', file), 'utf8');
+    var oasDoc = jsyaml.load(spec);
+    configs.logger.info('Input oas-doc %s: %s', file, oasDoc);
+  } catch (err) {
+    configs.logger.error("Error loading OAS file: " + err);
+    process.exit();
+  }
+
+  // Validate
+  var oas_schema = jsyaml.load(fs.readFileSync(path.join(__dirname, '../schemas/openapi-3.0.yaml'), 'utf8'));
+  var validator = new jsonschema.Validator()
+  var err = validator.validate(oasDoc, oas_schema);
+  if (err.valid == false) {
+    configs.logger.error(`oasDoc is not valid: ${err.errors}, quitting`);
+    process.exit();
+  }
+  return oasDoc;
+}
+
+
+/**
  * Checks if an array contains an (complex) object.
  * @param {array} arrayOfObjects - An array of objects.
  * @param {object} objectToCheck - An SLA to validate.
@@ -165,5 +194,6 @@ module.exports = {
     isAValidUrl: isAValidUrl,
     getLimitPeriod: getLimitPeriod,
     getProxyConfigTemplate: getProxyConfigTemplate,
-    validateParamsCLI: validateParamsCLI
+    validateParamsCLI: validateParamsCLI,
+    loadAndValidateOAS: loadAndValidateOAS
 };
