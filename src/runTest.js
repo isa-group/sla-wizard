@@ -15,7 +15,7 @@ var program = new commander.Command();
 function customUrlBuilder(userId){
     var url = "http://localhost/once-per-second-endpoint";
     var url = "http://localhost/once-per-second-endpoint";
-    //var url = "http://localhost/open-endpoint";
+    var url = "http://localhost/open-endpoint";
     return url;
 }
 
@@ -42,22 +42,11 @@ function customRequestBuilder(userId){
 }
 
 function customResultsHandler(results){
-    var deniedRequests = 0;
-    for (var stats in results.lotStats) {
-        var statusCode = results.lotStats[stats].result.stats[0].statusCode;
-        if (statusCode == 429) {
-          deniedRequests++;
-        }
-        var userID = results.lotStats[stats].result.stats[0].id;
-        var iterationId = results.lotStats[stats].id
-        configs.logger.info(`${iterationId}: ${userID} - ${statusCode}`);
-    }
-    var totalRequests = results.lotStats.length;
-    configs.logger.info("Sucess: " + (100 - (deniedRequests / totalRequests * 100)) + "%");
+    console.log(JSON.stringify(results.lotStats));
 }
 
 function runTest(oasPath, testOptions){
-  if (options.testConfig === undefined){
+  if (testOptions === undefined){
     configs.logger.info("Default test configurations will be used.");
     // TODO: load performancetTest.json
   }

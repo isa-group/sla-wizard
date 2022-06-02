@@ -29,7 +29,6 @@ program.command('runTest')
   .description('Run test with APIPecker.')
   .requiredOption('--specs <testSpecs>', 'Path to a test config file.')
   .option('--oas <pathToOAS>', 'Path to a OAS v3 file.','specs/oas.yaml')
-  .option('--json', 'Produces output as JSON.',false)
   .action((options) => {
     runTest.runTest(options.oas, options.specs);
   });

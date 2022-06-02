@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "mocha ./tests/basic.js",
+    "test": "./node_modules/mocha/bin/mocha.js ./tests/basic.js",
     "start": "node index.js"
   },
   "author": "",

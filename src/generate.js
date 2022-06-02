@@ -423,13 +423,13 @@ function generateConfigHandle(file, proxyType, outFile, customTemplate) {
 
 
 /**
- * . TODO: document
- * @param {}  -
- * @param {}  -
- * @param {}  -
- * @param {}  -
- * @param {}  -
- * @param {}  -
+ * Calls the actual proxy config file generation functions.
+ * @param {string} proxyType - Proxy type.
+ * @param {object} SLAsFiltered - Valid SLAs.
+ * @param {object} oasDoc - Open API definition.
+ * @param {string} apiServerURL - API server url.
+ * @param {string} customTemplate - Path to custom proxy config template.
+ * @param {string} outFile - Path where to save the produced proxy configuration.
  */
 function generateProxyConfig(proxyType,
                     SLAsFiltered,

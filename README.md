@@ -115,9 +115,9 @@ To create a configuration file for an Envoy proxy, use the argument `envoy` of t
 node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
 ```
 
-#### Custom Template
+**Note**: currently, global rate limit is not supported, only local rate limit. This means the configuration file produced by sla-wizard uses `type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit`.
 
-TODO
+#### Custom Template
 
 Refer to `templates/envoy.yaml`.
 
