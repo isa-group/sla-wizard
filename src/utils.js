@@ -94,7 +94,7 @@ function validateSLAs(SLAsToValidate){
     var validator = new jsonschema.Validator()
     var err = validator.validate(element, SLAschema);
     if (err.valid == false) {
-      configs.logger.error(`SLA with id ${element.context.id} is not valid: ${err.errors}, quitting`);
+      configs.logger.error(`SLA with id ${element.context.id} is not valid: ${JSON.stringify(err.errors)}, quitting`);
       process.exit();
     }
     else if (element.context.type != "agreement"){
