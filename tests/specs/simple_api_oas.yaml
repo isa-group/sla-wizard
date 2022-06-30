@@ -4,10 +4,10 @@ servers:
 info:
   x-sla:
     $ref:
-     - ./slas/sla1.yaml
-     - ./slas/sla1_copy.yaml
-     - ./slas/sla2.yaml
-     - /data/universidad/master/tfm/sla-wizard/tests/specs/slas/sla2.yaml
+     - ./slas/basic.yaml
+     - ./slas/basic_copy.yaml
+     - ./slas/pro.yaml
+     - /data/universidad/master/tfm/sla-wizard/tests/specs/slas/pro.yaml
      - ./slas/
      - /data/universidad/master/tfm/sla-wizard/tests/specs/slas/
      #- http://localhost:8989/array-of-slas
@@ -24,7 +24,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SampleObj"
-  /once-per-second-endpoint:
+  /first-endpoint:
     get:
       summary: This endpoint accepts requests only once per second
       responses:
@@ -34,7 +34,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SampleObj"
-  /twice-per-minute-endpoint:
+  /second-endpoint:
     get:
       summary: This endpoint accepts requests only twice per minute
       responses:

@@ -1,15 +1,15 @@
-sla4oai: 1.0.0
+sla4oas: 1.0.0
 context:
-  id: 1perSecond
+  id: ProCustomer
   type: agreement
   api:
     $ref: ./simple_api_oas.yaml
   provider: ISAGroup
-  customer: ACME S.L
+  customer: BAR S.L
   apikeys:
-    - user1
-    - user2
-    - user3
+    - qmFm7B5zIKa99vcitRGX-p
+    - RCwyJs35QzVV6y1EmQFb-p
+    - H8Fv6UmGcj9y3Bb9TVF9-p
   validity:
     from: "2022-11-23T20:20:40+00:00"
     to: "2023-11-23T20:20:40+00:00"
@@ -19,15 +19,20 @@ metrics:
     format: int64
     description: "Number of requests"
 plan:
-  name: basic
+  name: pro
   pricing:
-      cost: 5
+      cost: 15
       currency: EUR
       billing: monthly
   availability: "2022-11-23T20:20:40+00:00"
   rates:
-    /once-per-second-endpoint:
+    /first-endpoint:
       get:
         requests:
-          - max: 1
+          - max: 10
             period: second
+    /second-endpoint:
+      get:
+        requests:
+          - max: 20
+            period: minute

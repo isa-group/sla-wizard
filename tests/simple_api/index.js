@@ -12,12 +12,12 @@ app.get("/open-endpoint", function(req,res){
             "description": "There's no restriction on this endpoint"});
 });
 
-app.get("/once-per-second-endpoint", function(req,res){
-  res.send({"endpoint":"/once-per-second-endpoint",
-            "description": "This endpoint accepts requests only once per second"});
+app.get("/first-endpoint", function(req,res){
+  res.send({"endpoint":"/first-endpoint",
+            "description": "This is the first endpoint."});
 });
 
-app.get("/twice-per-minute-endpoint", function(req,res){
-  res.send({"endpoint":"/twice-per-minute-endpoint",
-            "description": "This endpoint accepts requests only twice per minute"});
+app.get("/second-endpoint", function(req,res){
+  res.send({"endpoint":"/second-endpoint",
+            "description": "This is the second endpoint."});
 });

@@ -240,8 +240,8 @@ Source: https://www.npmjs.com/package/apipecker
 
 apipecker 5 10 500 http://localhost/open-endpoint -v # should succeed
 
-apipecker 1 5 1100 http://localhost/once-per-second-endpoint -v # should succeed
+apipecker 1 5 1100 http://localhost/first-endpoint -v # should succeed
 
-apipecker 1 10 700 http://localhost/once-per-second-endpoint -v # half should fail
+apipecker 1 10 700 http://localhost/first-endpoint -v # half should fail
 
 ```
