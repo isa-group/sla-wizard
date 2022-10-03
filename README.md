@@ -2,42 +2,43 @@
 
 ## Usage
 
-Once the tool is published in npm, it will be possible to install it using `npm install ...` but until then, to get the tool clone the repository:
+Once the tool is published in npm, it will be possible to install it using `npm install sla-wizard` but until then, to get the tool clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/isa-group/sla-wizard
-```
-
-Dependencies must be installed prior to using the tool:
-
-```bash
+cd sla-wizard
 npm install
 ```
 
-Displayed below is the output of the `-h` option of sla-wizard' CLI:
+Displayed below is the output of the `-h` option of sla-wizard CLI:
 
 ```bash
+$ node src/index.js -h
 Usage: sla-wizard <arguments> <options>
 
-Arguments:
-  file                               Path to a OAS v3 file
-  proxy                              Proxy for which the configuration should
-                                     be generated. (choices: "nginx",
-                                     "haproxy", "traefik", "envoy")
-
 Options:
-  -o, --outFile <configFile>         Config output file.
-  --customTemplate <customTemplate>  Custom proxy configuration template.
-  -h, --help                         display help for command
+  -h, --help                display help for command
+
+Commands:
+  config [options] <proxy>
+  runTest [options]         Run test with APIPecker.
+  help [command]            display help for command
 ```
 
-To control log levels define the environment variable `LOGGER_LEVEL` prior to the run. The possible values are error, warn, custom, info and debug.
+SLA Wizard includes currently two commands:
 
-## Prerequisites
+| Command  |  Explanation |
+|---|---|
+| `config`  |  Takes an SLA document and generates a proxy configuration file which includes rate limiting as specified on the provided SLA. |
+| `runTest` |  Performs validation testing of the rate limiting defined on a proxy by an SLA Wizard-generated configuration file. |
+
+To control log levels define the environment variable `LOGGER_LEVEL` prior to the run. The possible values are `error`, `warn`, `custom`, `info` and `debug`.
+
+## To consider
 
 ### SLA types
 
-SLA Wizard only works with SLAs of type `agreement`. The provided SLA(s) will be validated according to a schema.
+SLA Wizard only works with SLAs of type `agreement`. It validates the provided SLAs with the [SLA4OAI-Specification JSON schema](https://github.com/isa-group/SLA4OAI-Specification/blob/main/schemas/1.0.0-Draft.schema.json).
 If any of the provided SLAs is not valid (does not conform to schema or is not of type agreement), the execution will stop. Additionally, duplicated SLAs will be ignored.
 
 ### URL reference in OAS
@@ -53,59 +54,23 @@ servers:
   - url: 'http://server3:8080'
 ```
 
-### SLA reference in OAS
+### SLA reference
 
-The following are supported:
+Both SLA Wizard functionalities provided by the commands `config` and `runTest` require an SLA document. While it is possible to reference the SLA directly in the OAS document (`info.x-sla.$ref`), the tool will not consider it. Instead, please use the commands' `--sla` option to indicate where the SLA document(s) can be found. This option can take a path to a single file, a folder containing multiple files or even a URL (note GET to the URL must receive an array, even if there's only one SLA).
 
-#### Single file
+### API Authentication 
 
-```yaml
-    $ref:
-     - ./sla.yaml
-```
+APIs support different authentication methods. When authenticating with an API key, generally, it is possible to provide it in different places of the request: 
 
-#### Multiple files
+1. As a header
+2. As a query parameter
+3. As part of the URL
 
-```yaml
-    $ref:
-     - ./sla1.yaml
-     - ./sla2.yaml
-```
+All the proxies supported by SLA Wizard allow using API keys on these three locations. When creating a proxy configuration file, the option `--authLocation` of SLA Wizard's `config` command should be used to set this, it can take the values `header`, `query` and `url`. In any case, the usage of the option is not compulsory, its default value is `header`. 
 
-#### Single directory containing SLA(s)
+## Creating proxy configurations
 
-```yaml
-    $ref:
-     - ./slas1Dir/
-```
-
-#### Multiple directories containing SLA(s)
-
-```yaml
-    $ref:
-    - ./slasDir1/
-    - ./slasDir2/
-```
-
-#### Combinations
-
-```yaml
-    $ref:
-    - ./sla1.yaml
-    - ./slasDir1/
-    - ./slasDir2/
-```
-
-#### Single URL
-
-GET to the URL must receive an array. Unlike in the previous cases, here only one URL is allowed.
-
-```yaml
-    $ref:
-    - http://server.example/slas
-```
-
-## Supported proxies
+SLA Wizard can create configuration files from scratch for four different proxy technologies: Envoy, HAProxy, Nginx and Traefik. Also, it can modify an already existing configuration file, to add the SLA logic. 
 
 ### Envoy
 
@@ -115,7 +80,7 @@ To create a configuration file for an Envoy proxy, use the argument `envoy` of t
 node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
 ```
 
-**Note**: currently, global rate limit is not supported, only local rate limit. This means the configuration file produced by sla-wizard uses `type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit`.
+**Note**: currently, [global rate limit](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/other_features/global_rate_limiting) is not supported, only [local rate limit](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/local_rate_limit_filter). 
 
 #### Custom Template
 
@@ -147,7 +112,7 @@ Refer to `templates/nginx.conf`.
 
 ### Traefik
 
-Unlike in the other three proxies supported by sla-wizard, in the case of Traefik, besides the main configuration file a dynamic configuration file is needed. This dynamic configuration file is the one that sla-wizard creates. To do that, use the argument `traefik` of the `config` command, for example:
+Unlike in the other three proxies supported by sla-wizard, besides the main configuration file a dynamic configuration file is needed. This file is the one that sla-wizard creates. To do that, use the argument `traefik` of the `config` command, for example:
 
 ```bash
 node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
@@ -157,7 +122,7 @@ node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --outFile
 
 Refer to `templates/traefik.yaml`.
 
-## Test
+## Testing
 
 Dependencies must be installed prior to using the tool:
 
@@ -245,3 +210,13 @@ apipecker 1 5 1100 http://localhost/first-endpoint -v # should succeed
 apipecker 1 10 700 http://localhost/first-endpoint -v # half should fail
 
 ```
+
+## License
+
+Copyright 2022, [ISA Group](http://www.isa.us.es), [University of Sevilla](http://www.us.es)
+
+[![ISA Group](http://www.isa.us.es/2.0/assets/img/theme/logo2.png)](http://www.isa.us.es)
+
+Licensed under the **Apache License, Version 2.0** (the "[License](./LICENSE)"); you may not use this file except in compliance with the License. You may obtain a copy of the License at apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the License for the specific language governing permissions and limitations under the License.
