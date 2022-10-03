@@ -87,7 +87,7 @@ function sanitizeEndpoint(input) {
 function validateSLAs(SLAsToValidate){
 
   var SLAsFiltered = [];
-  var SLAschema = jsyaml.load(fs.readFileSync(path.join(__dirname, '../schemas/sla.json'), 'utf8')); // TODO: check schema conforms to https://github.com/isa-group/SLA4OAI-Specification/blob/main/versions/1.0.0-Draft.md
+  var SLAschema = jsyaml.load(fs.readFileSync(path.join(__dirname, '../schemas/sla.json'), 'utf8')); 
   configs.logger.debug("SLAs to validate:");
   configs.logger.debug(JSON.stringify(SLAsToValidate));
   SLAsToValidate.forEach(element => {
@@ -101,7 +101,6 @@ function validateSLAs(SLAsToValidate){
       configs.logger.error(`SLA with id ${element.context.id} is not of type 'agreement', quitting`);
       process.exit();
     }
-
     else if (arrayContainsObject(SLAsFiltered, element)){ // else if (SLAsFiltered.includes(element)){
       configs.logger.warn(`SLA with id ${element.context.id} is duplicated`);
     }

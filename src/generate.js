@@ -338,7 +338,7 @@ function generateConfigHandle(file, proxyType, outFile, customTemplate) {
   var SLApaths = [];
   var oasLocation = file.substring(0, file.lastIndexOf('/'));
   try {
-    var partialSlaPath = oasDoc["info"]["x-sla"]["$ref"] // TODO: bad, take from CLI (what can take: single file, single folder and single URL?)
+    var partialSlaPath = oasDoc["info"]["x-sla"]["$ref"] 
     if (partialSlaPath == undefined ){
       configs.logger.error("OAS' info.x-sla property missing value");
       process.exit();
