@@ -97,6 +97,10 @@ function validateSLAs(SLAsToValidate){
       configs.logger.error(`SLA with id ${element.context.id} is not valid: ${JSON.stringify(err.errors)}, quitting`);
       process.exit();
     }
+    else if (element.context.apikeys === undefined){
+      configs.logger.error(`SLA with id ${element.context.id} does not have property context.apikeys, quitting`);
+      process.exit();
+    }
     else if (element.context.type != "agreement"){
       configs.logger.error(`SLA with id ${element.context.id} is not of type 'agreement', quitting`);
       process.exit();

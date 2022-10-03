@@ -42,14 +42,14 @@ The following table describes all the options that SLA Wizard includes for its c
 
 | Option/Argument  |  Command | Required  |  Explanation |
 |---|---|---|---|
-| proxy | `config` | Yes | Proxy for which the configuration should be generated. (choices: "nginx", "haproxy", "traefik", "envoy") |
-| -o, --outFile <configFile> | `config` | | Config output file. |
-| --sla <slaPath> | `config` & `runTest`| Yes | One of: 1) single SLA, 2) folder of SLAs, 3) URL returning an array of SLA objects |
-| --oas <pathToOAS> | `config` & `runTest` | No | Path to an OAS v3 file. (default: "./specs/oas.yaml") |
-| --customTemplate <customTemplate> | `config` | No | Custom proxy configuration template. |
-| --authLocation <authLocation> | `config` | No | Where to look for the authentication parameter. (default: "header") |
-| --authName <authName> | `config` | No | Name of the authentication parameter, such as "token" or "apikey". (default: "apikey") |
-| --specs <testSpecs> | `runTest` | | Path to a test config file. |
+| `proxy` | `config` | Yes | Proxy for which the configuration should be generated. (choices: "nginx", "haproxy", "traefik", "envoy") |
+| `-o`, `--outFile <configFile>` | `config` | Yes | Config output file. |
+| `--sla <slaPath>` | `config` & `runTest`| No | One of: 1) single SLA, 2) folder of SLAs, 3) URL returning an array of SLA objects (default: "./specs/sla.yaml") |
+| `--oas <pathToOAS>` | `config` & `runTest` | No | Path to an OAS v3 file. (default: "./specs/oas.yaml") |
+| `--customTemplate <customTemplate>` | `config` | No | Custom proxy configuration template. |
+| `--authLocation <authLocation>` | `config` | No | Where to look for the authentication parameter. (default: "header") |
+| `--authName <authName>` | `config` | No | Name of the authentication parameter, such as "token" or "apikey". (default: "apikey") |
+| `--specs <testSpecs>` | `runTest` | Yes | Path to a test config file. |
       
 
 ## Considerations
@@ -108,7 +108,7 @@ The following table indicates how the three possible API key locations are imple
 To create a configuration file for an Envoy proxy, use the argument `envoy` of the `config` command, for example:
 
 ```bash
-node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
+node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration
 ```
 
 **Note**: currently, [global rate limit](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/other_features/global_rate_limiting) is not supported, only [local rate limit](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/local_rate_limit_filter). 
@@ -130,7 +130,7 @@ Refer to `templates/envoy.yaml`.
 To create a configuration file for an HAProxy proxy, use the argument `haproxy` of the `config` command, for example:
 
 ```bash
-node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
+node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration
 ```
 
 #### Custom Template
@@ -150,7 +150,7 @@ Refer to `templates/haproxy.cfg`.
 To create a configuration file for a NGINX proxy, use the argument `nginx` of the `config` command, for example:
 
 ```bash
-node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
+node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration
 ```
 
 #### Custom Template
@@ -170,7 +170,7 @@ Refer to `templates/nginx.conf`.
 Unlike in the other three proxies supported by SLA Wizard, besides the main configuration file a dynamic configuration file is needed. This file is the one that SLA Wizard creates. To do that, use the argument `traefik` of the `config` command, for example:
 
 ```bash
-node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --outFile tests/proxy-configuration
+node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration
 ```
 
 #### Custom Template
@@ -188,7 +188,7 @@ The following steps indicate how to create proxy configuration files and validat
 To create the config file of a proxy use the following command:
 
 ```bash
-node src/index.js config <proxy> --oas <pathToOAS> --outFile <destinationFile>
+node src/index.js config <proxy> --oas <pathToOAS> --sla <pathToSLA> --outFile <destinationFile>
 ```
 
 For examples refer to the section [Creating proxy configurations](#creating-proxy-configurations).

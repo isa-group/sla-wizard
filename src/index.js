@@ -6,7 +6,7 @@ var runTest = require('./runTest');
 var commander = require('commander');
 var program = new commander.Command();
 
-// General details
+// CLI tool name and usage
 program
   .name('sla-wizard')
   .usage('<arguments> <options>');
@@ -15,24 +15,32 @@ program
 program.command('config')
   .addArgument(new commander.Argument('<proxy>', 'Proxy for which the configuration should be generated.').choices(['nginx','haproxy','traefik','envoy']))
   .requiredOption('-o, --outFile <configFile>','Config output file.')
-  .option('--sla <slaPath>','One of: 1) single SLA, 2) folder of SLAs, 3) URL returning an array of SLA objects') // TODO: requiredOption
-  .option('--oas <pathToOAS>','Path to an OAS v3 file.', './specs/oas.yaml') // TODO: default value?
+  .option('--sla <slaPath>','One of: 1) single SLA, 2) folder of SLAs, 3) URL returning an array of SLA objects', './specs/sla.yaml') 
+  .option('--oas <pathToOAS>','Path to an OAS v3 file.','./specs/oas.yaml') 
   .option('--customTemplate <customTemplate>','Custom proxy configuration template.')
   .option('--authLocation <authLocation>','Where to look for the authentication parameter.','header') // TODO: choices(['header','query','url'])
   .option('--authName <authName>','Name of the authentication parameter, such as "token" or "apikey".','apikey')
   .action(function(proxy, options) {
-    proxy, options = utils.validateParamsCLI(proxy, options);
-    generate.generateConfigHandle(options.oas, proxy, options.outFile, options.customTemplate);
+    proxy, options = utils.validateParamsCLI(proxy,
+                                             options);
+    generate.generateConfigHandle(options.oas,
+                                  proxy, 
+                                  options.sla, 
+                                  options.outFile, 
+                                  options.customTemplate, 
+                                  options.authLocation,
+                                  options.authName);
   })
 
 // Test command
 program.command('runTest')
   .description('Run test with APIPecker.')
   .requiredOption('--specs <testSpecs>', 'Path to a test config file.')
-  .option('--sla <slaPath>','One of: 1) single SLA, 2) folder of SLAs, 3) URL returning an array of SLA objects') // TODO: requiredOption
-  .option('--oas <pathToOAS>', 'Path to a OAS v3 file.','specs/oas.yaml')
+  .option('--sla <slaPath>','One of: 1) single SLA, 2) folder of SLAs, 3) URL returning an array of SLA objects', './specs/sla.yaml') 
+  .option('--oas <pathToOAS>','Path to an OAS v3 file.','./specs/oas.yaml') 
   .action((options) => {
-    runTest.runTest(options.oas, options.specs);
+    runTest.runTest(options.oas, 
+                    options.specs);
   });
 
 // Program parse

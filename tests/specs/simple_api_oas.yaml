@@ -2,15 +2,6 @@ openapi: 3.0.0
 servers:
   - url: 'http://api:9999'
 info:
-  x-sla:
-    $ref:
-     - ./slas/basic.yaml
-     - ./slas/basic_copy.yaml
-     - ./slas/pro.yaml
-     - /data/universidad/master/tfm/sla-wizard/tests/specs/slas/pro.yaml
-     - ./slas/
-     - /data/universidad/master/tfm/sla-wizard/tests/specs/slas/
-     #- http://localhost:8989/array-of-slas
   version: 1.0.0
   title: Valid specification file
 paths:

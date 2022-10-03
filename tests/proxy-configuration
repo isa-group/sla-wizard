@@ -1,51 +1,76 @@
-static_resources:
-  listeners:
-    - address:
-        socket_address:
-          address: 0.0.0.0
-          port_value: 80
-      filter_chains:
-        - filters:
-            - name: envoy.filters.network.http_connection_manager
-              typed_config:
-                '@type': >-
-                  type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
-                stat_prefix: ingress_http
-                http_filters:
-                  - name: envoy.filters.http.local_ratelimit
-                    typed_config:
-                      '@type': >-
-                        type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
-                      stat_prefix: http_local_rate_limiter
-                  - name: envoy.filters.http.router
-                route_config:
-                  name: local_route
-                  virtual_hosts:
-                    - name: local_service
-                      domains:
-                        - '*'
-                      routes:
-                        - match:
-                            path: /open-endpoint
-                          route:
-                            cluster: main-cluster
-                        - match:
-                            path: /once-per-second-endpoint
-                          route:
-                            cluster: main-cluster
-                        - match:
-                            path: /twice-per-minute-endpoint
-                          route:
-                            cluster: main-cluster
-  clusters:
-    - name: main-cluster
-      type: STRICT_DNS
-      load_assignment:
-        cluster_name: main-cluster
-        endpoints:
-          - lb_endpoints:
-              - endpoint:
-                  address:
-                    socket_address:
-                      address: api
-                      port_value: '9999'
+http:
+  services:
+    main-service:
+      loadBalancer:
+        servers:
+          - url: http://api:9999
+  routers:
+    basic_first-endpoint:
+      rule: >-
+        PathPrefix(`/first-endpoint`) && (Headers(`apikey`,
+        `7B5zIqmRGXmrJTFmKa99-b`) || Headers(`apikey`, `QzVV6y1EmQFbbxOfRCwy-b`)
+        || Headers(`apikey`, `mGcjH8Fv6U9y3BVF9H3Y-b`))
+      service: main-service
+      middlewares:
+        - basic_first-endpoint
+    basic_second-endpoint:
+      rule: >-
+        PathPrefix(`/second-endpoint`) && (Headers(`apikey`,
+        `7B5zIqmRGXmrJTFmKa99-b`) || Headers(`apikey`, `QzVV6y1EmQFbbxOfRCwy-b`)
+        || Headers(`apikey`, `mGcjH8Fv6U9y3BVF9H3Y-b`))
+      service: main-service
+      middlewares:
+        - basic_second-endpoint
+    pro_first-endpoint:
+      rule: >-
+        PathPrefix(`/first-endpoint`) && (Headers(`apikey`,
+        `qmFm7B5zIKa99vcitRGX-p`) || Headers(`apikey`, `RCwyJs35QzVV6y1EmQFb-p`)
+        || Headers(`apikey`, `H8Fv6UmGcj9y3Bb9TVF9-p`))
+      service: main-service
+      middlewares:
+        - pro_first-endpoint
+    pro_second-endpoint:
+      rule: >-
+        PathPrefix(`/second-endpoint`) && (Headers(`apikey`,
+        `qmFm7B5zIKa99vcitRGX-p`) || Headers(`apikey`, `RCwyJs35QzVV6y1EmQFb-p`)
+        || Headers(`apikey`, `H8Fv6UmGcj9y3Bb9TVF9-p`))
+      service: main-service
+      middlewares:
+        - pro_second-endpoint
+    open-endpoint:
+      rule: >-
+        PathPrefix(`/open-endpoint`) && (Headers(`apikey`,
+        `7B5zIqmRGXmrJTFmKa99-b`) || Headers(`apikey`, `QzVV6y1EmQFbbxOfRCwy-b`)
+        || Headers(`apikey`, `mGcjH8Fv6U9y3BVF9H3Y-b`) || Headers(`apikey`,
+        `qmFm7B5zIKa99vcitRGX-p`) || Headers(`apikey`, `RCwyJs35QzVV6y1EmQFb-p`)
+        || Headers(`apikey`, `H8Fv6UmGcj9y3Bb9TVF9-p`))
+      service: main-service
+  middlewares:
+    basic_first-endpoint:
+      rateLimit:
+        sourceCriterion:
+          requestHeaderName: apikey
+        average: 1
+        period: 1s
+        burst: 1
+    basic_second-endpoint:
+      rateLimit:
+        sourceCriterion:
+          requestHeaderName: apikey
+        average: 2
+        period: 1m
+        burst: 2
+    pro_first-endpoint:
+      rateLimit:
+        sourceCriterion:
+          requestHeaderName: apikey
+        average: 10
+        period: 1s
+        burst: 10
+    pro_second-endpoint:
+      rateLimit:
+        sourceCriterion:
+          requestHeaderName: apikey
+        average: 20
+        period: 1m
+        burst: 20

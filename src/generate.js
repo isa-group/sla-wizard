@@ -105,49 +105,72 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
  * @param {object} oasDoc - Open API definition.
  * @param {string} apiServerURL - API server url.
  * @param {string} configTemplatePath - Path to proxy config template.
+ * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
+ * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  */
-function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml'){
+function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml', authLocation, authName){
 
   var traefikTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
 
-  var trackingQueryName = "apikey";
+  var trackingParameterName = authName;
   var routersDefinition = {};
   var middlewaresDefinition = {};
   var limitedPaths = [];
+  var allApikeysAsHeader = "";
 
   for (var subSLA of SLAs){
-    var subSLARates = subSLA["rates"];
+    var planName = subSLA["plan"]["name"];
+    var subSLARates = subSLA["plan"]["rates"];
 
-      for (var endpoint in subSLARates){
-        limitedPaths.push(endpoint);
+    var apikeyCounterPerSLA = 0;
+    var apikeysAsHeader = "";
+    subSLA["context"]["apikeys"].forEach(apikey => {
+      apikeysAsHeader = `${apikeysAsHeader} || Headers(\`${trackingParameterName}\`, \`${apikey}\`)`; // TODO: this is useful only when apikey in header, split function for header, query and url?
+      apikeyCounterPerSLA++;
+    });
+    allApikeysAsHeader = allApikeysAsHeader + apikeysAsHeader;
 
-        for (var method in subSLARates[endpoint]){
-          var method_specs = subSLARates[endpoint][method];
-          var max = method_specs["requests"][0]["max"];
-          var period = method_specs["requests"][0]["period"];
-          var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
-          period = utils.getLimitPeriod(period,"traefik");
-          routersDefinition[sanitized_endpoint] = {
-            rule: `PathPrefix(\`${endpoint}\`)`,
-            service: "main-service",
-            middlewares: [sanitized_endpoint]
+    for (var endpoint in subSLARates){
+      limitedPaths.push(endpoint);
+      
+      for (var method in subSLARates[endpoint]){
+        var method_specs = subSLARates[endpoint][method];
+        var max = method_specs["requests"][0]["max"];
+        var period = method_specs["requests"][0]["period"];
+        var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+        period = utils.getLimitPeriod(period,"traefik");
+                
+        routersDefinition[`${planName}_${sanitized_endpoint}_ak${apikeyCounterPerSLA}`] = {
+          rule: `PathPrefix(\`${endpoint}\`) && (${apikeysAsHeader.replace(' || ','')})`,
+          service: "main-service",
+          middlewares: [`${planName}_${sanitized_endpoint}`, `${planName}_addApikeyHeader_ak${apikeyCounterPerSLA}`] // TODO: if apikey in query, middlewares should include also `${planName}_addApikeyHeader_ak${apikeyCounterPerSLA}`
+        }
+        
+        middlewaresDefinition[`${planName}_${sanitized_endpoint}`] = { // This one is always added, regardless of header, query or url
+          rateLimit: {
+            sourceCriterion: {requestHeaderName: trackingParameterName},
+            average: max,
+            period: `1${period}`,
+            burst: max
           }
-          middlewaresDefinition[sanitized_endpoint] = {
-            rateLimit: {
-              sourceCriterion: {requestHeaderName: trackingQueryName},
-              average: max,
-              period: `1${period}`,
-              burst: max
+        }
+        if (authLocation == "query") {
+          middlewaresDefinition[`${planName}_addApikeyHeader_ak${apikeyCounterPerSLA}`] = {
+            headers: {
+              customRequestHeaders: {
+                trackingHeaderName: "apikey1234" // TODO: trackingHeaderName is a variable that stores a string
+              }
             }
           }
         }
       }
+    }
   }
 
   for (var endpoint in oasDoc.paths){ // "free" endpoints are taken from OAS as they're missing from SLA
     if (!limitedPaths.includes(endpoint)){
       routersDefinition[utils.sanitizeEndpoint(endpoint)] = {
-        rule: `PathPrefix(\`${endpoint}\`)`,
+        rule: `PathPrefix(\`${endpoint}\`) && (${allApikeysAsHeader.replace(' || ','')})`,
         service: "main-service"
       }
     }
@@ -171,7 +194,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
 
   var haproxyTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
 
-  var trackingQueryName = "apikey";
+  var trackingParameterName = "apikey";
   var frontendDefinition = "";
   var backendDefinition = "";
   var limitedPaths = [];
@@ -179,28 +202,28 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
   for (var subSLA of SLAs){
     var subSLARates = subSLA["rates"];
 
-      for (var endpoint in subSLARates){
-        limitedPaths.push(endpoint);
-        var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+    for (var endpoint in subSLARates){
+      limitedPaths.push(endpoint);
+      var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
 
-        for (var method in subSLARates[endpoint]){
-          frontendDefinition += `use_backend ${sanitized_endpoint} if { path_beg ${endpoint} } \n    `
-          var method_specs = subSLARates[endpoint][method];
-          var max = method_specs["requests"][0]["max"];
-          var period = method_specs["requests"][0]["period"];
-          period = utils.getLimitPeriod(period,"haproxy");
-          backendDefinition +=
+      for (var method in subSLARates[endpoint]){
+        frontendDefinition += `use_backend ${sanitized_endpoint} if { path_beg ${endpoint} } \n    `
+        var method_specs = subSLARates[endpoint][method];
+        var max = method_specs["requests"][0]["max"];
+        var period = method_specs["requests"][0]["period"];
+        period = utils.getLimitPeriod(period,"haproxy");
+        backendDefinition +=
 `backend ${sanitized_endpoint}
-    mode http
-    stick-table type binary len 20 size 100k expire 1${period} store http_req_rate(1${period})
-    acl has_token url_param(${trackingQueryName}) -m found
-    acl exceeds_limit url_param(${trackingQueryName}),table_http_req_rate() gt ${max}
-    http-request track-sc0 url_param(${trackingQueryName}) unless exceeds_limit
-    http-request deny deny_status 403 if !has_token
-    http-request deny deny_status 429 if exceeds_limit
-    server ${sanitized_endpoint} ${apiServerURL.replace("http://","")} \n\n` // protocol not allowed here
-        }
+  mode http
+  stick-table type binary len 20 size 100k expire 1${period} store http_req_rate(1${period})
+  acl has_token url_param(${trackingParameterName}) -m found
+  acl exceeds_limit url_param(${trackingParameterName}),table_http_req_rate() gt ${max}
+  http-request track-sc0 url_param(${trackingParameterName}) unless exceeds_limit
+  http-request deny deny_status 403 if !has_token
+  http-request deny deny_status 429 if exceeds_limit
+  server ${sanitized_endpoint} ${apiServerURL.replace("http://","")} \n\n` // protocol not allowed here
       }
+    }
   }
 
   for (var endpoint in oasDoc.paths){
@@ -239,32 +262,31 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   for (var subSLA of SLAs){
     var subSLARates = subSLA["rates"];
 
-      for (var endpoint in subSLARates){
-        limitedPaths.push(endpoint);
+    for (var endpoint in subSLARates){
+      limitedPaths.push(endpoint);
 
-        /////////////// LIMITS
-        for (var method in subSLARates[endpoint]){
-          var method_specs = subSLARates[endpoint][method];
-          var max = method_specs["requests"][0]["max"];
-          var period = method_specs["requests"][0]["period"];
-          var zone_name = utils.sanitizeEndpoint(endpoint);
-          var zone_size = "10m" // 1 megabyte = 16k IPs
-          period = utils.getLimitPeriod(period,"nginx");
-          var limit = `limit_req_zone $http_${trackingHeaderName} ` +
-                  `zone=${zone_name}:${zone_size} rate=${max}r/${period};\n    `
-          limitsDefinition += limit;
-        }
+      /////////////// LIMITS
+      for (var method in subSLARates[endpoint]){
+        var method_specs = subSLARates[endpoint][method];
+        var max = method_specs["requests"][0]["max"];
+        var period = method_specs["requests"][0]["period"];
+        var zone_name = utils.sanitizeEndpoint(endpoint);
+        var zone_size = "10m" // 1 megabyte = 16k IPs
+        period = utils.getLimitPeriod(period,"nginx");
+        var limit = `limit_req_zone $http_${trackingHeaderName} ` +
+                `zone=${zone_name}:${zone_size} rate=${max}r/${period};\n    `
+        limitsDefinition += limit;
+      }
 
-        /////////////// LOCATIONS
-        var location = `
-          location ${endpoint} {
-              proxy_pass ${apiServerURL};
-              limit_req zone=${zone_name};
-          }\n`
-        locationDefinitions += location;
+      /////////////// LOCATIONS
+      var location = `
+        location ${endpoint} {
+            proxy_pass ${apiServerURL};
+            limit_req zone=${zone_name};
+        }\n`
+      locationDefinitions += location;
 
-      };
-
+    };
   }
 
   for (var endpoint in oasDoc.paths){
@@ -316,15 +338,19 @@ function getSLAsFromURL(slasURL,
 
 /**
  * Configuration file generation handle.
- * @param {string} file - Path to the OAS description.
+ * @param {string} oasPath - Path to the OAS description.
  * @param {string} proxyType - Proxy type.
+ * @param {string} slaPath - Path to the SLA description. 
  * @param {string} outFile - Path where to save the produced proxy configuration.
- * @param {string} customTemplate - Path to custom proxy config template.
+ * @param {string} customTemplate - Path to custom proxy config template. 
+ * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
+ * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
+ 
  */
-function generateConfigHandle(file, proxyType, outFile, customTemplate) {
+function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTemplate, authLocation, authName) {
 
   // Load and validate OAS
-  var oasDoc = utils.loadAndValidateOAS(file);
+  var oasDoc = utils.loadAndValidateOAS(oasPath);
 
   // Get server URL
   try {
@@ -336,16 +362,12 @@ function generateConfigHandle(file, proxyType, outFile, customTemplate) {
 
   // Get SLA(s) path(s) from OAS
   var SLApaths = [];
-  var oasLocation = file.substring(0, file.lastIndexOf('/'));
+  var oasLocation = oasPath.substring(0, oasPath.lastIndexOf('/'));
   try {
-    var partialSlaPath = oasDoc["info"]["x-sla"]["$ref"] 
-    if (partialSlaPath == undefined ){
-      configs.logger.error("OAS' info.x-sla property missing value");
-      process.exit();
-    } else if (typeof partialSlaPath === "string" ){
-      SLApaths.push(partialSlaPath);
+    if (typeof slaPath === "string" ){
+      SLApaths.push(slaPath);
     } else {
-      SLApaths = partialSlaPath;
+      SLApaths = slaPath;
     }
   } catch {
     configs.logger.error("OAS' info.x-sla property missing");
@@ -370,19 +392,15 @@ function generateConfigHandle(file, proxyType, outFile, customTemplate) {
                        outFile);
       }
       else {
-        var elementPath = path.join(oasLocation, element);
-        if (path.isAbsolute(element)){ // info.x-sla.$ref can be absolute
-          var elementPath = element;
-        }
-        if (fs.lstatSync(elementPath).isDirectory()) { // FOLDER
-          fs.readdirSync(elementPath).forEach(file => {
-            var slaPath = path.join(elementPath, file); // add base path to SLA paths
+        if (fs.lstatSync(element).isDirectory()) { // FOLDER
+          fs.readdirSync(element).forEach(file => {
+            var slaPath = path.join(element, file); // add base path to SLA paths
             configs.logger.debug(`File in directory: ${slaPath}`);
             SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
           });
         } else { // FILE
           configs.logger.debug(`File: ${element}`);
-          var slaPath = elementPath; // add base path to SLA paths
+          var slaPath = element; // add base path to SLA paths
           SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
         }
 
@@ -395,8 +413,9 @@ function generateConfigHandle(file, proxyType, outFile, customTemplate) {
                             oasDoc,
                             apiServerURL,
                             customTemplate,
-                            outFile)
-
+                            outFile,
+                            authLocation,
+                            authName)
       }
     } catch (err) {
       configs.logger.error(`Error with SLA(s) ${element}: ${err}. Quitting`);
@@ -414,37 +433,49 @@ function generateConfigHandle(file, proxyType, outFile, customTemplate) {
  * @param {string} apiServerURL - API server url.
  * @param {string} customTemplate - Path to custom proxy config template.
  * @param {string} outFile - Path where to save the produced proxy configuration.
+ * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
+ * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  */
 function generateProxyConfig(proxyType,
                     SLAsFiltered,
                     oasDoc,
                     apiServerURL,
                     customTemplate,
-                    outFile){
+                    outFile,
+                    authLocation,
+                    authName){
   switch (proxyType) {
     case 'nginx':
       var proxyConf = generateNginxConfig(SLAsFiltered,
                                           oasDoc,
                                           apiServerURL,
-                                          customTemplate);
+                                          customTemplate,
+                                          authLocation,
+                                          authName);
       break;
     case 'haproxy':
       var proxyConf = generateHAproxyConfig(SLAsFiltered,
                                             oasDoc,
                                             apiServerURL,
-                                            customTemplate);
+                                            customTemplate,
+                                            authLocation,
+                                            authName);
       break;
     case 'traefik':
       var proxyConf = generateTraefikConfig(SLAsFiltered,
                                             oasDoc,
                                             apiServerURL,
-                                            customTemplate);
+                                            customTemplate,
+                                            authLocation,
+                                            authName);
       break;
     case 'envoy':
       var proxyConf = generateEnvoyConfig(SLAsFiltered,
                                             oasDoc,
                                             apiServerURL,
-                                            customTemplate);
+                                            customTemplate,
+                                            authLocation,
+                                            authName);
       break;
   }
   fs.writeFileSync(outFile, proxyConf);
