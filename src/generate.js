@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 var jsyaml = require('js-yaml');
-var jsonschema = require('jsonschema');
+//var jsonschema = require('jsonschema');
 var url = require("url");
 var axios = require("axios");
 var configs = require("./configs");
@@ -181,7 +181,7 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
  * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  */
- function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml', authLocation, authName){
+ function generateTraefikConfig_query(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml', authLocation, authName){
 
   var traefikTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
 
@@ -212,7 +212,7 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
           routersDefinition[`${planName}_${sanitized_endpoint}_ak${i}`] = {
             rule: `PathPrefix(\`${endpoint}\`) && Query(\`${trackingParameterName}=${slaApikeys[i]}\`)`,
             service: "main-service",
-            middlewares: [`${planName}_${sanitized_endpoint}`, `${planName}_addApikeyHeader_ak${i}`] 
+            middlewares: [`${planName}_addApikeyHeader_ak${i}`, `${planName}_${sanitized_endpoint}`] 
           }
           middlewaresDefinition[`${planName}_addApikeyHeader_ak${i}`] = {
             headers: {
@@ -253,6 +253,100 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
   return jsyaml.dump(traefikTemplate)
 }
 
+
+/**
+ * Receives a SLA plan and produces (as string) a Traefik dynamic config file
+ * according to the limitations it defines.
+ * @param {object} SLAs - SLA plan(s).
+ * @param {object} oasDoc - Open API definition.
+ * @param {string} apiServerURL - API server url.
+ * @param {string} configTemplatePath - Path to proxy config template.
+ * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
+ * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
+ */
+ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml', authLocation, authName){
+
+  var traefikTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
+
+  var trackingParameterName = authName;
+  var routersDefinition = {};
+  var middlewaresDefinition = {};
+  var limitedPaths = [];
+  var allProxyApikeys = [];
+
+  for (var subSLA of SLAs){
+    var planName = subSLA["plan"]["name"];
+    var subSLARates = subSLA["plan"]["rates"];
+
+    var slaApikeys = subSLA["context"]["apikeys"]
+    allProxyApikeys = allProxyApikeys.concat(slaApikeys);
+
+    for (var endpoint in subSLARates){
+      limitedPaths.push(endpoint);
+      
+      for (var method in subSLARates[endpoint]){ // TODO: check adding the same middleware/router for multiple methods
+        var method_specs = subSLARates[endpoint][method];
+        var max = method_specs["requests"][0]["max"];
+        var period = method_specs["requests"][0]["period"];
+        var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+        period = utils.getLimitPeriod(period,"traefik");
+                
+        for (var i in slaApikeys) {
+          routersDefinition[`${planName}_${sanitized_endpoint}_ak${i}`] = {
+            rule: `Path(\`${endpoint}/${slaApikeys[i]}\`)`,
+            service: "main-service",
+            middlewares: [`${sanitized_endpoint}-replacePath`, `${planName}_addApikeyHeader_ak${i}`, `${planName}_${sanitized_endpoint}`] 
+          }
+          middlewaresDefinition[`${planName}_addApikeyHeader_ak${i}`] = {
+            headers: {
+              customRequestHeaders: {
+                [trackingParameterName]: slaApikeys[i] 
+              }
+            }
+          }
+        }
+        middlewaresDefinition[`${sanitized_endpoint}-replacePath`] = {
+          replacePath: {
+            path: endpoint
+          }
+        }
+        middlewaresDefinition[`${planName}_${sanitized_endpoint}`] = { // This one is always added, regardless of header, query or url
+          rateLimit: {
+            sourceCriterion: {requestHeaderName: trackingParameterName},
+            average: max,
+            period: `1${period}`,
+            burst: max
+          }
+        }
+      }
+    }
+  }
+
+  for (var endpoint in oasDoc.paths){ // "free" endpoints are taken from OAS as they're missing from SLA
+    var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+    if (!limitedPaths.includes(endpoint)){
+      var rule = `Path(\`${endpoint}\`) && (`;
+      var rule = "";
+      for (var apikey in allProxyApikeys){
+        rule += `Path(\`${endpoint}/${allProxyApikeys[apikey]}\`) || `
+      }
+      routersDefinition[sanitized_endpoint] = {
+        rule: rule.replace(/ \|\| $/,''),
+        service: "main-service",
+        middlewares: [`${sanitized_endpoint}-replacePath`]
+      }
+      middlewaresDefinition[`${sanitized_endpoint}-replacePath`] = {
+        replacePath: {
+          path: endpoint
+        }
+      }
+    }
+  }
+  traefikTemplate.http.services["main-service"].loadBalancer.servers[0].url = apiServerURL
+  traefikTemplate.http.routers = routersDefinition
+  traefikTemplate.http.middlewares = middlewaresDefinition
+  return jsyaml.dump(traefikTemplate)
+}
 
 /**
  * Receives a SLA plan and produces (as string) an HAProxy config file according

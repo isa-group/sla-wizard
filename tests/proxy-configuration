@@ -6,86 +6,100 @@ http:
           - url: http://api:9999
   routers:
     basic_first-endpoint_ak0:
-      rule: PathPrefix(`/first-endpoint`) && Query(`apikey=7B5zIqmRGXmrJTFmKa99-b`)
+      rule: Path(`/first-endpoint/7B5zIqmRGXmrJTFmKa99-b`)
       service: main-service
       middlewares:
-        - basic_first-endpoint
+        - first-endpoint-replacePath
         - basic_addApikeyHeader_ak0
+        - basic_first-endpoint
     basic_first-endpoint_ak1:
-      rule: PathPrefix(`/first-endpoint`) && Query(`apikey=QzVV6y1EmQFbbxOfRCwy-b`)
+      rule: Path(`/first-endpoint/QzVV6y1EmQFbbxOfRCwy-b`)
       service: main-service
       middlewares:
-        - basic_first-endpoint
+        - first-endpoint-replacePath
         - basic_addApikeyHeader_ak1
+        - basic_first-endpoint
     basic_first-endpoint_ak2:
-      rule: PathPrefix(`/first-endpoint`) && Query(`apikey=mGcjH8Fv6U9y3BVF9H3Y-b`)
+      rule: Path(`/first-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b`)
       service: main-service
       middlewares:
+        - first-endpoint-replacePath
+        - basic_addApikeyHeader_ak2
         - basic_first-endpoint
-        - basic_addApikeyHeader_ak2
     basic_second-endpoint_ak0:
-      rule: PathPrefix(`/second-endpoint`) && Query(`apikey=7B5zIqmRGXmrJTFmKa99-b`)
+      rule: Path(`/second-endpoint/7B5zIqmRGXmrJTFmKa99-b`)
       service: main-service
       middlewares:
-        - basic_second-endpoint
+        - second-endpoint-replacePath
         - basic_addApikeyHeader_ak0
+        - basic_second-endpoint
     basic_second-endpoint_ak1:
-      rule: PathPrefix(`/second-endpoint`) && Query(`apikey=QzVV6y1EmQFbbxOfRCwy-b`)
+      rule: Path(`/second-endpoint/QzVV6y1EmQFbbxOfRCwy-b`)
       service: main-service
       middlewares:
-        - basic_second-endpoint
+        - second-endpoint-replacePath
         - basic_addApikeyHeader_ak1
-    basic_second-endpoint_ak2:
-      rule: PathPrefix(`/second-endpoint`) && Query(`apikey=mGcjH8Fv6U9y3BVF9H3Y-b`)
-      service: main-service
-      middlewares:
         - basic_second-endpoint
+    basic_second-endpoint_ak2:
+      rule: Path(`/second-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b`)
+      service: main-service
+      middlewares:
+        - second-endpoint-replacePath
         - basic_addApikeyHeader_ak2
+        - basic_second-endpoint
     pro_first-endpoint_ak0:
-      rule: PathPrefix(`/first-endpoint`) && Query(`apikey=qmFm7B5zIKa99vcitRGX-p`)
+      rule: Path(`/first-endpoint/qmFm7B5zIKa99vcitRGX-p`)
       service: main-service
       middlewares:
-        - pro_first-endpoint
+        - first-endpoint-replacePath
         - pro_addApikeyHeader_ak0
+        - pro_first-endpoint
     pro_first-endpoint_ak1:
-      rule: PathPrefix(`/first-endpoint`) && Query(`apikey=RCwyJs35QzVV6y1EmQFb-p`)
+      rule: Path(`/first-endpoint/RCwyJs35QzVV6y1EmQFb-p`)
       service: main-service
       middlewares:
-        - pro_first-endpoint
+        - first-endpoint-replacePath
         - pro_addApikeyHeader_ak1
+        - pro_first-endpoint
     pro_first-endpoint_ak2:
-      rule: PathPrefix(`/first-endpoint`) && Query(`apikey=H8Fv6UmGcj9y3Bb9TVF9-p`)
+      rule: Path(`/first-endpoint/H8Fv6UmGcj9y3Bb9TVF9-p`)
       service: main-service
       middlewares:
+        - first-endpoint-replacePath
+        - pro_addApikeyHeader_ak2
         - pro_first-endpoint
-        - pro_addApikeyHeader_ak2
     pro_second-endpoint_ak0:
-      rule: PathPrefix(`/second-endpoint`) && Query(`apikey=qmFm7B5zIKa99vcitRGX-p`)
+      rule: Path(`/second-endpoint/qmFm7B5zIKa99vcitRGX-p`)
       service: main-service
       middlewares:
-        - pro_second-endpoint
+        - second-endpoint-replacePath
         - pro_addApikeyHeader_ak0
+        - pro_second-endpoint
     pro_second-endpoint_ak1:
-      rule: PathPrefix(`/second-endpoint`) && Query(`apikey=RCwyJs35QzVV6y1EmQFb-p`)
+      rule: Path(`/second-endpoint/RCwyJs35QzVV6y1EmQFb-p`)
       service: main-service
       middlewares:
-        - pro_second-endpoint
+        - second-endpoint-replacePath
         - pro_addApikeyHeader_ak1
+        - pro_second-endpoint
     pro_second-endpoint_ak2:
-      rule: PathPrefix(`/second-endpoint`) && Query(`apikey=H8Fv6UmGcj9y3Bb9TVF9-p`)
+      rule: Path(`/second-endpoint/H8Fv6UmGcj9y3Bb9TVF9-p`)
       service: main-service
       middlewares:
-        - pro_second-endpoint
+        - second-endpoint-replacePath
         - pro_addApikeyHeader_ak2
+        - pro_second-endpoint
     open-endpoint:
       rule: >-
-        PathPrefix(`/open-endpoint`) && (Query(`apikey=7B5zIqmRGXmrJTFmKa99-b`)
-        || Query(`apikey=QzVV6y1EmQFbbxOfRCwy-b`) ||
-        Query(`apikey=mGcjH8Fv6U9y3BVF9H3Y-b`) ||
-        Query(`apikey=qmFm7B5zIKa99vcitRGX-p`) ||
-        Query(`apikey=RCwyJs35QzVV6y1EmQFb-p`) ||
-        Query(`apikey=H8Fv6UmGcj9y3Bb9TVF9-p`))
+        Path(`/open-endpoint/7B5zIqmRGXmrJTFmKa99-b`) ||
+        Path(`/open-endpoint/QzVV6y1EmQFbbxOfRCwy-b`) ||
+        Path(`/open-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b`) ||
+        Path(`/open-endpoint/qmFm7B5zIKa99vcitRGX-p`) ||
+        Path(`/open-endpoint/RCwyJs35QzVV6y1EmQFb-p`) ||
+        Path(`/open-endpoint/H8Fv6UmGcj9y3Bb9TVF9-p`)
       service: main-service
+      middlewares:
+        - open-endpoint-replacePath
   middlewares:
     basic_addApikeyHeader_ak0:
       headers:
@@ -99,6 +113,9 @@ http:
       headers:
         customRequestHeaders:
           apikey: mGcjH8Fv6U9y3BVF9H3Y-b
+    first-endpoint-replacePath:
+      replacePath:
+        path: /first-endpoint
     basic_first-endpoint:
       rateLimit:
         sourceCriterion:
@@ -106,6 +123,9 @@ http:
         average: 1
         period: 1s
         burst: 1
+    second-endpoint-replacePath:
+      replacePath:
+        path: /second-endpoint
     basic_second-endpoint:
       rateLimit:
         sourceCriterion:
@@ -139,3 +159,6 @@ http:
         average: 20
         period: 1m
         burst: 20
+    open-endpoint-replacePath:
+      replacePath:
+        path: /open-endpoint
