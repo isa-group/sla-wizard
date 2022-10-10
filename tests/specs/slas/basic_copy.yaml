@@ -7,9 +7,9 @@ context:
   provider: ISAGroup
   customer: FOO S.L
   apikeys:
-    - 7B5zIqmRGXmrJTFmKa99-b # client_one_basic
-    - QzVV6y1EmQFbbxOfRCwy-b # client_two_basic
-    - mGcjH8Fv6U9y3BVF9H3Y-b # client_three_basic
+    - 7B5zIqmRGXmrJTFmKa99-b  
+    - QzVV6y1EmQFbbxOfRCwy-b  
+    - mGcjH8Fv6U9y3BVF9H3Y-b 
   validity:
     from: "2022-11-23T20:20:40+00:00"
     to: "2023-11-23T20:20:40+00:00"
@@ -26,13 +26,26 @@ plan:
       billing: monthly
   availability: "2022-11-23T20:20:40+00:00"
   rates:
-    /first-endpoint:
+    /pets:
       get:
         requests:
           - max: 1
             period: second
-    /second-endpoint:
-      get:
-        requests:
+      post:
+        requests: 
           - max: 2
             period: minute
+    /pets/{id}:
+      get:
+        requests:
+          - max: 3
+            period: second
+      put:
+        requests:
+          - max: 4
+            period: minute
+      delete:
+        requests:
+          - max: 5
+            period: second
+    

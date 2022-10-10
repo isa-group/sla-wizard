@@ -5,101 +5,83 @@ http:
         servers:
           - url: http://api:9999
   routers:
-    basic_first-endpoint_ak0:
-      rule: Path(`/first-endpoint/7B5zIqmRGXmrJTFmKa99-b`)
+    basic_pets_ak0:
+      rule: PathPrefix(`/pets`) && Query(`apikey=7B5zIqmRGXmrJTFmKa99-b`)
       service: main-service
       middlewares:
-        - first-endpoint-replacePath
         - basic_addApikeyHeader_ak0
-        - basic_first-endpoint
-    basic_first-endpoint_ak1:
-      rule: Path(`/first-endpoint/QzVV6y1EmQFbbxOfRCwy-b`)
+        - basic_pets
+    basic_pets_ak1:
+      rule: PathPrefix(`/pets`) && Query(`apikey=QzVV6y1EmQFbbxOfRCwy-b`)
       service: main-service
       middlewares:
-        - first-endpoint-replacePath
         - basic_addApikeyHeader_ak1
-        - basic_first-endpoint
-    basic_first-endpoint_ak2:
-      rule: Path(`/first-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b`)
+        - basic_pets
+    basic_pets_ak2:
+      rule: PathPrefix(`/pets`) && Query(`apikey=mGcjH8Fv6U9y3BVF9H3Y-b`)
       service: main-service
       middlewares:
-        - first-endpoint-replacePath
         - basic_addApikeyHeader_ak2
-        - basic_first-endpoint
-    basic_second-endpoint_ak0:
-      rule: Path(`/second-endpoint/7B5zIqmRGXmrJTFmKa99-b`)
+        - basic_pets
+    basic_petsid_ak0:
+      rule: PathPrefix(`/pets/{id}`) && Query(`apikey=7B5zIqmRGXmrJTFmKa99-b`)
       service: main-service
       middlewares:
-        - second-endpoint-replacePath
         - basic_addApikeyHeader_ak0
-        - basic_second-endpoint
-    basic_second-endpoint_ak1:
-      rule: Path(`/second-endpoint/QzVV6y1EmQFbbxOfRCwy-b`)
+        - basic_petsid
+    basic_petsid_ak1:
+      rule: PathPrefix(`/pets/{id}`) && Query(`apikey=QzVV6y1EmQFbbxOfRCwy-b`)
       service: main-service
       middlewares:
-        - second-endpoint-replacePath
         - basic_addApikeyHeader_ak1
-        - basic_second-endpoint
-    basic_second-endpoint_ak2:
-      rule: Path(`/second-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b`)
+        - basic_petsid
+    basic_petsid_ak2:
+      rule: PathPrefix(`/pets/{id}`) && Query(`apikey=mGcjH8Fv6U9y3BVF9H3Y-b`)
       service: main-service
       middlewares:
-        - second-endpoint-replacePath
         - basic_addApikeyHeader_ak2
-        - basic_second-endpoint
-    pro_first-endpoint_ak0:
-      rule: Path(`/first-endpoint/qmFm7B5zIKa99vcitRGX-p`)
+        - basic_petsid
+    pro_pets_ak0:
+      rule: PathPrefix(`/pets`) && Query(`apikey=qmFm7B5zIKa99vcitRGX-p`)
       service: main-service
       middlewares:
-        - first-endpoint-replacePath
         - pro_addApikeyHeader_ak0
-        - pro_first-endpoint
-    pro_first-endpoint_ak1:
-      rule: Path(`/first-endpoint/RCwyJs35QzVV6y1EmQFb-p`)
+        - pro_pets
+    pro_pets_ak1:
+      rule: PathPrefix(`/pets`) && Query(`apikey=RCwyJs35QzVV6y1EmQFb-p`)
       service: main-service
       middlewares:
-        - first-endpoint-replacePath
         - pro_addApikeyHeader_ak1
-        - pro_first-endpoint
-    pro_first-endpoint_ak2:
-      rule: Path(`/first-endpoint/H8Fv6UmGcj9y3Bb9TVF9-p`)
+        - pro_pets
+    pro_pets_ak2:
+      rule: PathPrefix(`/pets`) && Query(`apikey=H8Fv6UmGcj9y3Bb9TVF9-p`)
       service: main-service
       middlewares:
-        - first-endpoint-replacePath
         - pro_addApikeyHeader_ak2
-        - pro_first-endpoint
-    pro_second-endpoint_ak0:
-      rule: Path(`/second-endpoint/qmFm7B5zIKa99vcitRGX-p`)
+        - pro_pets
+    pro_petsid_ak0:
+      rule: PathPrefix(`/pets/{id}`) && Query(`apikey=qmFm7B5zIKa99vcitRGX-p`)
       service: main-service
       middlewares:
-        - second-endpoint-replacePath
         - pro_addApikeyHeader_ak0
-        - pro_second-endpoint
-    pro_second-endpoint_ak1:
-      rule: Path(`/second-endpoint/RCwyJs35QzVV6y1EmQFb-p`)
+        - pro_petsid
+    pro_petsid_ak1:
+      rule: PathPrefix(`/pets/{id}`) && Query(`apikey=RCwyJs35QzVV6y1EmQFb-p`)
       service: main-service
       middlewares:
-        - second-endpoint-replacePath
         - pro_addApikeyHeader_ak1
-        - pro_second-endpoint
-    pro_second-endpoint_ak2:
-      rule: Path(`/second-endpoint/H8Fv6UmGcj9y3Bb9TVF9-p`)
+        - pro_petsid
+    pro_petsid_ak2:
+      rule: PathPrefix(`/pets/{id}`) && Query(`apikey=H8Fv6UmGcj9y3Bb9TVF9-p`)
       service: main-service
       middlewares:
-        - second-endpoint-replacePath
         - pro_addApikeyHeader_ak2
-        - pro_second-endpoint
-    open-endpoint:
+        - pro_petsid
+    open-endpoint_get:
       rule: >-
-        Path(`/open-endpoint/7B5zIqmRGXmrJTFmKa99-b`) ||
-        Path(`/open-endpoint/QzVV6y1EmQFbbxOfRCwy-b`) ||
-        Path(`/open-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b`) ||
-        Path(`/open-endpoint/qmFm7B5zIKa99vcitRGX-p`) ||
-        Path(`/open-endpoint/RCwyJs35QzVV6y1EmQFb-p`) ||
-        Path(`/open-endpoint/H8Fv6UmGcj9y3Bb9TVF9-p`)
+        PathPrefix(`/open-endpoint`) && Method(`GET`) &&
+        Query(`apikey={7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b|qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p}`)
       service: main-service
-      middlewares:
-        - open-endpoint-replacePath
   middlewares:
     basic_addApikeyHeader_ak0:
       headers:
@@ -113,26 +95,20 @@ http:
       headers:
         customRequestHeaders:
           apikey: mGcjH8Fv6U9y3BVF9H3Y-b
-    first-endpoint-replacePath:
-      replacePath:
-        path: /first-endpoint
-    basic_first-endpoint:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 1
-        period: 1s
-        burst: 1
-    second-endpoint-replacePath:
-      replacePath:
-        path: /second-endpoint
-    basic_second-endpoint:
+    basic_pets:
       rateLimit:
         sourceCriterion:
           requestHeaderName: apikey
         average: 2
         period: 1m
         burst: 2
+    basic_petsid:
+      rateLimit:
+        sourceCriterion:
+          requestHeaderName: apikey
+        average: 5
+        period: 1s
+        burst: 5
     pro_addApikeyHeader_ak0:
       headers:
         customRequestHeaders:
@@ -145,20 +121,17 @@ http:
       headers:
         customRequestHeaders:
           apikey: H8Fv6UmGcj9y3Bb9TVF9-p
-    pro_first-endpoint:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 10
-        period: 1s
-        burst: 10
-    pro_second-endpoint:
+    pro_pets:
       rateLimit:
         sourceCriterion:
           requestHeaderName: apikey
         average: 20
         period: 1m
         burst: 20
-    open-endpoint-replacePath:
-      replacePath:
-        path: /open-endpoint
+    pro_petsid:
+      rateLimit:
+        sourceCriterion:
+          requestHeaderName: apikey
+        average: 50
+        period: 1s
+        burst: 50

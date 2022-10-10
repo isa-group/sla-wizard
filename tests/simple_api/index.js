@@ -8,16 +8,22 @@ app.listen(port, function(){
 });
 
 app.get("/open-endpoint", function(req,res){
-  res.send({"endpoint":"/open-endpoint",
-            "description": "There's no restriction on this endpoint"});
+  res.send({"endpoint": req.originalUrl, "description": "GET"});
 });
 
-app.get("/first-endpoint", function(req,res){
-  res.send({"endpoint":"/first-endpoint",
-            "description": "This is the first endpoint."});
+app.get("/pets", function(req,res){
+  res.send({"endpoint": req.originalUrl, "description": "GET"});
+});
+app.post("/pets", function(req,res){
+  res.send({"endpoint": req.originalUrl, "description": "POST"});
 });
 
-app.get("/second-endpoint", function(req,res){
-  res.send({"endpoint":"/second-endpoint",
-            "description": "This is the second endpoint."});
+app.get("/pets/:id", function(req,res){
+  res.send({"endpoint": req.originalUrl, "description": "GET with id " + req.params.id});
+});
+app.put("/pets/:id", function(req,res){
+  res.send({"endpoint": req.originalUrl, "description": "PUT with id " + req.params.id});
+});
+app.delete("/pets/:id", function(req,res){
+  res.send({"endpoint": req.originalUrl, "description": "DELETE with id " + req.params.id});
 });

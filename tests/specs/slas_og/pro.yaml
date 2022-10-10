@@ -26,26 +26,26 @@ plan:
       billing: monthly
   availability: "2022-11-23T20:20:40+00:00"
   rates:
-    /pets:
+    /first-endpoint:
       get:
         requests:
           - max: 10
             period: second
-      post:
-        requests: 
-          - max: 20
-            period: minute
-    /pets/{id}:
+    /second-endpoint:
       get:
         requests:
+          - max: 20
+            period: minute
+      post:
+        requests:
           - max: 30
+            period: minute
+    /third-endpoint:
+      delete:
+        requests:
+          - max: 40
             period: second
       put:
         requests:
-          - max: 40
-            period: minute
-      delete:
-        requests:
           - max: 50
-            period: second
-    
+            period: minute

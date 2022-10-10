@@ -1,0 +1,58 @@
+openapi: 3.0.0
+servers:
+  - url: 'http://api:9999'
+info:
+  version: 1.0.0
+  title: Valid specification file
+paths:
+  /open-endpoint:
+    get:
+      summary: There's no restriction on this endpoint
+      responses:
+        '200':
+          description: Just a static response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleObj"
+  /first-endpoint:
+    get:
+      summary: This is the first endpoint, usable with the GET method. 
+      responses:
+        '200':
+          description: Just a static response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleObj"
+  /second-endpoint:
+    get:
+      summary: This is the second endpoint, usable with the GET method. 
+      responses:
+        '200':
+          description: Just a static response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleObj"
+  /third-endpoint:
+    post:
+      summary: This is the third endpoint, usable with the POST method. 
+      responses:
+        '201':
+          description: Just a static response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleObj"
+components:
+  schemas:
+    SampleObj:
+      required:
+        - endpoint
+        - description
+      properties:
+        endpoint:
+          type: string
+        description:
+          type: string
