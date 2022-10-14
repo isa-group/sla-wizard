@@ -111,8 +111,6 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
 function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml', authLocation, authName){
 
   var traefikTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
-
-  var trackingParameterName = authName;
   var routersDefinition = {};
   var middlewaresDefinition = {};
   var limitedPaths = [];
@@ -124,29 +122,28 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
 
     var apikeysAsHeader = "";
     subSLA["context"]["apikeys"].forEach(apikey => {
-      apikeysAsHeader = `${apikeysAsHeader} || Headers(\`${trackingParameterName}\`, \`${apikey}\`)`; // TODO: this is useful only when apikey in header, split function for header, query and url?
+      apikeysAsHeader = `${apikeysAsHeader} || HeadersRegexp(\`${authName}\`, \`${apikey}\`)`; // TODO: this is useful only when apikey in header, split function for header, query and url?
     });
     allApikeysAsHeader = allApikeysAsHeader + apikeysAsHeader;
 
     for (var endpoint in subSLARates){
       limitedPaths.push(endpoint);
-      
+      var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+
       for (var method in subSLARates[endpoint]){
         var method_specs = subSLARates[endpoint][method];
         var max = method_specs["requests"][0]["max"];
-        var period = method_specs["requests"][0]["period"];
-        var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
-        period = utils.getLimitPeriod(period,"traefik");
+        var period = utils.getLimitPeriod(method_specs["requests"][0]["period"],"traefik");
                 
         routersDefinition[`${planName}_${sanitized_endpoint}`] = {
-          rule: `PathPrefix(\`${endpoint}\`) && (${apikeysAsHeader.replace(' || ','')})`,
+          rule: `Path(\`${endpoint}\`) && (${apikeysAsHeader.replace(' || ','')})`,
           service: "main-service",
           middlewares: [`${planName}_${sanitized_endpoint}`] 
         }
         
-        middlewaresDefinition[`${planName}_${sanitized_endpoint}`] = { // This one is always added, regardless of header, query or url
+        middlewaresDefinition[`${planName}_${sanitized_endpoint}_${method}`] = { // This one is always added, regardless of header, query or url
           rateLimit: {
-            sourceCriterion: {requestHeaderName: trackingParameterName},
+            sourceCriterion: {requestHeaderName: authName},
             average: max,
             period: `1${period}`,
             burst: max
@@ -159,7 +156,7 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
   for (var endpoint in oasDoc.paths){ // "free" endpoints are taken from OAS as they're missing from SLA
     if (!limitedPaths.includes(endpoint)){
       routersDefinition[utils.sanitizeEndpoint(endpoint)] = {
-        rule: `PathPrefix(\`${endpoint}\`) && (${allApikeysAsHeader.replace(' || ','')})`,
+        rule: `Path(\`${endpoint}\`) && (${allApikeysAsHeader.replace(' || ','')})`,
         service: "main-service"
       }
     }
@@ -184,7 +181,6 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
  function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml', authLocation, authName){
 
   var traefikTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
-
   var routersDefinition = {};
   var middlewaresDefinition = {};
   var limitedPaths = [];
@@ -198,19 +194,35 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
 
     for (var endpoint in subSLARates){
       limitedPaths.push(endpoint);
-      
+      var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+
       for (var method in subSLARates[endpoint]){
         var method_specs = subSLARates[endpoint][method];
         var max = method_specs["requests"][0]["max"];
-        var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
         var period = utils.getLimitPeriod(method_specs["requests"][0]["period"],"traefik");
                 
         for (var i in slaApikeys) {
-          routersDefinition[`${planName}_${sanitized_endpoint}_ak${i}`] = {
-            rule: `PathPrefix(\`${endpoint}\`) && Query(\`${authName}=${slaApikeys[i]}\`)`,
-            service: "main-service",
-            middlewares: [`${planName}_addApikeyHeader_ak${i}`, `${planName}_${sanitized_endpoint}`] 
+          if (authLocation == "query"){
+            routersDefinition[`${planName}_${sanitized_endpoint}_ak${i}_${method}`] = {
+              rule: `Path(\`${endpoint}\`) && Method(\`${method.toUpperCase()}\`) && Query(\`${authName}=${slaApikeys[i]}\`)`, 
+              service: "main-service",
+              middlewares: [`${planName}_addApikeyHeader_ak${i}`, `${planName}_${sanitized_endpoint}_${method}`] 
+            }
+          } else if (authLocation == "url"){
+            routersDefinition[`${planName}_${sanitized_endpoint}_ak${i}_${method}`] = {
+              rule: `Path(\`${endpoint}/${slaApikeys[i]}\`) && Method(\`${method.toUpperCase()}\`)`,
+              service: "main-service",
+              middlewares: ["removeApikeyFromURL", `${planName}_addApikeyHeader_ak${i}`, `${planName}_${sanitized_endpoint}_${method}`] 
+            }
+          } else if (authLocation == "header"){ // TODO: no loop needed in this case
+            routersDefinition[`${planName}_${sanitized_endpoint}_${method}`] = {
+              rule: `Path(\`${endpoint}\`) && Method(\`${method.toUpperCase()}\`) && HeadersRegexp(\`${authName}\`, \`${slaApikeys.join('|')}\`)`,
+              service: "main-service",
+              middlewares: [`${planName}_${sanitized_endpoint}_${method}`] 
+            }
+            break;
           }
+          
           middlewaresDefinition[`${planName}_addApikeyHeader_ak${i}`] = {
             headers: {
               customRequestHeaders: {
@@ -220,7 +232,7 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
           }
         }
         
-        middlewaresDefinition[`${planName}_${sanitized_endpoint}`] = { // This one is always added, regardless of header, query or url
+        middlewaresDefinition[`${planName}_${sanitized_endpoint}_${method}`] = { // This one is always added, regardless of header, query or url
           rateLimit: {
             sourceCriterion: {requestHeaderName: authName},
             average: max,
@@ -232,18 +244,41 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
     }
   }
 
-  var allProxyApikeys_regex = allProxyApikeys.join('|'); // +'$' // TODO: dollar needed?
+  var allProxyApikeys_regex = allProxyApikeys.join('|'); 
   for (var endpoint in oasDoc.paths){ // "free" endpoints are taken from OAS as they're missing from SLA
     var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
     if (!limitedPaths.includes(endpoint)){
       for (var method in oasDoc.paths[endpoint]){
-        routersDefinition[`${sanitized_endpoint}_${method}`] = {
-          rule: `PathPrefix(\`${endpoint}\`) && Method(\`${method.toUpperCase()}\`) && Query(\`${authName}={${allProxyApikeys_regex}}\`)`, 
-          service: "main-service"
-        }    
+        if (authLocation == "query"){
+          routersDefinition[`${sanitized_endpoint}_${method}`] = {
+            rule: `Path(\`${endpoint}\`) && Method(\`${method.toUpperCase()}\`) && Query(\`${authName}={${allProxyApikeys_regex}}\`)`, 
+            service: "main-service"
+          }
+        } else if (authLocation == "url") {
+          routersDefinition[`${sanitized_endpoint}_${method}`] = {
+            rule: `Path(\`${endpoint}/${slaApikeys[i]}\`) && Method(\`${method.toUpperCase()}\`)`, 
+            service: "main-service",
+            middlewares: ["removeApikeyFromURL"] 
+          }
+        } else if (authLocation == "header") {
+          routersDefinition[`${sanitized_endpoint}_${method}`] = {
+            rule: `Path(\`${endpoint}\`) && Method(\`${method.toUpperCase()}\`) && HeadersRegexp(\`${authName}\`, \`${allProxyApikeys_regex}\`)`, 
+            service: "main-service"
+          }
+        }
       }
     }
   }
+
+  if (authLocation == "url") {
+    middlewaresDefinition["removeApikeyFromURL"] = { // TODO: diff, only for URL. TODO: does not depend on the endpoint or method, but on the APIkey
+      replacePathRegex: {
+        regex: `/${allProxyApikeys_regex}`,
+        replacement: "$1"
+      }
+    }
+  }
+
   traefikTemplate.http.services["main-service"].loadBalancer.servers[0].url = apiServerURL
   traefikTemplate.http.routers = routersDefinition
   traefikTemplate.http.middlewares = middlewaresDefinition
@@ -264,7 +299,6 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
  function generateTraefikConfig_url(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml', authLocation, authName){
 
   var traefikTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
-
   var routersDefinition = {};
   var middlewaresDefinition = {};
   var limitedPaths = [];
@@ -312,21 +346,21 @@ function generateTraefikConfig_header(SLAs, oasDoc, apiServerURL, configTemplate
     }
   }
 
-  var allProxyApikeys_regex = allProxyApikeys.join('|'); // +'$' // TODO: dollar needed?
+  var allProxyApikeys_regex = allProxyApikeys.join('|'); 
   for (var endpoint in oasDoc.paths){ // "free" endpoints are taken from OAS as they're missing from SLA
     var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
     if (!limitedPaths.includes(endpoint)){
       for (var method in oasDoc.paths[endpoint]){
         routersDefinition[`${sanitized_endpoint}_${method}`] = {
-          rule: `Method(\`${method.toUpperCase()}\`) && Path(\`${endpoint}/{${allProxyApikeys_regex}}\`)`, // TODO: this does not work
+          rule: `Path(\`${endpoint}/${slaApikeys[i]}\`) && Method(\`${method.toUpperCase()}\`)`, // TODO: diff
           service: "main-service",
-          middlewares: ["removeApikeyFromURL"]
+          middlewares: ["removeApikeyFromURL"] // TODO: diff, only for URL
         }    
       }
     }
   }
 
-  middlewaresDefinition["removeApikeyFromURL"] = { // TODO: does not depend on the endpoint or method, but on the APIkey
+  middlewaresDefinition["removeApikeyFromURL"] = { // TODO: diff, only for URL. TODO: does not depend on the endpoint or method, but on the APIkey
     replacePathRegex: {
       regex: `/${allProxyApikeys_regex}`,
       replacement: "$1"
