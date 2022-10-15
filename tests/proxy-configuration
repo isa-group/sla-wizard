@@ -1,23 +1,23 @@
 events {}
 http {
 
-    limit_req_zone $http_apikey zone=basic_pets_GET:10m rate=1r/s;
-    limit_req_zone $http_apikey zone=basic_pets_POST:10m rate=2r/m;
-    limit_req_zone $http_apikey zone=basic_petsid_GET:10m rate=3r/s;
-    limit_req_zone $http_apikey zone=basic_petsid_PUT:10m rate=4r/m;
-    limit_req_zone $http_apikey zone=basic_petsid_DELETE:10m rate=5r/s;
-    limit_req_zone $http_apikey zone=pro_pets_GET:10m rate=10r/s;
-    limit_req_zone $http_apikey zone=pro_pets_POST:10m rate=20r/m;
-    limit_req_zone $http_apikey zone=pro_petsid_GET:10m rate=30r/s;
-    limit_req_zone $http_apikey zone=pro_petsid_PUT:10m rate=40r/m;
-    limit_req_zone $http_apikey zone=pro_petsid_DELETE:10m rate=50r/s;
+    limit_req_zone $arg_apikey zone=basic_pets_GET:10m rate=1r/s;
+    limit_req_zone $arg_apikey zone=basic_pets_POST:10m rate=2r/m;
+    limit_req_zone $arg_apikey zone=basic_petsid_GET:10m rate=3r/s;
+    limit_req_zone $arg_apikey zone=basic_petsid_PUT:10m rate=4r/m;
+    limit_req_zone $arg_apikey zone=basic_petsid_DELETE:10m rate=5r/s;
+    limit_req_zone $arg_apikey zone=pro_pets_GET:10m rate=10r/s;
+    limit_req_zone $arg_apikey zone=pro_pets_POST:10m rate=20r/m;
+    limit_req_zone $arg_apikey zone=pro_petsid_GET:10m rate=30r/s;
+    limit_req_zone $arg_apikey zone=pro_petsid_PUT:10m rate=40r/m;
+    limit_req_zone $arg_apikey zone=pro_petsid_DELETE:10m rate=50r/s;
     
 
     limit_req_status 429;
 
     map_hash_bucket_size 128;
 
-    map $http_apikey $api_client_name {
+    map $arg_apikey $api_client_name {
      default ""; 
      "~(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b)" "basic";
      "~(qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)" "pro";
@@ -25,7 +25,7 @@ http {
 
     server {
 
-      if ($http_apikey = "") {
+      if ($arg_apikey = "") {
           return 401; # Unauthorized
       }
       if ($api_client_name = "") {

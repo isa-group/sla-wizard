@@ -288,13 +288,21 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
  */
 function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/nginx.conf', authLocation, authName){
 
-  var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
+  var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString(); // TODO: should simplify the template 
   var limitsDefinition = "";
   var locationDefinitions = "";
-  var mapApikeysDefinition = `map $http_${authName} $api_client_name {\n     default ""; \n`;
   var uriRewrites = "";
   var limitedPaths = [];
   var allProxyApikeys = [];
+
+  if (authLocation == "header") {
+    authLocation = "http";
+  } else if (authLocation == "query") {
+    authLocation = "arg";
+  } else {
+    console.log("TODO")
+  }
+  var mapApikeysDefinition = `map $${authLocation}_${authName} $api_client_name {\n     default ""; \n`;
 
   for (var subSLA of SLAs){
     var planName = subSLA["plan"]["name"];
@@ -315,7 +323,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
         var zone_size = "10m" // 1 megabyte = 16k IPs
       
         /////////////// LIMITS
-        var limit = `limit_req_zone $http_${authName} ` +
+        var limit = `limit_req_zone $${authLocation}_${authName} ` +
                 `zone=${zone_name}:${zone_size} rate=${max}r/${period};\n    `
         limitsDefinition += limit;
 
@@ -360,6 +368,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   return nginxTemplate
             .replace('%%LIMIT_REQ_ZONE_PH%%', limitsDefinition)
             .replace('%%MAP_APIKEYS_PH%%', mapApikeysDefinition + '    }')
+            .replace('%%AUTH_LOCATION_PH%%', authLocation)
             .replace('%%URI_REWRITES_PH%%', uriRewrites)
             .replace('%%LOCATIONS_PH%%', locationDefinitions);
 }
