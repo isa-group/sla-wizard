@@ -10,6 +10,9 @@ app.listen(port, function(){
 app.get("/open-endpoint", function(req,res){
   res.send({"endpoint": req.originalUrl, "description": "GET"});
 });
+app.post("/open-endpoint", function(req,res){
+  res.send({"endpoint": req.originalUrl, "description": "POST"});
+});
 
 app.get("/pets", function(req,res){
   res.send({"endpoint": req.originalUrl, "description": "GET"});

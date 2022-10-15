@@ -146,7 +146,16 @@ paths:
                 $ref: '#/components/schemas/Error'
   /open-endpoint:
     get:
-      summary: There's no restriction on this endpoint
+      summary: There's no restriction on this endpoint (GET)
+      responses:
+        '200':
+          description: Just a static response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SampleObj"
+    post:
+      summary: There's no restriction on this endpoint (POST)
       responses:
         '200':
           description: Just a static response

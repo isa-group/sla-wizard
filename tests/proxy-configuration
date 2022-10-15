@@ -1,322 +1,119 @@
-http:
-  services:
-    main-service:
-      loadBalancer:
-        servers:
-          - url: http://api:9999
-  routers:
-    basic_pets_ak0_get:
-      rule: Path(`/pets/7B5zIqmRGXmrJTFmKa99-b`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak0
-        - basic_pets_get
-    basic_pets_ak1_get:
-      rule: Path(`/pets/QzVV6y1EmQFbbxOfRCwy-b`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak1
-        - basic_pets_get
-    basic_pets_ak2_get:
-      rule: Path(`/pets/mGcjH8Fv6U9y3BVF9H3Y-b`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak2
-        - basic_pets_get
-    basic_pets_ak0_post:
-      rule: Path(`/pets/7B5zIqmRGXmrJTFmKa99-b`) && Method(`POST`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak0
-        - basic_pets_post
-    basic_pets_ak1_post:
-      rule: Path(`/pets/QzVV6y1EmQFbbxOfRCwy-b`) && Method(`POST`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak1
-        - basic_pets_post
-    basic_pets_ak2_post:
-      rule: Path(`/pets/mGcjH8Fv6U9y3BVF9H3Y-b`) && Method(`POST`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak2
-        - basic_pets_post
-    basic_petsid_ak0_get:
-      rule: Path(`/pets/{id}/7B5zIqmRGXmrJTFmKa99-b`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak0
-        - basic_petsid_get
-    basic_petsid_ak1_get:
-      rule: Path(`/pets/{id}/QzVV6y1EmQFbbxOfRCwy-b`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak1
-        - basic_petsid_get
-    basic_petsid_ak2_get:
-      rule: Path(`/pets/{id}/mGcjH8Fv6U9y3BVF9H3Y-b`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak2
-        - basic_petsid_get
-    basic_petsid_ak0_put:
-      rule: Path(`/pets/{id}/7B5zIqmRGXmrJTFmKa99-b`) && Method(`PUT`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak0
-        - basic_petsid_put
-    basic_petsid_ak1_put:
-      rule: Path(`/pets/{id}/QzVV6y1EmQFbbxOfRCwy-b`) && Method(`PUT`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak1
-        - basic_petsid_put
-    basic_petsid_ak2_put:
-      rule: Path(`/pets/{id}/mGcjH8Fv6U9y3BVF9H3Y-b`) && Method(`PUT`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak2
-        - basic_petsid_put
-    basic_petsid_ak0_delete:
-      rule: Path(`/pets/{id}/7B5zIqmRGXmrJTFmKa99-b`) && Method(`DELETE`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak0
-        - basic_petsid_delete
-    basic_petsid_ak1_delete:
-      rule: Path(`/pets/{id}/QzVV6y1EmQFbbxOfRCwy-b`) && Method(`DELETE`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak1
-        - basic_petsid_delete
-    basic_petsid_ak2_delete:
-      rule: Path(`/pets/{id}/mGcjH8Fv6U9y3BVF9H3Y-b`) && Method(`DELETE`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - basic_addApikeyHeader_ak2
-        - basic_petsid_delete
-    pro_pets_ak0_get:
-      rule: Path(`/pets/qmFm7B5zIKa99vcitRGX-p`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak0
-        - pro_pets_get
-    pro_pets_ak1_get:
-      rule: Path(`/pets/RCwyJs35QzVV6y1EmQFb-p`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak1
-        - pro_pets_get
-    pro_pets_ak2_get:
-      rule: Path(`/pets/H8Fv6UmGcj9y3Bb9TVF9-p`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak2
-        - pro_pets_get
-    pro_pets_ak0_post:
-      rule: Path(`/pets/qmFm7B5zIKa99vcitRGX-p`) && Method(`POST`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak0
-        - pro_pets_post
-    pro_pets_ak1_post:
-      rule: Path(`/pets/RCwyJs35QzVV6y1EmQFb-p`) && Method(`POST`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak1
-        - pro_pets_post
-    pro_pets_ak2_post:
-      rule: Path(`/pets/H8Fv6UmGcj9y3Bb9TVF9-p`) && Method(`POST`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak2
-        - pro_pets_post
-    pro_petsid_ak0_get:
-      rule: Path(`/pets/{id}/qmFm7B5zIKa99vcitRGX-p`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak0
-        - pro_petsid_get
-    pro_petsid_ak1_get:
-      rule: Path(`/pets/{id}/RCwyJs35QzVV6y1EmQFb-p`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak1
-        - pro_petsid_get
-    pro_petsid_ak2_get:
-      rule: Path(`/pets/{id}/H8Fv6UmGcj9y3Bb9TVF9-p`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak2
-        - pro_petsid_get
-    pro_petsid_ak0_put:
-      rule: Path(`/pets/{id}/qmFm7B5zIKa99vcitRGX-p`) && Method(`PUT`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak0
-        - pro_petsid_put
-    pro_petsid_ak1_put:
-      rule: Path(`/pets/{id}/RCwyJs35QzVV6y1EmQFb-p`) && Method(`PUT`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak1
-        - pro_petsid_put
-    pro_petsid_ak2_put:
-      rule: Path(`/pets/{id}/H8Fv6UmGcj9y3Bb9TVF9-p`) && Method(`PUT`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak2
-        - pro_petsid_put
-    pro_petsid_ak0_delete:
-      rule: Path(`/pets/{id}/qmFm7B5zIKa99vcitRGX-p`) && Method(`DELETE`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak0
-        - pro_petsid_delete
-    pro_petsid_ak1_delete:
-      rule: Path(`/pets/{id}/RCwyJs35QzVV6y1EmQFb-p`) && Method(`DELETE`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak1
-        - pro_petsid_delete
-    pro_petsid_ak2_delete:
-      rule: Path(`/pets/{id}/H8Fv6UmGcj9y3Bb9TVF9-p`) && Method(`DELETE`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-        - pro_addApikeyHeader_ak2
-        - pro_petsid_delete
-    open-endpoint_get:
-      rule: Path(`/open-endpoint/H8Fv6UmGcj9y3Bb9TVF9-p`) && Method(`GET`)
-      service: main-service
-      middlewares:
-        - removeApikeyFromURL
-  middlewares:
-    basic_addApikeyHeader_ak0:
-      headers:
-        customRequestHeaders:
-          apikey: 7B5zIqmRGXmrJTFmKa99-b
-    basic_addApikeyHeader_ak1:
-      headers:
-        customRequestHeaders:
-          apikey: QzVV6y1EmQFbbxOfRCwy-b
-    basic_addApikeyHeader_ak2:
-      headers:
-        customRequestHeaders:
-          apikey: mGcjH8Fv6U9y3BVF9H3Y-b
-    basic_pets_get:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 1
-        period: 1s
-        burst: 1
-    basic_pets_post:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 2
-        period: 1m
-        burst: 2
-    basic_petsid_get:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 3
-        period: 1s
-        burst: 3
-    basic_petsid_put:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 4
-        period: 1m
-        burst: 4
-    basic_petsid_delete:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 5
-        period: 1s
-        burst: 5
-    pro_addApikeyHeader_ak0:
-      headers:
-        customRequestHeaders:
-          apikey: qmFm7B5zIKa99vcitRGX-p
-    pro_addApikeyHeader_ak1:
-      headers:
-        customRequestHeaders:
-          apikey: RCwyJs35QzVV6y1EmQFb-p
-    pro_addApikeyHeader_ak2:
-      headers:
-        customRequestHeaders:
-          apikey: H8Fv6UmGcj9y3Bb9TVF9-p
-    pro_pets_get:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 10
-        period: 1s
-        burst: 10
-    pro_pets_post:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 20
-        period: 1m
-        burst: 20
-    pro_petsid_get:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 30
-        period: 1s
-        burst: 30
-    pro_petsid_put:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 40
-        period: 1m
-        burst: 40
-    pro_petsid_delete:
-      rateLimit:
-        sourceCriterion:
-          requestHeaderName: apikey
-        average: 50
-        period: 1s
-        burst: 50
-    removeApikeyFromURL:
-      replacePathRegex:
-        regex: >-
-          /7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b|qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p
-        replacement: $1
+events {}
+http {
+
+    limit_req_zone $http_apikey zone=basic_pets_GET:10m rate=1r/s;
+    limit_req_zone $http_apikey zone=basic_pets_POST:10m rate=2r/m;
+    limit_req_zone $http_apikey zone=basic_petsid_GET:10m rate=3r/s;
+    limit_req_zone $http_apikey zone=basic_petsid_PUT:10m rate=4r/m;
+    limit_req_zone $http_apikey zone=basic_petsid_DELETE:10m rate=5r/s;
+    limit_req_zone $http_apikey zone=pro_pets_GET:10m rate=10r/s;
+    limit_req_zone $http_apikey zone=pro_pets_POST:10m rate=20r/m;
+    limit_req_zone $http_apikey zone=pro_petsid_GET:10m rate=30r/s;
+    limit_req_zone $http_apikey zone=pro_petsid_PUT:10m rate=40r/m;
+    limit_req_zone $http_apikey zone=pro_petsid_DELETE:10m rate=50r/s;
+    
+
+    limit_req_status 429;
+
+    map_hash_bucket_size 128;
+
+    map $http_apikey $api_client_name {
+     default ""; 
+     "~(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b)" "basic";
+     "~(qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)" "pro";
+    }
+
+    server {
+
+      if ($http_apikey = "") {
+          return 401; # Unauthorized
+      }
+      if ($api_client_name = "") {
+          return 403; # Forbidden
+      }
+
+      set $uri_original $uri;
+
+      
+    if ($uri = /pets) {
+      rewrite /pets "/${api_client_name}_pets_${request_method}" break; 
+    }
+
+    if ($uri ~ /pets/(.+)) {
+      rewrite /pets/(.+) "/${api_client_name}_petsid_${request_method}" break; 
+    }
+
+    if ($uri = /open-endpoint) {
+      rewrite /open-endpoint "/open-endpoint_${request_method}" break; 
+    }
+
+
+      
+        location /basic_pets_GET {
+            rewrite /basic_pets_GET $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=basic_pets_GET;
+        }
+
+        location /basic_pets_POST {
+            rewrite /basic_pets_POST $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=basic_pets_POST;
+        }
+
+        location /basic_petsid_GET {
+            rewrite /basic_petsid_GET $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=basic_petsid_GET;
+        }
+
+        location /basic_petsid_PUT {
+            rewrite /basic_petsid_PUT $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=basic_petsid_PUT;
+        }
+
+        location /basic_petsid_DELETE {
+            rewrite /basic_petsid_DELETE $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=basic_petsid_DELETE;
+        }
+
+        location /pro_pets_GET {
+            rewrite /pro_pets_GET $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=pro_pets_GET;
+        }
+
+        location /pro_pets_POST {
+            rewrite /pro_pets_POST $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=pro_pets_POST;
+        }
+
+        location /pro_petsid_GET {
+            rewrite /pro_petsid_GET $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=pro_petsid_GET;
+        }
+
+        location /pro_petsid_PUT {
+            rewrite /pro_petsid_PUT $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=pro_petsid_PUT;
+        }
+
+        location /pro_petsid_DELETE {
+            rewrite /pro_petsid_DELETE $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=pro_petsid_DELETE;
+        }
+ 
+        location ~ /open-endpoint_(GET|POST) {
+            rewrite /open-endpoint_(GET|POST) $uri_original break;
+            proxy_pass http://api:9999;
+        }
+
+
+    }
+}
