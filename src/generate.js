@@ -294,21 +294,31 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   var uriRewrites = "";
   var limitedPaths = [];
   var allProxyApikeys = [];
+  var uriOriginalSave = "set $uri_original $uri;"
+  var getApikeyFromUrl = "";
 
   if (authLocation == "header") {
     authLocation = "http";
   } else if (authLocation == "query") {
     authLocation = "arg";
-  } else {
-    console.log("TODO")
+  } else if (authLocation == "url") {
+    authLocation = "from_url";
+    getApikeyFromUrl = `
+        if ($request_uri ~* "([^/]*$)" ) { # Gets the apikey from the url
+          set $from_url_apikey  $1;
+        }`;
+    uriOriginalSave = `
+        if ($request_uri ~* "((.*)\/)" ) { # Gets the url w/o apikey
+          set $uri_original  $1;
+        }`;
   }
-  var mapApikeysDefinition = `map $${authLocation}_${authName} $api_client_name {\n     default ""; \n`;
+  var mapApikeysDefinition = `map $${authLocation}_${authName} $api_client_name {\n     default "";\n`;
 
   for (var subSLA of SLAs){
     var planName = subSLA["plan"]["name"];
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
-    allProxyApikeys = allProxyApikeys.concat(slaApikeys); // TODO: is this used for query or url?
+    allProxyApikeys = allProxyApikeys.concat(slaApikeys); 
     mapApikeysDefinition += `     "~(${slaApikeys.join('|')})" "${planName}";\n`;
 
     for (var endpoint in subSLARates){ 
@@ -333,7 +343,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
             rewrite /${zone_name} $uri_original break;
             proxy_pass ${apiServerURL};
             limit_req zone=${zone_name};
-        }\n`
+        }`
         locationDefinitions += location;
       }
     };
@@ -353,22 +363,32 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
         location ~ ${endpoint}_(${methods.join('|').toUpperCase()}) {
             rewrite ${endpoint}_(${methods.join('|').toUpperCase()}) $uri_original break;
             proxy_pass ${apiServerURL};
-        }\n`
+        }`
       locationDefinitions += location;
     }
 
+    /////////////// URI BASED ROUTING
     var endpoint_paramsMod = endpoint.replace(/\{(.*?)\}/g, '(.+)'); // If the endpoint has parameters, these are modified so Nginx understands them
+    var apikeysInUrl = "";
+    if (authLocation == "from_url"){
+      if (check == "~") {
+        apikeysInUrl = `/(${allProxyApikeys.join('|')})`;
+      } else {
+        apikeysInUrl = `/$${authLocation}_${authName}`;        
+      }
+    }
     uriRewrites += `
-    if ($uri ${check} ${endpoint_paramsMod}) {
-      rewrite ${endpoint_paramsMod} "/${planBased}${utils.sanitizeEndpoint(endpoint)}_\${request_method}" break; 
-    }\n`;
-
+        if ($uri ${check} ${endpoint_paramsMod}${apikeysInUrl}) {
+          rewrite ${endpoint_paramsMod} "/${planBased}${utils.sanitizeEndpoint(endpoint)}_\${request_method}" break; 
+        }`;
   }
 
   return nginxTemplate
             .replace('%%LIMIT_REQ_ZONE_PH%%', limitsDefinition)
             .replace('%%MAP_APIKEYS_PH%%', mapApikeysDefinition + '    }')
-            .replace('%%AUTH_LOCATION_PH%%', authLocation)
+            .replace('%%GET_APIKEY_FROM_URL_PH%%', getApikeyFromUrl)
+            .replace('%%AUTH_LOCATION_PH%%', `${authLocation}_${authName}`)
+            .replace('%%URI_ORIGINAL_SAVE_PH%%', uriOriginalSave)
             .replace('%%URI_REWRITES_PH%%', uriRewrites)
             .replace('%%LOCATIONS_PH%%', locationDefinitions);
 }

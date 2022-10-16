@@ -1,119 +1,107 @@
 events {}
 http {
 
-    limit_req_zone $arg_apikey zone=basic_pets_GET:10m rate=1r/s;
-    limit_req_zone $arg_apikey zone=basic_pets_POST:10m rate=2r/m;
-    limit_req_zone $arg_apikey zone=basic_petsid_GET:10m rate=3r/s;
-    limit_req_zone $arg_apikey zone=basic_petsid_PUT:10m rate=4r/m;
-    limit_req_zone $arg_apikey zone=basic_petsid_DELETE:10m rate=5r/s;
-    limit_req_zone $arg_apikey zone=pro_pets_GET:10m rate=10r/s;
-    limit_req_zone $arg_apikey zone=pro_pets_POST:10m rate=20r/m;
-    limit_req_zone $arg_apikey zone=pro_petsid_GET:10m rate=30r/s;
-    limit_req_zone $arg_apikey zone=pro_petsid_PUT:10m rate=40r/m;
-    limit_req_zone $arg_apikey zone=pro_petsid_DELETE:10m rate=50r/s;
+    limit_req_zone $http_apikey zone=basic_pets_GET:10m rate=1r/s;
+    limit_req_zone $http_apikey zone=basic_pets_POST:10m rate=2r/m;
+    limit_req_zone $http_apikey zone=basic_petsid_GET:10m rate=3r/s;
+    limit_req_zone $http_apikey zone=basic_petsid_PUT:10m rate=4r/m;
+    limit_req_zone $http_apikey zone=basic_petsid_DELETE:10m rate=5r/s;
+    limit_req_zone $http_apikey zone=pro_pets_GET:10m rate=10r/s;
+    limit_req_zone $http_apikey zone=pro_pets_POST:10m rate=20r/m;
+    limit_req_zone $http_apikey zone=pro_petsid_GET:10m rate=30r/s;
+    limit_req_zone $http_apikey zone=pro_petsid_PUT:10m rate=40r/m;
+    limit_req_zone $http_apikey zone=pro_petsid_DELETE:10m rate=50r/s;
     
 
     limit_req_status 429;
 
     map_hash_bucket_size 128;
 
-    map $arg_apikey $api_client_name {
-     default ""; 
+    map $http_apikey $api_client_name {
+     default "";
      "~(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b)" "basic";
      "~(qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)" "pro";
     }
 
     server {
 
-      if ($arg_apikey = "") {
-          return 401; # Unauthorized
-      }
-      if ($api_client_name = "") {
-          return 403; # Forbidden
-      }
+        
 
-      set $uri_original $uri;
+        if ($http_apikey = "") {
+            return 401; # Unauthorized
+        }
+        if ($api_client_name = "") {
+            return 403; # Forbidden
+        }
 
-      
-    if ($uri = /pets) {
-      rewrite /pets "/${api_client_name}_pets_${request_method}" break; 
-    }
+        set $uri_original $uri; 
 
-    if ($uri ~ /pets/(.+)) {
-      rewrite /pets/(.+) "/${api_client_name}_petsid_${request_method}" break; 
-    }
+        
+        if ($uri = /pets) {
+          rewrite /pets "/${api_client_name}_pets_${request_method}" break; 
+        }
+        if ($uri ~ /pets/(.+)) {
+          rewrite /pets/(.+) "/${api_client_name}_petsid_${request_method}" break; 
+        }
+        if ($uri = /open-endpoint) {
+          rewrite /open-endpoint "/open-endpoint_${request_method}" break; 
+        }
 
-    if ($uri = /open-endpoint) {
-      rewrite /open-endpoint "/open-endpoint_${request_method}" break; 
-    }
-
-
-      
+        
         location /basic_pets_GET {
             rewrite /basic_pets_GET $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=basic_pets_GET;
         }
-
         location /basic_pets_POST {
             rewrite /basic_pets_POST $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=basic_pets_POST;
         }
-
         location /basic_petsid_GET {
             rewrite /basic_petsid_GET $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=basic_petsid_GET;
         }
-
         location /basic_petsid_PUT {
             rewrite /basic_petsid_PUT $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=basic_petsid_PUT;
         }
-
         location /basic_petsid_DELETE {
             rewrite /basic_petsid_DELETE $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=basic_petsid_DELETE;
         }
-
         location /pro_pets_GET {
             rewrite /pro_pets_GET $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=pro_pets_GET;
         }
-
         location /pro_pets_POST {
             rewrite /pro_pets_POST $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=pro_pets_POST;
         }
-
         location /pro_petsid_GET {
             rewrite /pro_petsid_GET $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=pro_petsid_GET;
         }
-
         location /pro_petsid_PUT {
             rewrite /pro_petsid_PUT $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=pro_petsid_PUT;
         }
-
         location /pro_petsid_DELETE {
             rewrite /pro_petsid_DELETE $uri_original break;
             proxy_pass http://api:9999;
             limit_req zone=pro_petsid_DELETE;
-        }
- 
+        } 
         location ~ /open-endpoint_(GET|POST) {
             rewrite /open-endpoint_(GET|POST) $uri_original break;
             proxy_pass http://api:9999;
         }
-
 
     }
 }
