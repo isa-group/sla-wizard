@@ -1,7 +1,6 @@
 var fs = require('fs');
 var path = require('path');
 var jsyaml = require('js-yaml');
-//var jsonschema = require('jsonschema');
 var url = require("url");
 var axios = require("axios");
 var configs = require("./configs");
@@ -223,56 +222,84 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
  * @param {object} oasDoc - Open API definition.
  * @param {string} apiServerURL - API server url.
  * @param {string} configTemplatePath - Path to proxy config template.
+ * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
+ * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  */
-function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/haproxy.cfg'){
+function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/haproxy.cfg', authLocation, authName){
 
   var haproxyTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
-
-  var trackingParameterName = "apikey";
   var frontendDefinition = "";
   var backendDefinition = "";
   var limitedPaths = [];
+  var allProxyApikeys = [];
+  var getApikeyFromUrl = "";
+  var removeApikeyFromURL = "";
+  var apikeyChecks = 
+`# Deny if missing key
+acl has_apikey ${authLocation}(${authName}) -m found
+http-request deny deny_status 401 if !has_apikey
+
+# Deny if bad key
+`;
+
+  if (authLocation == "header") {
+    authLocation = "hdr";
+  } else if (authLocation == "query") {
+    authLocation = "url_param";
+  }
 
   for (var subSLA of SLAs){
-    var subSLARates = subSLA["rates"];
+    var planName = subSLA["plan"]["name"];
+    var subSLARates = subSLA["plan"]["rates"];
+    var slaApikeys = subSLA["context"]["apikeys"]
+    allProxyApikeys = allProxyApikeys.concat(slaApikeys);
+
+    // TODO: build here %%APIKEY_CHECKS_PH%%
+    apikeyChecks += `acl ${planName}_valid_apikey ${authLocation}(${authName}) -m str ${slaApikeys.concat(' ')}\n`;
 
     for (var endpoint in subSLARates){
       limitedPaths.push(endpoint);
       var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
-
+      
       for (var method in subSLARates[endpoint]){
-        frontendDefinition += `use_backend ${sanitized_endpoint} if { path_beg ${endpoint} } \n    `
+                
         var method_specs = subSLARates[endpoint][method];
         var max = method_specs["requests"][0]["max"];
-        var period = method_specs["requests"][0]["period"];
-        period = utils.getLimitPeriod(period,"haproxy");
+        var period = utils.getLimitPeriod(method_specs["requests"][0]["period"],"traefik");
+        method = method.toUpperCase();
+        var paramsCount = (endpoint.match(/{/g)||[]).length;
+        var endpoint_paramsMod = endpoint.replace(/\/{(.*?)\}/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+
+        frontendDefinition += `use_backend ${planName}_${sanitized_endpoint}_${method} if ${planName}_valid_apikey METH_${method} { path_reg \\${endpoint_paramsMod}\\/?$ } \n    `
         backendDefinition +=
-`backend ${sanitized_endpoint}
-  mode http
-  stick-table type binary len 20 size 100k expire 1${period} store http_req_rate(1${period})
-  acl has_token url_param(${trackingParameterName}) -m found
-  acl exceeds_limit url_param(${trackingParameterName}),table_http_req_rate() gt ${max}
-  http-request track-sc0 url_param(${trackingParameterName}) unless exceeds_limit
-  http-request deny deny_status 403 if !has_token
-  http-request deny deny_status 429 if exceeds_limit
-  server ${sanitized_endpoint} ${apiServerURL.replace("http://","")} \n\n` // protocol not allowed here
+`backend ${planName}_${sanitized_endpoint}_${method}
+    stick-table type binary len 20 size 100k expire 1${period} store http_req_rate(1${period})
+    acl exceeds_limit ${authLocation}(${authName}),table_http_req_rate() gt ${max}
+    http-request track-sc0 ${authLocation}(${authName}) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server ${sanitized_endpoint} ${apiServerURL.replace("http://","")}\n` // protocol not allowed here
       }
     }
   }
 
   for (var endpoint in oasDoc.paths){
     if (!limitedPaths.includes(endpoint)){
-      haproxyTemplate = haproxyTemplate.replace('%%DEFAULT_BACKEND_PH%%',
-`backend default-server
-    mode http
-    server default-server ${apiServerURL.replace("http://","")}`);
+      frontendDefinition += `use_backend no_ratelimit_endpoints if METH_GET { path_reg \/open-endpoint\/?$ } or METH_POST { path_reg \/open-endpoint\/?$ }`; // TODO: can have params too
+      haproxyTemplate = haproxyTemplate.replace('%%DEFAULT_BACKEND_PH%%', // TODO: move the replace to the return
+`backend no_ratelimit_endpoints
+    server no_ratelimit_endpoints ${apiServerURL.replace("http://","")}`);
     break;
     }
   }
 
+  apikeyChecks += `http-request deny deny_status 403 if !basic_valid_apikey !pro_valid_apikey`; // TODO: plan names here
+
   return haproxyTemplate
+            .replace('%%GET_APIKEY_FROM_URL_PH%%', getApikeyFromUrl)
+            .replace('%%APIKEY_CHECKS_PH%%', apikeyChecks)
+            .replace('%%REMOVE_API_FROM_URL_PH%%', removeApikeyFromURL)
             .replace('%%FRONTEND_PH%%', frontendDefinition)
-            .replace('%%BACKEND_PH%%', backendDefinition);
+            .replace('%%BACKENDS_PH%%', backendDefinition);
 }
 
 
@@ -286,7 +313,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
  * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  */
-function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/nginx.conf', authLocation, authName){
+function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/nginx.conf', authLocation, authName){ // TODO: improve resulting file format (i.e beautify)
 
   var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString(); // TODO: should simplify the template 
   var limitsDefinition = "";

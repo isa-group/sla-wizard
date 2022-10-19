@@ -1,107 +1,112 @@
-events {}
-http {
+global
+    stats socket /run/haproxy.sock mode 660 level admin
 
-    limit_req_zone $http_apikey zone=basic_pets_GET:10m rate=1r/s;
-    limit_req_zone $http_apikey zone=basic_pets_POST:10m rate=2r/m;
-    limit_req_zone $http_apikey zone=basic_petsid_GET:10m rate=3r/s;
-    limit_req_zone $http_apikey zone=basic_petsid_PUT:10m rate=4r/m;
-    limit_req_zone $http_apikey zone=basic_petsid_DELETE:10m rate=5r/s;
-    limit_req_zone $http_apikey zone=pro_pets_GET:10m rate=10r/s;
-    limit_req_zone $http_apikey zone=pro_pets_POST:10m rate=20r/m;
-    limit_req_zone $http_apikey zone=pro_petsid_GET:10m rate=30r/s;
-    limit_req_zone $http_apikey zone=pro_petsid_PUT:10m rate=40r/m;
-    limit_req_zone $http_apikey zone=pro_petsid_DELETE:10m rate=50r/s;
+defaults
+    timeout connect 10s
+    timeout client 1m
+    timeout server 1m
+    option httplog
+    log stdout local0
+    mode http
+
+frontend proxy
+    bind :80
+
+    # Deny if missing key
+    acl has_apikey header(apikey) -m found
+    http-request deny deny_status 401 if !has_apikey
+
+    # Deny if bad key
+    acl basic_valid_apikey hdr(apikey) -m str 7B5zIqmRGXmrJTFmKa99-b,QzVV6y1EmQFbbxOfRCwy-b,mGcjH8Fv6U9y3BVF9H3Y-b, 
+    acl pro_valid_apikey hdr(apikey) -m str qmFm7B5zIKa99vcitRGX-p,RCwyJs35QzVV6y1EmQFb-p,H8Fv6UmGcj9y3Bb9TVF9-p, 
+    http-request deny deny_status 403 if !basic_valid_apikey !pro_valid_apikey
+
+    # Route request to the right backend (considers both /pets and /pets/)
+
+    # BASIC    
+    use_backend basic_pets_GET if basic_valid_apikey METH_GET { path_reg \/pets\/?$ }
+    use_backend basic_pets_POST if basic_valid_apikey METH_POST { path_reg \/pets\/?$ }
+    use_backend basic_petsid_GET if basic_valid_apikey METH_GET { path_reg \/pets(?:\/[^/]+){1}\/?$ }
+    use_backend basic_petsid_PUT if basic_valid_apikey METH_PUT { path_reg \/pets(?:\/[^/]+){1}\/?$ }
+    use_backend basic_petsid_DELETE if basic_valid_apikey METH_DELETE { path_reg \/pets(?:\/[^/]+){1}\/?$ }
     
+    # PRO
+    use_backend pro_pets_GET if pro_valid_apikey METH_GET { path_reg \/pets\/?$ }
+    use_backend pro_pets_POST if pro_valid_apikey METH_POST { path_reg \/pets\/?$ }
+    use_backend pro_petsid_GET if pro_valid_apikey METH_GET { path_reg \/pets(?:\/[^/]+){1}\/?$ }
+    use_backend pro_petsid_PUT if pro_valid_apikey METH_PUT { path_reg \/pets(?:\/[^/]+){1}\/?$ }
+    use_backend pro_petsid_DELETE if pro_valid_apikey METH_DELETE { path_reg \/pets(?:\/[^/]+){1}\/?$ }
+    
+    # NO MATCHING PATH? -> 404
+    default_backend response-404-server
 
-    limit_req_status 429;
+backend response-404-server
+    http-request deny deny_status 404
 
-    map_hash_bucket_size 128;
+backend no_ratelimit_endpoints
+    server no_ratelimit_endpoints api:9999
 
-    map $http_apikey $api_client_name {
-     default "";
-     "~(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b)" "basic";
-     "~(qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)" "pro";
-    }
+# BASIC
+backend basic_pets_GET
+    stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 1
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server pets api:9999
+backend basic_pets_POST
+    stick-table type binary len 20 size 100k expire 1m store http_req_rate(1m)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 2
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server pets api:9999
+backend basic_petsid_GET
+    stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 3
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server petsid api:9999
+backend basic_petsid_PUT
+    stick-table type binary len 20 size 100k expire 1m store http_req_rate(1m)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 4
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server petsid api:9999
+backend basic_petsid_DELETE
+    stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 5
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server petsid api:9999
 
-    server {
+# PRO
+backend pro_pets_GET
+    stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 10
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server pets api:9999
+backend pro_pets_POST
+    stick-table type binary len 20 size 100k expire 1m store http_req_rate(1m)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 20
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server pets api:9999
+backend pro_petsid_GET
+    stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 30
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server petsid api:9999
+backend pro_petsid_PUT
+    stick-table type binary len 20 size 100k expire 1m store http_req_rate(1m)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 40
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server petsid api:9999
+backend pro_petsid_DELETE
+    stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
+    acl exceeds_limit hdr(apikey),table_http_req_rate() gt 50
+    http-request track-sc0 hdr(apikey) unless exceeds_limit
+    http-request deny deny_status 429 if exceeds_limit
+    server petsid api:9999
 
-        
-
-        if ($http_apikey = "") {
-            return 401; # Unauthorized
-        }
-        if ($api_client_name = "") {
-            return 403; # Forbidden
-        }
-
-        set $uri_original $uri; 
-
-        
-        if ($uri = /pets) {
-          rewrite /pets "/${api_client_name}_pets_${request_method}" break; 
-        }
-        if ($uri ~ /pets/(.+)) {
-          rewrite /pets/(.+) "/${api_client_name}_petsid_${request_method}" break; 
-        }
-        if ($uri = /open-endpoint) {
-          rewrite /open-endpoint "/open-endpoint_${request_method}" break; 
-        }
-
-        
-        location /basic_pets_GET {
-            rewrite /basic_pets_GET $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=basic_pets_GET;
-        }
-        location /basic_pets_POST {
-            rewrite /basic_pets_POST $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=basic_pets_POST;
-        }
-        location /basic_petsid_GET {
-            rewrite /basic_petsid_GET $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=basic_petsid_GET;
-        }
-        location /basic_petsid_PUT {
-            rewrite /basic_petsid_PUT $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=basic_petsid_PUT;
-        }
-        location /basic_petsid_DELETE {
-            rewrite /basic_petsid_DELETE $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=basic_petsid_DELETE;
-        }
-        location /pro_pets_GET {
-            rewrite /pro_pets_GET $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=pro_pets_GET;
-        }
-        location /pro_pets_POST {
-            rewrite /pro_pets_POST $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=pro_pets_POST;
-        }
-        location /pro_petsid_GET {
-            rewrite /pro_petsid_GET $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=pro_petsid_GET;
-        }
-        location /pro_petsid_PUT {
-            rewrite /pro_petsid_PUT $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=pro_petsid_PUT;
-        }
-        location /pro_petsid_DELETE {
-            rewrite /pro_petsid_DELETE $uri_original break;
-            proxy_pass http://api:9999;
-            limit_req zone=pro_petsid_DELETE;
-        } 
-        location ~ /open-endpoint_(GET|POST) {
-            rewrite /open-endpoint_(GET|POST) $uri_original break;
-            proxy_pass http://api:9999;
-        }
-
-    }
-}
