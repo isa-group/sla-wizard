@@ -8,8 +8,8 @@ var utils = require("./utils");
 
 
 /**
- * Receives a SLA plan and produces (as string) a Envoy dynamic config file
- * according to the limitations it defines.
+ * Receives an SLA agreement and produces (as string) a Envoy dynamic config file
+ * according to the rate limiting it defines.
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
  * @param {string} apiServerURL - API server url.
@@ -98,8 +98,8 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
 
 
 /**
- * Receives a SLA plan and produces (as string) a Traefik dynamic config file
- * according to the limitations it defines.
+ * Receives an SLA agreement and produces (as string) a Traefik dynamic config file
+ * according to the rate limiting it defines.
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
  * @param {string} apiServerURL - API server url.
@@ -174,7 +174,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   }
 
   var allProxyApikeys_regex = allProxyApikeys.join('|'); 
-  for (var endpoint in oasDoc.paths){ // "free" endpoints are taken from OAS as they're missing from SLA
+  for (var endpoint in oasDoc.paths){ // "ratelimiting-less" endpoints are taken from OAS as they're missing from SLA
     var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
     if (!limitedPaths.includes(endpoint)){
       for (var method in oasDoc.paths[endpoint]){
@@ -216,8 +216,8 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
 
 
 /**
- * Receives a SLA plan and produces (as string) an HAProxy config file according
- * to the limitations it defines.
+ * Receives an SLA agreement and produces (as string) an HAProxy config file according
+ * to the rate limiting it defines.
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
  * @param {string} apiServerURL - API server url.
@@ -230,32 +230,35 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
   var haproxyTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
   var frontendDefinition = "";
   var backendDefinition = "";
+  var defaultBackendDefinition = "";
   var limitedPaths = [];
   var allProxyApikeys = [];
+  var allProxyPlanNames = [];
   var getApikeyFromUrl = "";
   var removeApikeyFromURL = "";
-  var apikeyChecks = 
-`# Deny if missing key
-acl has_apikey ${authLocation}(${authName}) -m found
-http-request deny deny_status 401 if !has_apikey
-
-# Deny if bad key
-`;
+  var apikeyChecks = "";
 
   if (authLocation == "header") {
     authLocation = "hdr";
   } else if (authLocation == "query") {
     authLocation = "url_param";
   }
+  apikeyChecks = 
+`# Deny if missing key
+    acl has_apikey ${authLocation}(${authName}) -m found
+    http-request deny deny_status 401 if !has_apikey
 
+    # Deny if bad key
+`;
+  
   for (var subSLA of SLAs){
     var planName = subSLA["plan"]["name"];
+    allProxyPlanNames.push(planName);
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
 
-    // TODO: build here %%APIKEY_CHECKS_PH%%
-    apikeyChecks += `acl ${planName}_valid_apikey ${authLocation}(${authName}) -m str ${slaApikeys.concat(' ')}\n`;
+    apikeyChecks += `    acl ${planName}_valid_apikey ${authLocation}(${authName}) -m str ${slaApikeys.join(' ')}\n`;
 
     for (var endpoint in subSLARates){
       limitedPaths.push(endpoint);
@@ -277,35 +280,45 @@ http-request deny deny_status 401 if !has_apikey
     acl exceeds_limit ${authLocation}(${authName}),table_http_req_rate() gt ${max}
     http-request track-sc0 ${authLocation}(${authName}) unless exceeds_limit
     http-request deny deny_status 429 if exceeds_limit
-    server ${sanitized_endpoint} ${apiServerURL.replace("http://","")}\n` // protocol not allowed here
+    server ${sanitized_endpoint} ${apiServerURL.replace("http://","")}\n` // the protocol is removed as it's not allowed here
       }
     }
   }
 
-  for (var endpoint in oasDoc.paths){
-    if (!limitedPaths.includes(endpoint)){
-      frontendDefinition += `use_backend no_ratelimit_endpoints if METH_GET { path_reg \/open-endpoint\/?$ } or METH_POST { path_reg \/open-endpoint\/?$ }`; // TODO: can have params too
-      haproxyTemplate = haproxyTemplate.replace('%%DEFAULT_BACKEND_PH%%', // TODO: move the replace to the return
-`backend no_ratelimit_endpoints
-    server no_ratelimit_endpoints ${apiServerURL.replace("http://","")}`);
-    break;
+  if (limitedPaths.length != Object.keys(oasDoc.paths).length) { // "ratelimiting-less" endpoints management
+    for (var endpoint in oasDoc.paths){
+      if (!limitedPaths.includes(endpoint)){
+        for (var method in oasDoc.paths[endpoint]){
+          method = method.toUpperCase();
+          var paramsCount = (endpoint.match(/{/g)||[]).length;
+          var endpoint_paramsMod = endpoint.replace(/\/{(.*?)\}/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+          frontendDefinition += `use_backend no_ratelimit_endpoints if METH_${method} { path_reg \\${endpoint_paramsMod}\\/?$ }\n    `; 
+        }  
+      }
     }
+    defaultBackendDefinition = 
+  `backend no_ratelimit_endpoints
+    server no_ratelimit_endpoints ${apiServerURL.replace("http://","")}`;
   }
 
-  apikeyChecks += `http-request deny deny_status 403 if !basic_valid_apikey !pro_valid_apikey`; // TODO: plan names here
+  apikeyChecks += `    http-request deny deny_status 403 if`; 
+  allProxyPlanNames.forEach(element => {
+    apikeyChecks += ` !${element}_valid_apikey`;
+  });
 
   return haproxyTemplate
             .replace('%%GET_APIKEY_FROM_URL_PH%%', getApikeyFromUrl)
             .replace('%%APIKEY_CHECKS_PH%%', apikeyChecks)
             .replace('%%REMOVE_API_FROM_URL_PH%%', removeApikeyFromURL)
             .replace('%%FRONTEND_PH%%', frontendDefinition)
+            .replace('%%DEFAULT_BACKEND_PH%%', defaultBackendDefinition)
             .replace('%%BACKENDS_PH%%', backendDefinition);
 }
 
 
 /**
- * Receives a SLA plan and produces (as string) an NGINX config file according
- * to the limitations it defines.
+ * Receives an SLA agreement and produces (as string) an NGINX config file according
+ * to the rate limiting it defines.
  * @param {object} SLAs - SLA plan(s).
  * @param {object} oasDoc - Open API definition.
  * @param {string} apiServerURL - API server url.
@@ -382,7 +395,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
     if (endpoint.includes('{')) {
       check = "~";
     }
-    if (!limitedPaths.includes(endpoint)){ // "free" endpoints 
+    if (!limitedPaths.includes(endpoint)){ // "ratelimiting-less" endpoints 
       var methods = Object.keys(oasDoc.paths[endpoint]);
       planBased = "";
       /////////////// LOCATIONS

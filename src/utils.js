@@ -64,6 +64,16 @@ function arrayContainsObject(arrayOfObjects, objectToCheck){ // TODO: not perfor
   return res;
 }
 
+/**
+ * Compares if two arrays have the same strings.
+ * @param {array} array1 - An array of strings.
+ * @param {array} array2 - An array of strings.
+ */
+
+function compareArrays(array1, array2){
+  if (array1.length != array1.length){}
+
+}
 
 /**
  * Sanitizes the endpoint to be used for naming zones, servers, etc.

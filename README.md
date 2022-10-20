@@ -108,7 +108,7 @@ The following table indicates how the three possible API key locations are imple
 To create a configuration file for an Envoy proxy, use the argument `envoy` of the `config` command, for example:
 
 ```bash
-node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration
+node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-envoy.yaml
 ```
 
 **Note**: currently, [global rate limit](https://www.envoyproxy.io/docs/envoy/latest/intro/arch_overview/other_features/global_rate_limiting) is not supported, only [local rate limit](https://www.envoyproxy.io/docs/envoy/latest/configuration/http/http_filters/local_rate_limit_filter). 
@@ -130,7 +130,7 @@ Refer to `templates/envoy.yaml`.
 To create a configuration file for an HAProxy proxy, use the argument `haproxy` of the `config` command, for example:
 
 ```bash
-node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration
+node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-haproxy
 ```
 
 #### Custom Template
@@ -150,7 +150,7 @@ Refer to `templates/haproxy.cfg`.
 To create a configuration file for a NGINX proxy, use the argument `nginx` of the `config` command, for example:
 
 ```bash
-node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration
+node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-nginx
 ```
 
 #### Custom Template
@@ -170,7 +170,7 @@ Refer to `templates/nginx.conf`.
 Unlike in the other three proxies supported by SLA Wizard, besides the main configuration file a dynamic configuration file is needed. This file is the one that SLA Wizard creates. To do that, use the argument `traefik` of the `config` command, for example:
 
 ```bash
-node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration
+node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-traefik.yaml
 ```
 
 #### Custom Template

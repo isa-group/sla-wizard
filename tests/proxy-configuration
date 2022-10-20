@@ -11,31 +11,29 @@ defaults
 
 frontend proxy
     bind :80
-
+    
     # Deny if missing key
-    acl has_apikey header(apikey) -m found
+    acl has_apikey hdr(apikey) -m found
     http-request deny deny_status 401 if !has_apikey
 
     # Deny if bad key
-    acl basic_valid_apikey hdr(apikey) -m str 7B5zIqmRGXmrJTFmKa99-b,QzVV6y1EmQFbbxOfRCwy-b,mGcjH8Fv6U9y3BVF9H3Y-b, 
-    acl pro_valid_apikey hdr(apikey) -m str qmFm7B5zIKa99vcitRGX-p,RCwyJs35QzVV6y1EmQFb-p,H8Fv6UmGcj9y3Bb9TVF9-p, 
+    acl basic_valid_apikey hdr(apikey) -m str 7B5zIqmRGXmrJTFmKa99-b QzVV6y1EmQFbbxOfRCwy-b mGcjH8Fv6U9y3BVF9H3Y-b
+    acl pro_valid_apikey hdr(apikey) -m str qmFm7B5zIKa99vcitRGX-p RCwyJs35QzVV6y1EmQFb-p H8Fv6UmGcj9y3Bb9TVF9-p
     http-request deny deny_status 403 if !basic_valid_apikey !pro_valid_apikey
-
-    # Route request to the right backend (considers both /pets and /pets/)
-
-    # BASIC    
-    use_backend basic_pets_GET if basic_valid_apikey METH_GET { path_reg \/pets\/?$ }
-    use_backend basic_pets_POST if basic_valid_apikey METH_POST { path_reg \/pets\/?$ }
-    use_backend basic_petsid_GET if basic_valid_apikey METH_GET { path_reg \/pets(?:\/[^/]+){1}\/?$ }
-    use_backend basic_petsid_PUT if basic_valid_apikey METH_PUT { path_reg \/pets(?:\/[^/]+){1}\/?$ }
-    use_backend basic_petsid_DELETE if basic_valid_apikey METH_DELETE { path_reg \/pets(?:\/[^/]+){1}\/?$ }
     
-    # PRO
-    use_backend pro_pets_GET if pro_valid_apikey METH_GET { path_reg \/pets\/?$ }
-    use_backend pro_pets_POST if pro_valid_apikey METH_POST { path_reg \/pets\/?$ }
-    use_backend pro_petsid_GET if pro_valid_apikey METH_GET { path_reg \/pets(?:\/[^/]+){1}\/?$ }
-    use_backend pro_petsid_PUT if pro_valid_apikey METH_PUT { path_reg \/pets(?:\/[^/]+){1}\/?$ }
-    use_backend pro_petsid_DELETE if pro_valid_apikey METH_DELETE { path_reg \/pets(?:\/[^/]+){1}\/?$ }
+    # Route request to the right backend (considers both /pets and /pets/)
+    use_backend basic_pets_GET if basic_valid_apikey METH_GET { path_reg \/pets\/?$ } 
+    use_backend basic_pets_POST if basic_valid_apikey METH_POST { path_reg \/pets\/?$ } 
+    use_backend basic_petsid_GET if basic_valid_apikey METH_GET { path_reg \/pets(?:\/[^/]+){1}\/?$ } 
+    use_backend basic_petsid_PUT if basic_valid_apikey METH_PUT { path_reg \/pets(?:\/[^/]+){1}\/?$ } 
+    use_backend basic_petsid_DELETE if basic_valid_apikey METH_DELETE { path_reg \/pets(?:\/[^/]+){1}\/?$ } 
+    use_backend pro_pets_GET if pro_valid_apikey METH_GET { path_reg \/pets\/?$ } 
+    use_backend pro_pets_POST if pro_valid_apikey METH_POST { path_reg \/pets\/?$ } 
+    use_backend pro_petsid_GET if pro_valid_apikey METH_GET { path_reg \/pets(?:\/[^/]+){1}\/?$ } 
+    use_backend pro_petsid_PUT if pro_valid_apikey METH_PUT { path_reg \/pets(?:\/[^/]+){1}\/?$ } 
+    use_backend pro_petsid_DELETE if pro_valid_apikey METH_DELETE { path_reg \/pets(?:\/[^/]+){1}\/?$ } 
+    use_backend no_ratelimit_endpoints if METH_GET { path_reg \/open-endpoint\/?$ }
+    use_backend no_ratelimit_endpoints if METH_POST { path_reg \/open-endpoint\/?$ }
     
     # NO MATCHING PATH? -> 404
     default_backend response-404-server
@@ -46,7 +44,6 @@ backend response-404-server
 backend no_ratelimit_endpoints
     server no_ratelimit_endpoints api:9999
 
-# BASIC
 backend basic_pets_GET
     stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
     acl exceeds_limit hdr(apikey),table_http_req_rate() gt 1
@@ -77,8 +74,6 @@ backend basic_petsid_DELETE
     http-request track-sc0 hdr(apikey) unless exceeds_limit
     http-request deny deny_status 429 if exceeds_limit
     server petsid api:9999
-
-# PRO
 backend pro_pets_GET
     stick-table type binary len 20 size 100k expire 1s store http_req_rate(1s)
     acl exceeds_limit hdr(apikey),table_http_req_rate() gt 10
