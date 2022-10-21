@@ -27,7 +27,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
     var subSLARates = subSLA["rates"];
 
       for (var endpoint in subSLARates){
-        limitedPaths.push(endpoint);
+        limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {} ;
 
         for (var method in subSLARates[endpoint]){
           var method_specs = subSLARates[endpoint][method];
@@ -122,7 +122,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
 
     for (var endpoint in subSLARates){
-      limitedPaths.push(endpoint);
+      limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {} ;
       var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
 
       for (var method in subSLARates[endpoint]){
@@ -237,11 +237,20 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
   var getApikeyFromUrl = "";
   var removeApikeyFromURL = "";
   var apikeyChecks = "";
+  var authCheckMethod = "str";
 
   if (authLocation == "header") {
     authLocation = "hdr";
   } else if (authLocation == "query") {
     authLocation = "url_param";
+  } else if (authLocation == "url") {
+    authLocation = "hdr";
+    var authCheckMethod = "sub";
+
+    getApikeyFromUrl = `
+    # Create a header with the last part of the path (includes auth key)
+    http-request del-header ${authName}
+    http-request add-header ${authName} %[url]`;
   }
   apikeyChecks = 
 `# Deny if missing key
@@ -258,10 +267,10 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
     var slaApikeys = subSLA["context"]["apikeys"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
 
-    apikeyChecks += `    acl ${planName}_valid_apikey ${authLocation}(${authName}) -m str ${slaApikeys.join(' ')}\n`;
+    apikeyChecks += `    acl ${planName}_valid_apikey ${authLocation}(${authName}) -m ${authCheckMethod} ${slaApikeys.join(' ')}\n`;
 
     for (var endpoint in subSLARates){
-      limitedPaths.push(endpoint);
+      limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {} ; // only add if it is not already there (multiple SLAs agreements on a proxy have the same endpoints)
       var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
       
       for (var method in subSLARates[endpoint]){
@@ -291,7 +300,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
         for (var method in oasDoc.paths[endpoint]){
           method = method.toUpperCase();
           var paramsCount = (endpoint.match(/{/g)||[]).length;
-          var endpoint_paramsMod = endpoint.replace(/\/{(.*?)\}/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+          var endpoint_paramsMod = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd TODO: 
           frontendDefinition += `use_backend no_ratelimit_endpoints if METH_${method} { path_reg \\${endpoint_paramsMod}\\/?$ }\n    `; 
         }  
       }
@@ -305,6 +314,12 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
   allProxyPlanNames.forEach(element => {
     apikeyChecks += ` !${element}_valid_apikey`;
   });
+
+  if (authLocation == "hdr" && authCheckMethod == "sub"){ // TODO: doing two checks because authLocation is modified above 
+    removeApikeyFromURL = `
+    # Remove apikey from url
+    http-request replace-path (.*)/(${allProxyApikeys.join('|')}) \\1`;
+  }
 
   return haproxyTemplate
             .replace('%%GET_APIKEY_FROM_URL_PH%%', getApikeyFromUrl)
@@ -362,7 +377,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
     mapApikeysDefinition += `     "~(${slaApikeys.join('|')})" "${planName}";\n`;
 
     for (var endpoint in subSLARates){ 
-      limitedPaths.push(endpoint);
+      limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {} ;
 
       for (var method in subSLARates[endpoint]){
         var method_specs = subSLARates[endpoint][method];

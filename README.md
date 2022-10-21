@@ -200,13 +200,13 @@ For this, docker-compose is used. The variable `CFG_PATH` should point to the co
 #### NGINX
 
 ```bash
-sudo CFG_PATH=../proxy-configuration docker-compose --file tests/nginx/docker-compose-nginx.yaml up --build
+sudo CFG_PATH=../proxy-configuration-nginx docker-compose --file tests/nginx/docker-compose-nginx.yaml up --build
 ```
 
 #### HAProxy
 
 ```bash
-sudo CFG_PATH=../proxy-configuration docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up --build
+sudo CFG_PATH=../proxy-configuration-haproxy docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up --build
 ```
 
 #### Traefik
@@ -227,13 +227,13 @@ providers:
 Where `provider.file.filename` contains the path to the dynamic configuration file created by SLA Wizard. When spinning up the containers as in the command below, the variable `D_CFG_PATH` indicates the path to the dynamic configuration file:
 
 ```bash
-sudo D_CFG_PATH=../proxy-configuration CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
+sudo D_CFG_PATH=../proxy-configuration-traefik CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
 ```
 
 #### Envoy
 
 ```bash
-sudo CFG_PATH=../proxy-configuration docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
+sudo CFG_PATH=../proxy-configuration-envoy docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
 ```
 
 

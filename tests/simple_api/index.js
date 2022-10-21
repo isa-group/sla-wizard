@@ -13,6 +13,9 @@ app.get("/open-endpoint", function(req,res){
 app.post("/open-endpoint", function(req,res){
   res.send({"endpoint": req.originalUrl, "description": "POST"});
 });
+app.get("/open-endpoint/:param1/:param2", function(req,res){
+  res.send({"endpoint": req.originalUrl, "description": `GET with the following parameters: ${req.params.param1}, ${req.params.param2} `});
+});
 
 app.get("/pets", function(req,res){
   res.send({"endpoint": req.originalUrl, "description": "GET"});
@@ -22,11 +25,11 @@ app.post("/pets", function(req,res){
 });
 
 app.get("/pets/:id", function(req,res){
-  res.send({"endpoint": req.originalUrl, "description": "GET with id " + req.params.id});
+  res.send({"endpoint": req.originalUrl, "description": `GET with id ${req.params.id}`});
 });
 app.put("/pets/:id", function(req,res){
-  res.send({"endpoint": req.originalUrl, "description": "PUT with id " + req.params.id});
+  res.send({"endpoint": req.originalUrl, "description": `PUT with id ${req.params.id}`});
 });
 app.delete("/pets/:id", function(req,res){
-  res.send({"endpoint": req.originalUrl, "description": "DELETE with id " + req.params.id});
+  res.send({"endpoint": req.originalUrl, "description": `DELETE with id ${req.params.id}`});
 });

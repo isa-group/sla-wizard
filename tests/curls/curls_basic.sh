@@ -1,5 +1,18 @@
 ##### HEADER
 
+# Open
+curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint
+curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint
+curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint
+curl -X POST -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint
+curl -X POST -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint
+curl -X POST -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint
+
+# Open with parameters
+curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint/paramA/paramB
+curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint/paramA/paramB
+curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint/paramA/paramB
+
 # 1 per second
 curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets
 curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets
@@ -29,6 +42,19 @@ curl -X DELETE -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets/id01
 
 ##### QUERY
 
+# Open
+curl localhost/open-endpoint?apikey=7B5zIqmRGXmrJTFmKa99-b
+curl localhost/open-endpoint?apikey=QzVV6y1EmQFbbxOfRCwy-b
+curl localhost/open-endpoint?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+curl -X POST localhost/open-endpoint?apikey=7B5zIqmRGXmrJTFmKa99-b
+curl -X POST localhost/open-endpoint?apikey=QzVV6y1EmQFbbxOfRCwy-b
+curl -X POST localhost/open-endpoint?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+
+# Open with parameters
+curl localhost/open-endpoint/paramA/paramB?apikey=7B5zIqmRGXmrJTFmKa99-b
+curl localhost/open-endpoint/paramA/paramB?apikey=QzVV6y1EmQFbbxOfRCwy-b
+curl localhost/open-endpoint/paramA/paramB?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+
 # 1 per second
 curl localhost/pets?apikey=7B5zIqmRGXmrJTFmKa99-b
 curl localhost/pets?apikey=QzVV6y1EmQFbbxOfRCwy-b
@@ -57,6 +83,19 @@ curl -X DELETE localhost/pets/id01?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
 #####################################################################
 
 ##### URL
+
+# Open
+curl localhost/open-endpoint/7B5zIqmRGXmrJTFmKa99-b
+curl localhost/open-endpoint/QzVV6y1EmQFbbxOfRCwy-b
+curl localhost/open-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b
+curl -X POST localhost/open-endpoint/7B5zIqmRGXmrJTFmKa99-b
+curl -X POST localhost/open-endpoint/QzVV6y1EmQFbbxOfRCwy-b
+curl -X POST localhost/open-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b
+
+# Open with parameters
+curl localhost/open-endpoint/paramA/paramB/7B5zIqmRGXmrJTFmKa99-b
+curl localhost/open-endpoint/paramA/paramB/QzVV6y1EmQFbbxOfRCwy-b
+curl localhost/open-endpoint/paramA/paramB/mGcjH8Fv6U9y3BVF9H3Y-b
 
 # 1 per second
 curl localhost/pets/7B5zIqmRGXmrJTFmKa99-b
