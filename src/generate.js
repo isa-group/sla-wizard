@@ -14,29 +14,52 @@ var utils = require("./utils");
  * @param {object} oasDoc - Open API definition.
  * @param {string} apiServerURL - API server url.
  * @param {string} configTemplatePath - Path to proxy config template.
-*/
-function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/envoy.yaml'){
+ * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
+ * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
+ */
+function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/envoy.yaml', authLocation, authName){
 
   var envoyTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
-
   var routesDefinition = [];
   var limitedPaths = [];
+  var allProxyApikeys = [];
   apiServerURL = url.parse(apiServerURL)
 
   for (var subSLA of SLAs){
-    var subSLARates = subSLA["rates"];
+    var planName = subSLA["plan"]["name"];
+    var subSLARates = subSLA["plan"]["rates"];
+    var slaApikeys = subSLA["context"]["apikeys"]
+    allProxyApikeys = allProxyApikeys.concat(slaApikeys);
 
-      for (var endpoint in subSLARates){
-        limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {} ;
+    for (var endpoint in subSLARates){
+      limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {} ;
+      var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
 
-        for (var method in subSLARates[endpoint]){
-          var method_specs = subSLARates[endpoint][method];
-          var max = method_specs["requests"][0]["max"];
-          var period = method_specs["requests"][0]["period"];
-          period = utils.getLimitPeriod(period,"envoy");
-          routesDefinition.push({
+      for (var method in subSLARates[endpoint]){
+        var method_specs = subSLARates[endpoint][method];
+        var max = method_specs["requests"][0]["max"];
+        var period = utils.getLimitPeriod(method_specs["requests"][0]["period"],"envoy");
+
+        var paramsCount = (endpoint.match(/{/g)||[]).length;
+        var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+
+        for (var i in slaApikeys) {
+
+          var matcher = {
             "match": {
-              "path": endpoint
+              "headers": [
+                {
+                  "name":":method",
+                  "string_match": {
+                    "exact": method.toUpperCase()
+                  }
+                },{
+                  "name": authName,
+                  "string_match": {
+                    "exact": slaApikeys[i]
+                  }
+                }
+              ]
             },
             "route": {
               "cluster": "main-cluster"
@@ -65,25 +88,74 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
                 }
               }
             }
-          });
-        }
+          };
+
+          if (paramsCount == 0) {
+            matcher["match"]["path"] = endpoint
+          } else {
+            matcher["match"]["safe_regex"] = {
+              "google_re2": null,
+              "regex": `\"^${endpoint_paramsRegexd}$\"`
+            }
+          }
+          routesDefinition.push(matcher);
+        }  
       }
-
-  }
-
-  for (var endpoint in oasDoc.paths){
-    if (!limitedPaths.includes(endpoint)){
-      routesDefinition.push({
-         "match": {
-           "path": endpoint
-         },
-         "route": {
-           "cluster": "main-cluster"
-         }
-       });
     }
   }
 
+  if (limitedPaths.length != Object.keys(oasDoc.paths).length) { // "ratelimiting-less" endpoints management
+    var allProxyApikeysJoined = allProxyApikeys.join('|')
+    for (var endpoint in oasDoc.paths){
+      var methods = Object.keys(oasDoc.paths[endpoint]).join('|').toUpperCase();
+      if (!limitedPaths.includes(endpoint)){
+        for (var method in oasDoc.paths[endpoint]){
+          
+          var paramsCount = (endpoint.match(/{/g)||[]).length;
+          var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+          
+          var matcher = {
+            "match": {
+              "headers": [
+                {
+                  "name": "\:method",
+                  "string_match": {
+                    "safe_regex": {
+                      "google_re2": null,
+                      "regex": `\"^(${methods})$\"`
+                    }
+                  }
+                },{
+                  "name": authName,
+                  "string_match": {
+                    "safe_regex": {
+                      "google_re2": null,
+                      "regex": `\"^(${allProxyApikeysJoined})$\"`
+                    }
+                  }
+                }
+              ]
+            },
+            "route": {
+              "cluster": "main-cluster"
+            }
+          };
+
+          if (paramsCount == 0) {
+            matcher["match"]["path"] = endpoint
+          } else {
+            matcher["match"]["safe_regex"] = {
+              "google_re2": null,
+              "regex": `\"^${endpoint_paramsRegexd}$\"`
+            }
+          }
+          routesDefinition.push(matcher);
+        }
+      }
+    }
+  }
+
+  envoyTemplate.layered_runtime.layers[0].static_layer.re2.max_program_size.error_level = allProxyApikeysJoined.length + 50 // equivalent to max_program_size
   envoyTemplate.static_resources
     .listeners[0].filter_chains[0].filters[0]
     .typed_config.route_config.virtual_hosts[0].routes = routesDefinition
@@ -93,7 +165,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   envoyTemplate.static_resources
     .clusters[0].load_assignment.endpoints[0].lb_endpoints[0]
     .endpoint.address.socket_address.port_value = apiServerURL.port
-  return jsyaml.dump(envoyTemplate);
+  return jsyaml.dump(envoyTemplate, {lineWidth: -1, quotingType: '"'})
 }
 
 
@@ -211,7 +283,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   traefikTemplate.http.services["main-service"].loadBalancer.servers[0].url = apiServerURL
   traefikTemplate.http.routers = routersDefinition
   traefikTemplate.http.middlewares = middlewaresDefinition
-  return jsyaml.dump(traefikTemplate)
+  return jsyaml.dump(traefikTemplate, {lineWidth: -1})
 }
 
 
@@ -280,9 +352,9 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
         var period = utils.getLimitPeriod(method_specs["requests"][0]["period"],"traefik");
         method = method.toUpperCase();
         var paramsCount = (endpoint.match(/{/g)||[]).length;
-        var endpoint_paramsMod = endpoint.replace(/\/{(.*?)\}/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+        var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
 
-        frontendDefinition += `use_backend ${planName}_${sanitized_endpoint}_${method} if ${planName}_valid_apikey METH_${method} { path_reg \\${endpoint_paramsMod}\\/?$ } \n    `
+        frontendDefinition += `use_backend ${planName}_${sanitized_endpoint}_${method} if ${planName}_valid_apikey METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ } \n    `
         backendDefinition +=
 `backend ${planName}_${sanitized_endpoint}_${method}
     stick-table type binary len 20 size 100k expire 1${period} store http_req_rate(1${period})
@@ -300,8 +372,8 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
         for (var method in oasDoc.paths[endpoint]){
           method = method.toUpperCase();
           var paramsCount = (endpoint.match(/{/g)||[]).length;
-          var endpoint_paramsMod = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd TODO: 
-          frontendDefinition += `use_backend no_ratelimit_endpoints if METH_${method} { path_reg \\${endpoint_paramsMod}\\/?$ }\n    `; 
+          var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd TODO: 
+          frontendDefinition += `use_backend no_ratelimit_endpoints if METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ }\n    `; 
         }  
       }
     }
@@ -411,19 +483,19 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
       check = "~";
     }
     if (!limitedPaths.includes(endpoint)){ // "ratelimiting-less" endpoints 
-      var methods = Object.keys(oasDoc.paths[endpoint]);
+      var methods = Object.keys(oasDoc.paths[endpoint]).join('|').toUpperCase();
       planBased = "";
       /////////////// LOCATIONS
       var location = ` 
-        location ~ ${endpoint}_(${methods.join('|').toUpperCase()}) {
-            rewrite ${endpoint}_(${methods.join('|').toUpperCase()}) $uri_original break;
+        location ~ ${endpoint}_(${methods}) {
+            rewrite ${endpoint}_(${methods}) $uri_original break;
             proxy_pass ${apiServerURL};
         }`
       locationDefinitions += location;
     }
 
     /////////////// URI BASED ROUTING
-    var endpoint_paramsMod = endpoint.replace(/\{(.*?)\}/g, '(.+)'); // If the endpoint has parameters, these are modified so Nginx understands them
+    var endpoint_paramsRegexd = endpoint.replace(/\{(.*?)\}/g, '(.+)'); // If the endpoint has parameters, these are modified so Nginx understands them
     var apikeysInUrl = "";
     if (authLocation == "from_url"){
       if (check == "~") {
@@ -433,8 +505,8 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
       }
     }
     uriRewrites += `
-        if ($uri ${check} ${endpoint_paramsMod}${apikeysInUrl}) {
-          rewrite ${endpoint_paramsMod} "/${planBased}${utils.sanitizeEndpoint(endpoint)}_\${request_method}" break; 
+        if ($uri ${check} ${endpoint_paramsRegexd}${apikeysInUrl}) {
+          rewrite ${endpoint_paramsRegexd} "/${planBased}${utils.sanitizeEndpoint(endpoint)}_\${request_method}" break; 
         }`;
   }
 

@@ -1,3 +1,10 @@
+layered_runtime:
+  layers:
+  - name: static_layer_0
+    static_layer:
+      re2:
+        max_program_size:
+          error_level: 10000
 static_resources:
   listeners:
   - address:
@@ -16,6 +23,8 @@ static_resources:
               "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
               stat_prefix: http_local_rate_limiter
           - name: envoy.filters.http.router
+            typed_config:
+              "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
           route_config:
             name: local_route
             virtual_hosts:
