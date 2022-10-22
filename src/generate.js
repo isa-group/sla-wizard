@@ -5,6 +5,7 @@ var url = require("url");
 var axios = require("axios");
 var configs = require("./configs");
 var utils = require("./utils");
+const { match } = require('assert');
 
 
 /**
@@ -53,11 +54,6 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
                   "string_match": {
                     "exact": method.toUpperCase()
                   }
-                },{
-                  "name": authName,
-                  "string_match": {
-                    "exact": slaApikeys[i]
-                  }
                 }
               ]
             },
@@ -90,12 +86,26 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
             }
           };
 
+          var authCheck = {
+            "name": authName,
+            "string_match": {
+              "exact": slaApikeys[i]
+            }
+          };
+
+          if (authLocation == "header"){
+            matcher["match"]["headers"].push(authCheck);
+          } else if (authLocation == "query") {
+            matcher["match"]["query_parameters"] = [];
+            matcher["match"]["query_parameters"].push(authCheck);
+          }
+
           if (paramsCount == 0) {
             matcher["match"]["path"] = endpoint
           } else {
             matcher["match"]["safe_regex"] = {
               "google_re2": null,
-              "regex": `\"^${endpoint_paramsRegexd}$\"`
+              "regex": `^${endpoint_paramsRegexd}$`
             }
           }
           routesDefinition.push(matcher);
@@ -122,15 +132,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
                   "string_match": {
                     "safe_regex": {
                       "google_re2": null,
-                      "regex": `\"^(${methods})$\"`
-                    }
-                  }
-                },{
-                  "name": authName,
-                  "string_match": {
-                    "safe_regex": {
-                      "google_re2": null,
-                      "regex": `\"^(${allProxyApikeysJoined})$\"`
+                      "regex": `^(${methods})$`
                     }
                   }
                 }
@@ -141,12 +143,32 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
             }
           };
 
+          if (authLocation == "header"){
+            matcher["match"]["headers"].push({
+              "name": authName,
+              "string_match": {
+                "exact": slaApikeys[i]
+              }
+            });
+          } else if (authLocation == "query") { // For free endpoints, all the apikeys are added to a single string_match, hence using safe_regex instead exact
+            matcher["match"]["query_parameters"] = [];
+            matcher["match"]["query_parameters"].push({
+              "name": authName,
+              "string_match": {
+                "safe_regex": {
+                  "google_re2": null,
+                  "regex": `^(${allProxyApikeys.join('|')})$`
+                }
+              }
+            });
+          }
+
           if (paramsCount == 0) {
             matcher["match"]["path"] = endpoint
           } else {
             matcher["match"]["safe_regex"] = {
               "google_re2": null,
-              "regex": `\"^${endpoint_paramsRegexd}$\"`
+              "regex": `^${endpoint_paramsRegexd}$`
             }
           }
           routesDefinition.push(matcher);
@@ -165,7 +187,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   envoyTemplate.static_resources
     .clusters[0].load_assignment.endpoints[0].lb_endpoints[0]
     .endpoint.address.socket_address.port_value = apiServerURL.port
-  return jsyaml.dump(envoyTemplate, {lineWidth: -1, quotingType: '"'})
+  return jsyaml.dump(envoyTemplate, {lineWidth: -1})
 }
 
 

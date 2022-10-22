@@ -1,5 +1,7 @@
 # SLA Wizard
 
+## How it works
+
 ![SLA Wizard workflow](img/workflow.png)
 
 1. The user provides to SLA Wizard an OpenAPI Specification v3 and one or more SLAs agreement. 

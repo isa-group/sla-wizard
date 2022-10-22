@@ -15,28 +15,29 @@ static_resources:
         - filters:
             - name: envoy.filters.network.http_connection_manager
               typed_config:
-                "@type": type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
                 stat_prefix: ingress_http
                 http_filters:
                   - name: envoy.filters.http.local_ratelimit
                     typed_config:
-                      "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                      '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                       stat_prefix: http_local_rate_limiter
                   - name: envoy.filters.http.router
                     typed_config:
-                      "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+                      '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
                 route_config:
                   name: local_route
                   virtual_hosts:
                     - name: local_service
                       domains:
-                        - "*"
+                        - '*'
                       routes:
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: 7B5zIqmRGXmrJTFmKa99-b
@@ -45,7 +46,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 1
@@ -62,9 +63,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: QzVV6y1EmQFbbxOfRCwy-b
@@ -73,7 +75,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 1
@@ -90,9 +92,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: mGcjH8Fv6U9y3BVF9H3Y-b
@@ -101,7 +104,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 1
@@ -118,9 +121,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: POST
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: 7B5zIqmRGXmrJTFmKa99-b
@@ -129,7 +133,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 2
@@ -146,9 +150,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: POST
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: QzVV6y1EmQFbbxOfRCwy-b
@@ -157,7 +162,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 2
@@ -174,9 +179,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: POST
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: mGcjH8Fv6U9y3BVF9H3Y-b
@@ -185,7 +191,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 2
@@ -202,20 +208,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: 7B5zIqmRGXmrJTFmKa99-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 3
@@ -232,20 +239,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: QzVV6y1EmQFbbxOfRCwy-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 3
@@ -262,20 +270,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: mGcjH8Fv6U9y3BVF9H3Y-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 3
@@ -292,20 +301,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: PUT
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: 7B5zIqmRGXmrJTFmKa99-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 4
@@ -322,20 +332,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: PUT
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: QzVV6y1EmQFbbxOfRCwy-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 4
@@ -352,20 +363,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: PUT
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: mGcjH8Fv6U9y3BVF9H3Y-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 4
@@ -382,20 +394,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: DELETE
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: 7B5zIqmRGXmrJTFmKa99-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 5
@@ -412,20 +425,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: DELETE
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: QzVV6y1EmQFbbxOfRCwy-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 5
@@ -442,20 +456,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: DELETE
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: mGcjH8Fv6U9y3BVF9H3Y-b
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 5
@@ -472,9 +487,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: qmFm7B5zIKa99vcitRGX-p
@@ -483,7 +499,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 10
@@ -500,9 +516,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: RCwyJs35QzVV6y1EmQFb-p
@@ -511,7 +528,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 10
@@ -528,9 +545,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: H8Fv6UmGcj9y3Bb9TVF9-p
@@ -539,7 +557,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 10
@@ -556,9 +574,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: POST
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: qmFm7B5zIKa99vcitRGX-p
@@ -567,7 +586,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 20
@@ -584,9 +603,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: POST
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: RCwyJs35QzVV6y1EmQFb-p
@@ -595,7 +615,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 20
@@ -612,9 +632,10 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: POST
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: H8Fv6UmGcj9y3Bb9TVF9-p
@@ -623,7 +644,7 @@ static_resources:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 20
@@ -640,20 +661,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: qmFm7B5zIKa99vcitRGX-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 30
@@ -670,20 +692,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: RCwyJs35QzVV6y1EmQFb-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 30
@@ -700,20 +723,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: GET
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: H8Fv6UmGcj9y3Bb9TVF9-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 30
@@ -730,20 +754,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: PUT
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: qmFm7B5zIKa99vcitRGX-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 40
@@ -760,20 +785,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: PUT
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: RCwyJs35QzVV6y1EmQFb-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 40
@@ -790,20 +816,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: PUT
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: H8Fv6UmGcj9y3Bb9TVF9-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 40
@@ -820,20 +847,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: DELETE
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: qmFm7B5zIKa99vcitRGX-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 50
@@ -850,20 +878,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: DELETE
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: RCwyJs35QzVV6y1EmQFb-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 50
@@ -880,20 +909,21 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   exact: DELETE
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   exact: H8Fv6UmGcj9y3Bb9TVF9-p
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/pets(?:\\/[^/]+){1}$\""
+                              regex: ^/pets(?:\/[^/]+){1}$
                           route:
                             cluster: main-cluster
                           typed_per_filter_config:
                             envoy.filters.http.local_ratelimit:
-                              "@type": type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
+                              '@type': type.googleapis.com/envoy.extensions.filters.http.local_ratelimit.v3.LocalRateLimit
                               stat_prefix: route_rate_limit
                               token_bucket:
                                 max_tokens: 50
@@ -910,49 +940,52 @@ static_resources:
                                   denominator: HUNDRED
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   safe_regex:
                                     google_re2: null
-                                    regex: "\"^(GET|POST)$\""
+                                    regex: ^(GET|POST)$
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   safe_regex:
                                     google_re2: null
-                                    regex: "\"^(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b|qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)$\""
+                                    regex: ^(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b|qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)$
                             path: /open-endpoint
                           route:
                             cluster: main-cluster
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   safe_regex:
                                     google_re2: null
-                                    regex: "\"^(GET|POST)$\""
+                                    regex: ^(GET|POST)$
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   safe_regex:
                                     google_re2: null
-                                    regex: "\"^(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b|qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)$\""
+                                    regex: ^(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b|qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)$
                             path: /open-endpoint
                           route:
                             cluster: main-cluster
                         - match:
                             headers:
-                              - name: ":method"
+                              - name: ':method'
                                 string_match:
                                   safe_regex:
                                     google_re2: null
-                                    regex: "\"^(GET)$\""
+                                    regex: ^(GET)$
+                            query_parameters:
                               - name: apikey
                                 string_match:
                                   safe_regex:
                                     google_re2: null
-                                    regex: "\"^(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b|qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)$\""
+                                    regex: ^(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b|qmFm7B5zIKa99vcitRGX-p|RCwyJs35QzVV6y1EmQFb-p|H8Fv6UmGcj9y3Bb9TVF9-p)$
                             safe_regex:
                               google_re2: null
-                              regex: "\"^/open-endpoint(?:\\/[^/]+){2}$\""
+                              regex: ^/open-endpoint(?:\/[^/]+){2}$
                           route:
                             cluster: main-cluster
   clusters:
@@ -966,4 +999,4 @@ static_resources:
                   address:
                     socket_address:
                       address: api
-                      port_value: "9999"
+                      port_value: '9999'
