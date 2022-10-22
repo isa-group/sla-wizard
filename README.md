@@ -1,5 +1,7 @@
 # SLA Wizard
 
+![SLA Wizard workflow](https://github.com/isa-group/SLA4OAI-Specification/raw/main/img/workflow.svg)
+
 ## Usage
 
 Once the tool is published in npm, it will be possible to install it using `npm install sla-wizard` but until then, to get the tool clone the repository and install dependencies:
