@@ -1,6 +1,6 @@
 # SLA Wizard
 
-![SLA Wizard workflow](https://github.com/isa-group/SLA4OAI-Specification/raw/main/img/workflow.svg)
+![SLA Wizard workflow](img/workflow.png)
 
 ## Usage
 
