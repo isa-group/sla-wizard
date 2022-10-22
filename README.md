@@ -2,6 +2,10 @@
 
 ![SLA Wizard workflow](img/workflow.png)
 
+1. The user provides to SLA Wizard an OpenAPI Specification v3 and one or more SLAs agreement. 
+2. SLA Wizard generates a proxy configuration file which includes the rate limiting indicated in the SLA(s). 
+3. The obtained configuration is provided to the proxy server when launching it. The proxy can be one of: Envoy, HAProxy, Nginx or Traefik.
+
 ## Usage
 
 Once the tool is published in npm, it will be possible to install it using `npm install sla-wizard` but until then, to get the tool clone the repository and install dependencies:
