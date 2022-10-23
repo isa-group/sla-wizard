@@ -85,39 +85,39 @@ curl -X DELETE localhost/pets/id01?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
 ##### URL
 
 # Open
-curl localhost/open-endpoint/7B5zIqmRGXmrJTFmKa99-b
-curl localhost/open-endpoint/QzVV6y1EmQFbbxOfRCwy-b
-curl localhost/open-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b
-curl -X POST localhost/open-endpoint/7B5zIqmRGXmrJTFmKa99-b
-curl -X POST localhost/open-endpoint/QzVV6y1EmQFbbxOfRCwy-b
-curl -X POST localhost/open-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b
+curl localhost/open-endpoint/7B5zIqmRGXmrJTFmKa99-b; echo 
+curl localhost/open-endpoint/QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl localhost/open-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b; echo 
+curl -X POST localhost/open-endpoint/7B5zIqmRGXmrJTFmKa99-b; echo 
+curl -X POST localhost/open-endpoint/QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl -X POST localhost/open-endpoint/mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # Open with parameters
-curl localhost/open-endpoint/paramA/paramB/7B5zIqmRGXmrJTFmKa99-b
-curl localhost/open-endpoint/paramA/paramB/QzVV6y1EmQFbbxOfRCwy-b
-curl localhost/open-endpoint/paramA/paramB/mGcjH8Fv6U9y3BVF9H3Y-b
+curl localhost/open-endpoint/paramA/paramB/7B5zIqmRGXmrJTFmKa99-b; echo 
+curl localhost/open-endpoint/paramA/paramB/QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl localhost/open-endpoint/paramA/paramB/mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 1 per second
-curl localhost/pets/7B5zIqmRGXmrJTFmKa99-b
-curl localhost/pets/QzVV6y1EmQFbbxOfRCwy-b
-curl localhost/pets/mGcjH8Fv6U9y3BVF9H3Y-b
+curl localhost/pets/7B5zIqmRGXmrJTFmKa99-b; echo 
+curl localhost/pets/QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl localhost/pets/mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 2 per minute
-curl -X POST localhost/pets/7B5zIqmRGXmrJTFmKa99-b
-curl -X POST localhost/pets/QzVV6y1EmQFbbxOfRCwy-b
-curl -X POST localhost/pets/mGcjH8Fv6U9y3BVF9H3Y-b
+curl -X POST localhost/pets/7B5zIqmRGXmrJTFmKa99-b; echo 
+curl -X POST localhost/pets/QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl -X POST localhost/pets/mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 3 per second
-curl localhost/pets/id01/7B5zIqmRGXmrJTFmKa99-b
-curl localhost/pets/id01/QzVV6y1EmQFbbxOfRCwy-b
-curl localhost/pets/id01/mGcjH8Fv6U9y3BVF9H3Y-b
+curl localhost/pets/id01/7B5zIqmRGXmrJTFmKa99-b; echo 
+curl localhost/pets/id01/QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl localhost/pets/id01/mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 4 per minute
-curl -X PUT localhost/pets/id01/7B5zIqmRGXmrJTFmKa99-b
-curl -X PUT localhost/pets/id01/QzVV6y1EmQFbbxOfRCwy-b
-curl -X PUT localhost/pets/id01/mGcjH8Fv6U9y3BVF9H3Y-b
+curl -X PUT localhost/pets/id01/7B5zIqmRGXmrJTFmKa99-b; echo 
+curl -X PUT localhost/pets/id01/QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl -X PUT localhost/pets/id01/mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 5 per second
-curl -X DELETE localhost/pets/id01/7B5zIqmRGXmrJTFmKa99-b
-curl -X DELETE localhost/pets/id01/QzVV6y1EmQFbbxOfRCwy-b
-curl -X DELETE localhost/pets/id01/mGcjH8Fv6U9y3BVF9H3Y-b
+curl -X DELETE localhost/pets/id01/7B5zIqmRGXmrJTFmKa99-b; echo 
+curl -X DELETE localhost/pets/id01/QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl -X DELETE localhost/pets/id01/mGcjH8Fv6U9y3BVF9H3Y-b; echo 

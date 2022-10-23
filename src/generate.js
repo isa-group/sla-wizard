@@ -24,6 +24,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   var routesDefinition = [];
   var limitedPaths = [];
   var allProxyApikeys = [];
+  var apikeysAtTheEndOfURL = "";
   apiServerURL = url.parse(apiServerURL)
 
   for (var subSLA of SLAs){
@@ -58,7 +59,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
               ]
             },
             "route": {
-              "cluster": "main-cluster"
+              "cluster": "main-cluster" // If authLocation is url, this is later modified
             },
             "typed_per_filter_config": {
               "envoy.filters.http.local_ratelimit": {
@@ -98,14 +99,26 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
           } else if (authLocation == "query") {
             matcher["match"]["query_parameters"] = [];
             matcher["match"]["query_parameters"].push(authCheck);
+          } else if (authLocation == "url"){
+            apikeysAtTheEndOfURL = `/${slaApikeys[i]}`; // The variable apikeysAtTheEndOfURL will be '' if authLocation is header or query
+            matcher["route"] = {
+              "cluster": "main-cluster",
+              "regex_rewrite": {
+                "pattern": {
+                  "google_re2": null,
+                  "regex": `(.*)/${slaApikeys[i]}$`
+                },
+                "substitution": "\\1"
+              }
+            };
           }
 
           if (paramsCount == 0) {
-            matcher["match"]["path"] = endpoint
+            matcher["match"]["path"] = `${endpoint}${apikeysAtTheEndOfURL}`;
           } else {
             matcher["match"]["safe_regex"] = {
               "google_re2": null,
-              "regex": `^${endpoint_paramsRegexd}$`
+              "regex": `^${endpoint_paramsRegexd}${apikeysAtTheEndOfURL}$`
             }
           }
           routesDefinition.push(matcher);
@@ -161,14 +174,26 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
                 }
               }
             });
+          } else if (authLocation == "url") {
+            apikeysAtTheEndOfURL = `/(${allProxyApikeys.join('|')})`; // The variable apikeysAtTheEndOfURL will be '' if authLocation is header or query
+            matcher["route"] = {
+              "cluster": "main-cluster",
+              "regex_rewrite": {
+                "pattern": {
+                  "google_re2": null,
+                  "regex": `(.*)/(${allProxyApikeys.join('|')})$`
+                },
+                "substitution": "\\1"
+              }
+            };
           }
 
-          if (paramsCount == 0) {
-            matcher["match"]["path"] = endpoint
+          if (paramsCount == 0 && authLocation != "url") {
+            matcher["match"]["path"] = `${endpoint}${apikeysAtTheEndOfURL}`;
           } else {
             matcher["match"]["safe_regex"] = {
               "google_re2": null,
-              "regex": `^${endpoint_paramsRegexd}$`
+              "regex": `^${endpoint_paramsRegexd}${apikeysAtTheEndOfURL}$`
             }
           }
           routesDefinition.push(matcher);
