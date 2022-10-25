@@ -17,8 +17,9 @@ const { match } = require('assert');
  * @param {string} configTemplatePath - Path to proxy config template.
  * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
+ * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/envoy.yaml', authLocation, authName){
+function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/envoy.yaml', authLocation, authName, proxyPort){
 
   var envoyTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
   var routesDefinition = [];
@@ -204,6 +205,8 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
 
   envoyTemplate.layered_runtime.layers[0].static_layer.re2.max_program_size.error_level = allProxyApikeysJoined.length + 50 // equivalent to max_program_size
   envoyTemplate.static_resources
+    .listeners[0].address.socket_address.port_value = proxyPort
+  envoyTemplate.static_resources
     .listeners[0].filter_chains[0].filters[0]
     .typed_config.route_config.virtual_hosts[0].routes = routesDefinition
   envoyTemplate.static_resources
@@ -343,8 +346,9 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
  * @param {string} configTemplatePath - Path to proxy config template.
  * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
+ * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/haproxy.cfg', authLocation, authName){
+function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/haproxy.cfg', authLocation, authName, proxyPort){
 
   var haproxyTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
   var frontendDefinition = "";
@@ -441,6 +445,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
   }
 
   return haproxyTemplate
+            .replace('%%PROXY_PORT_PH%%', proxyPort)
             .replace('%%GET_APIKEY_FROM_URL_PH%%', getApikeyFromUrl)
             .replace('%%APIKEY_CHECKS_PH%%', apikeyChecks)
             .replace('%%REMOVE_API_FROM_URL_PH%%', removeApikeyFromURL)
@@ -459,8 +464,9 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
  * @param {string} configTemplatePath - Path to proxy config template.
  * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
+ * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/nginx.conf', authLocation, authName){ // TODO: improve resulting file format (i.e beautify)
+function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/nginx.conf', authLocation, authName, proxyPort){ // TODO: improve resulting file format (i.e beautify)
 
   var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString(); // TODO: should simplify the template 
   var limitsDefinition = "";
@@ -560,6 +566,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   return nginxTemplate
             .replace('%%LIMIT_REQ_ZONE_PH%%', limitsDefinition)
             .replace('%%MAP_APIKEYS_PH%%', mapApikeysDefinition + '    }')
+            .replace('%%PROXY_PORT_PH%%', proxyPort)
             .replace('%%GET_APIKEY_FROM_URL_PH%%', getApikeyFromUrl)
             .replace('%%AUTH_LOCATION_PH%%', `${authLocation}_${authName}`)
             .replace('%%URI_ORIGINAL_SAVE_PH%%', uriOriginalSave)
@@ -607,9 +614,9 @@ function getSLAsFromURL(slasURL,
  * @param {string} customTemplate - Path to custom proxy config template. 
  * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
- 
+ * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTemplate, authLocation, authName) {
+function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTemplate, authLocation, authName, proxyPort) {
 
   // Load and validate OAS
   var oasDoc = utils.loadAndValidateOAS(oasPath);
@@ -677,10 +684,11 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
                             customTemplate,
                             outFile,
                             authLocation,
-                            authName)
+                            authName,
+                            proxyPort)
       }
     } catch (err) {
-      configs.logger.error(`Error with SLA(s) ${element}: ${err}. Quitting`);
+      configs.logger.error(`Error with SLA(s) ${element}: ${err}. Quitting`); // TODO: scope this more to help trace errors 
       process.exit();
     }
   });
@@ -697,6 +705,7 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
  * @param {string} outFile - Path where to save the produced proxy configuration.
  * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
+ * @param {string} proxyPort - Port on which the proxy is running.
  */
 function generateProxyConfig(proxyType,
                     SLAsFiltered,
@@ -705,7 +714,8 @@ function generateProxyConfig(proxyType,
                     customTemplate,
                     outFile,
                     authLocation,
-                    authName){
+                    authName,
+                    proxyPort){
   switch (proxyType) {
     case 'nginx':
       var proxyConf = generateNginxConfig(SLAsFiltered,
@@ -713,7 +723,8 @@ function generateProxyConfig(proxyType,
                                           apiServerURL,
                                           customTemplate,
                                           authLocation,
-                                          authName);
+                                          authName,
+                                          proxyPort);
       break;
     case 'haproxy':
       var proxyConf = generateHAproxyConfig(SLAsFiltered,
@@ -721,7 +732,8 @@ function generateProxyConfig(proxyType,
                                             apiServerURL,
                                             customTemplate,
                                             authLocation,
-                                            authName);
+                                            authName,
+                                            proxyPort);
       break;
     case 'traefik':
       var proxyConf = generateTraefikConfig(SLAsFiltered,
@@ -737,7 +749,8 @@ function generateProxyConfig(proxyType,
                                             apiServerURL,
                                             customTemplate,
                                             authLocation,
-                                            authName);
+                                            authName,
+                                            proxyPort);
       break;
   }
   fs.writeFileSync(outFile, proxyConf);

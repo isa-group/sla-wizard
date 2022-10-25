@@ -20,6 +20,7 @@ program.command('config')
   .option('--customTemplate <customTemplate>','Custom proxy configuration template.')
   .option('--authLocation <authLocation>','Where to look for the authentication parameter.','header') // TODO: choices(['header','query','url'])
   .option('--authName <authName>','Name of the authentication parameter, such as "token" or "apikey".','apikey')
+  .option('--proxyPort <proxyPort>','Port on which the proxy is running',80)
   .action(function(proxy, options) {
     proxy, options = utils.validateParamsCLI(proxy,
                                              options);
@@ -29,7 +30,8 @@ program.command('config')
                                   options.outFile, 
                                   options.customTemplate, 
                                   options.authLocation,
-                                  options.authName);
+                                  options.authName,
+                                  options.proxyPort);
   })
 
 // Test command

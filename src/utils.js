@@ -79,6 +79,7 @@ function sanitizeEndpoint(input) {
  * Validates an array of SLA. For each SLA, it checks:
  *     - It conforms to the SLA schema
  *     - Its type is 'agreement'
+ *     - It contains API keys
  * If any of the SLAs in the array does not conform to those two requirements,
  * the execution stops. Additionally, if the array contains duplicated SLAs, those
  * will be ignored.
@@ -97,12 +98,12 @@ function validateSLAs(SLAsToValidate){
       configs.logger.error(`SLA with id ${element.context.id} is not valid: ${JSON.stringify(err.errors)}, quitting`);
       process.exit();
     }
-    else if (element.context.apikeys === undefined){
-      configs.logger.error(`SLA with id ${element.context.id} does not have property context.apikeys, quitting`);
-      process.exit();
-    }
     else if (element.context.type != "agreement"){
       configs.logger.error(`SLA with id ${element.context.id} is not of type 'agreement', quitting`);
+      process.exit();
+    }
+    else if (element.context.apikeys === undefined){
+      configs.logger.error(`SLA with id ${element.context.id} does not have property context.apikeys, quitting`);
       process.exit();
     }
     else if (arrayContainsObject(SLAsFiltered, element)){ // else if (SLAsFiltered.includes(element)){
