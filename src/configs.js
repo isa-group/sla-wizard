@@ -50,5 +50,5 @@ function createNewLogger() {
 }
 
 module.exports = {
-    logger: createNewLogger() // Create logger
+  logger: createNewLogger() // Create logger
 };

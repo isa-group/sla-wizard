@@ -14,7 +14,7 @@ var generate = require("./generate");
  * @param {object} proxy - Proxy type.
  * @param {object} options - CLI options.
  */
-function validateParamsCLI(proxy, options){ // TODO
+function validateParamsCLI(proxy, options) { // TODO
   return proxy, options;
 }
 
@@ -24,7 +24,7 @@ function validateParamsCLI(proxy, options){ // TODO
  * OAS object.
  * @param {string} file - Path to the OAS description.
  */
-function loadAndValidateOAS(file){
+function loadAndValidateOAS(file) {
 
   // Load
   try {
@@ -53,13 +53,13 @@ function loadAndValidateOAS(file){
  * @param {array} arrayOfObjects - An array of objects.
  * @param {object} objectToCheck - An SLA to validate.
  */
-function arrayContainsObject(arrayOfObjects, objectToCheck){ // TODO: not performant if the array is large
+function arrayContainsObject(arrayOfObjects, objectToCheck) { // TODO: not performant if the array is large
   var res = false
   arrayOfObjects.forEach(element => {
     try {
-       assert.deepStrictEqual(element, objectToCheck)
-       res = true;
-    } catch (err) {}
+      assert.deepStrictEqual(element, objectToCheck)
+      res = true;
+    } catch (err) { }
   });
   return res;
 }
@@ -85,10 +85,10 @@ function sanitizeEndpoint(input) {
  * will be ignored.
  * @param {object} slaToValidate - An SLA to validate.
  */
-function validateSLAs(SLAsToValidate){
+function validateSLAs(SLAsToValidate) {
 
   var SLAsFiltered = [];
-  var SLAschema = jsyaml.load(fs.readFileSync(path.join(__dirname, '../schemas/sla.json'), 'utf8')); 
+  var SLAschema = jsyaml.load(fs.readFileSync(path.join(__dirname, '../schemas/sla.json'), 'utf8'));
   configs.logger.debug("SLAs to validate:");
   configs.logger.debug(JSON.stringify(SLAsToValidate));
   SLAsToValidate.forEach(element => {
@@ -98,15 +98,15 @@ function validateSLAs(SLAsToValidate){
       configs.logger.error(`SLA with id ${element.context.id} is not valid: ${JSON.stringify(err.errors)}, quitting`);
       process.exit();
     }
-    else if (element.context.type != "agreement"){
+    else if (element.context.type != "agreement") {
       configs.logger.error(`SLA with id ${element.context.id} is not of type 'agreement', quitting`);
       process.exit();
     }
-    else if (element.context.apikeys === undefined){
+    else if (element.context.apikeys === undefined) {
       configs.logger.error(`SLA with id ${element.context.id} does not have property context.apikeys, quitting`);
       process.exit();
     }
-    else if (arrayContainsObject(SLAsFiltered, element)){ // else if (SLAsFiltered.includes(element)){
+    else if (arrayContainsObject(SLAsFiltered, element)) { // else if (SLAsFiltered.includes(element)){
       configs.logger.warn(`SLA with id ${element.context.id} is duplicated`);
     }
     else {
@@ -114,7 +114,7 @@ function validateSLAs(SLAsToValidate){
     }
   });
 
-  if (SLAsFiltered.length == 0 ){
+  if (SLAsFiltered.length == 0) {
     configs.logger.error("None of the provided SLAs is valid, nothing to do. ");
     process.exit();
   }
@@ -128,7 +128,7 @@ function validateSLAs(SLAsToValidate){
  * Given a string, checks if it's a valid URL.
  * @param {string} potentialURL - A potential URL.
  */
-function isAValidUrl(potentialURL){
+function isAValidUrl(potentialURL) {
   try {
     new url.URL(potentialURL);
     return true;
@@ -143,7 +143,7 @@ function isAValidUrl(potentialURL){
  * @param {string} proxy - One of: nginx, haproxy, traefik and envoy.
  * @param {string} period - One of: second, minute, hour, day, month and year.
  */
-function getLimitPeriod(period, proxy){
+function getLimitPeriod(period, proxy) {
   var periodMap = null;
   switch (proxy) {
     case 'nginx': // NGINX only accepts second and minute
@@ -187,17 +187,17 @@ function getLimitPeriod(period, proxy){
  * Loads a proxy config template.
  * @param {string} configTemplatePath - Path to proxy config template.
 */
-function getProxyConfigTemplate(configTemplatePath){
+function getProxyConfigTemplate(configTemplatePath) {
   return fs.readFileSync(path.join('', configTemplatePath));
 }
 
 
 module.exports = {
-    sanitizeEndpoint: sanitizeEndpoint,
-    validateSLAs: validateSLAs,
-    isAValidUrl: isAValidUrl,
-    getLimitPeriod: getLimitPeriod,
-    getProxyConfigTemplate: getProxyConfigTemplate,
-    validateParamsCLI: validateParamsCLI,
-    loadAndValidateOAS: loadAndValidateOAS
+  sanitizeEndpoint: sanitizeEndpoint,
+  validateSLAs: validateSLAs,
+  isAValidUrl: isAValidUrl,
+  getLimitPeriod: getLimitPeriod,
+  getProxyConfigTemplate: getProxyConfigTemplate,
+  validateParamsCLI: validateParamsCLI,
+  loadAndValidateOAS: loadAndValidateOAS
 };

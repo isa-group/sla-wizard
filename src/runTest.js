@@ -38,9 +38,9 @@ function runTest(oasPath, slaPath, testOptions) {
     var SLAs = [];
     if (fs.lstatSync(slaPath).isDirectory()) { // FOLDER
         fs.readdirSync(slaPath).forEach(file => {
-          var partialSlaPath = path.join(slaPath, file); // add base path to SLA paths
-          configs.logger.debug(`File in directory: ${partialSlaPath}`);
-          SLAs.push(jsyaml.load(fs.readFileSync(path.join('', partialSlaPath), 'utf8')));
+            var partialSlaPath = path.join(slaPath, file); // add base path to SLA paths
+            configs.logger.debug(`File in directory: ${partialSlaPath}`);
+            SLAs.push(jsyaml.load(fs.readFileSync(path.join('', partialSlaPath), 'utf8')));
         });
     } else { // FILE
         configs.logger.debug(`File: ${slaPath}`);
@@ -62,14 +62,9 @@ function runTest(oasPath, slaPath, testOptions) {
                     // If the endpoint has params these are "parametrized"
                     endpoint = endpoint.replace(/{|}/g, "");
 
-                    // TODO: for testing
-                    if (method != "get" ){
-                        var methodCurl = `-X ${method.toUpperCase()} `
-                    } else {
-                        var methodCurl = ""
-                    }
-                    console.log(`curl ${methodCurl}-H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
-                     
+                    // for testing
+                    //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
+
                     function customRequestBuilder() {
                         var data = { user: allProxyApikeys[apikey] }; // TODO: data is not needed
                         //apikey = "7B5zIqmRGXmrJTFmKa99-b"
@@ -118,17 +113,11 @@ function runTest(oasPath, slaPath, testOptions) {
                         // If the endpoint has params these are "parametrized"
                         endpoint = endpoint.replace(/{|}/g, "");
 
-                        // TODO: for testing
-                        if (method != "get" ){
-                            var methodCurl = `-X ${method.toUpperCase()} `
-                        } else {
-                            var methodCurl = ""
-                        }
-                        console.log(`curl ${methodCurl}-H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
-                        
-                        function customRequestBuilder(allProxyApikeys) {
+                        // for testing
+                        //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
+
+                        function customRequestBuilder() {
                             var data = { user: allProxyApikeys[apikey] }; // TODO: data is not needed
-                            //apikey = "7B5zIqmRGXmrJTFmKa99-b"
                             var jsonData = JSON.stringify(data);
                             var requestConfig = {
                                 options: {
