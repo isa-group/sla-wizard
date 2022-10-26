@@ -63,17 +63,16 @@ function runTest(oasPath, slaPath, testOptions) {
                     endpoint = endpoint.replace(/{|}/g, "");
 
                     // for testing
-                    //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
+                    console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
 
                     function customRequestBuilder() {
-                        var data = { user: allProxyApikeys[apikey] }; // TODO: data is not needed
-                        //apikey = "7B5zIqmRGXmrJTFmKa99-b"
+                        var data = { user: slaApikeys[apikey] }; // TODO: data is not needed
                         var jsonData = JSON.stringify(data);
                         var requestConfig = {
                             options: {
                                 method: method.toUpperCase(),
                                 headers: {
-                                    [authName]: `${allProxyApikeys[apikey]}`, // TODO: take from SLA's context.apikeys
+                                    [authName]: `'${slaApikeys[apikey]}'`, // TODO: take from SLA's context.apikeys
                                     'Content-Type': 'application/json',
                                     'Content-Length': jsonData.length
                                 }
@@ -114,7 +113,7 @@ function runTest(oasPath, slaPath, testOptions) {
                         endpoint = endpoint.replace(/{|}/g, "");
 
                         // for testing
-                        //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
+                        console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
 
                         function customRequestBuilder() {
                             var data = { user: allProxyApikeys[apikey] }; // TODO: data is not needed
@@ -123,7 +122,7 @@ function runTest(oasPath, slaPath, testOptions) {
                                 options: {
                                     method: method.toUpperCase(),
                                     headers: {
-                                        [authName]: `${allProxyApikeys[apikey]}`, // TODO: take from SLA's context.apikeys
+                                        [authName]: `'${allProxyApikeys[apikey]}'`, // TODO: take from SLA's context.apikeys
                                         'Content-Type': 'application/json',
                                         'Content-Length': jsonData.length
                                     }
@@ -140,6 +139,7 @@ function runTest(oasPath, slaPath, testOptions) {
                             return url
                         }
 
+                        
                         apipecker.run({ // TODO: the logs produced by this are not in the same order as 'endpoint's because of the async
                             concurrentUsers: 1,
                             iterations: 1,

@@ -39,12 +39,12 @@ describe(`Testing based on ${testConfig}`, function () {
   try {
     apipeckerLogs = JSON.parse(apipeckerLogs.replace(/\]\n\[/g, ","));
   } catch (error) {
-    configs.logger.error(`Error parsing APIPecker logs: ${error.message} (logs where: ${apipeckerLogs})`);
+    configs.logger.error(`Error parsing APIPecker logs: ${error.message}. Logs were: \n${apipeckerLogs}`);
     process.exit();
   }
 
   it('Check number of endpoints tested', function () { // TODO: 1st ver. one of these per endpoint
-    chai.expect(apipeckerLogs).to.have.lengthOf(4); // TODO: process the JSON produced by runTest
+    chai.expect(apipeckerLogs).to.have.lengthOf(48); // TODO: process the JSON produced by runTest
   });
   it('Check all requests succeeded', function () { // TODO: this will happen only in the first iteration. The second will get some 429 already
     apipeckerLogs.forEach(result => {
