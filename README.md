@@ -53,7 +53,7 @@ The following table describes all the options that SLA Wizard includes for its c
 |---|---|---|---|
 | `proxy` | `config` | Yes | Proxy for which the configuration should be generated. (choices: "nginx", "haproxy", "traefik", "envoy") |
 | `-o`, `--outFile <configFile>` | `config` | Yes | Config output file. |
-| `--sla <slaPath>` | `config` & `runTest`| No | One of: 1) single SLA, 2) folder of SLAs, 3) URL returning an array of SLA objects (default: "./specs/sla.yaml") |
+| `--sla <slaPath>` | `config` & `runTest`| No | One of: 1) single SLA, 2) folder containing SLAs, 3) URL returning an array of SLA objects (default: "./specs/sla.yaml"). Note in the case of `runTest` the URL option is not supported. |
 | `--oas <pathToOAS>` | `config` & `runTest` | No | Path to an OAS v3 file. (default: "./specs/oas.yaml") |
 | `--customTemplate <customTemplate>` | `config` | No | Custom proxy configuration template. |
 | `--authLocation <authLocation>` | `config` | No | Where to look for the authentication parameter. (default: "header") |
@@ -189,6 +189,10 @@ Refer to `templates/traefik.yaml`.
 ## Testing
 
 TODO: this should be done with `runTest`
+
+```bash
+node src/index.js runTest --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --specs tests/basicTestConfig.yaml 
+```
 
 The following steps indicate how to create proxy configuration files and validate they work as expected. SLA Wizard uses both the API's OAS and SLA definitions for that.
 

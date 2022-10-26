@@ -42,6 +42,7 @@ program.command('runTest')
   .option('--oas <pathToOAS>','Path to an OAS v3 file.','./specs/oas.yaml') 
   .action((options) => {
     runTest.runTest(options.oas, 
+                    options.sla, 
                     options.specs);
   });
 

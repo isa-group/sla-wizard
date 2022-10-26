@@ -29,15 +29,13 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   apiServerURL = url.parse(apiServerURL)
 
   for (var subSLA of SLAs){
-    var planName = subSLA["plan"]["name"];
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
 
     for (var endpoint in subSLARates){
       limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {} ;
-      var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
-
+      
       for (var method in subSLARates[endpoint]){
         var method_specs = subSLARates[endpoint][method];
         var max = method_specs["requests"][0]["max"];
@@ -632,69 +630,49 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
     process.exit();
   }
 
-  // Get SLA(s) path(s) from OAS
-  var SLApaths = [];
-  var oasLocation = oasPath.substring(0, oasPath.lastIndexOf('/'));
-  try {
-    if (typeof slaPath === "string" ){
-      SLApaths.push(slaPath);
-    } else {
-      SLApaths = slaPath;
-    }
-  } catch {
-    configs.logger.error("OAS' info.x-sla property missing");
-    process.exit();
-  }
-
   // Load all SLA path(s)
   var SLAs = [];
-  SLApaths.forEach(element => {
-    try{
-      if (SLApaths.length != 1 && utils.isAValidUrl(element)){
-        configs.logger.error("URL provided alongside other SLA pointers, quitting");
-        process.exit();
-      }
-      else if (SLApaths.length == 1 && utils.isAValidUrl(element)){ // URL
-        configs.logger.debug(`Getting SLAs from ${element}...`);
-        getSLAsFromURL(element,
-                       proxyType,
-                       oasDoc,
-                       apiServerURL,
-                       customTemplate,
-                       outFile);
-      }
-      else {
-        if (fs.lstatSync(element).isDirectory()) { // FOLDER
-          fs.readdirSync(element).forEach(file => {
-            var slaPath = path.join(element, file); // add base path to SLA paths
-            configs.logger.debug(`File in directory: ${slaPath}`);
-            SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
-          });
-        } else { // FILE
-          configs.logger.debug(`File: ${element}`);
-          var slaPath = element; // add base path to SLA paths
-          SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
-        }
-
-        // Validate SLAs
-        var SLAsFiltered = utils.validateSLAs(SLAs);
-
-        // Generate and write to file proxy config according to SLA
-        generateProxyConfig(proxyType,
-                            SLAsFiltered,
-                            oasDoc,
-                            apiServerURL,
-                            customTemplate,
-                            outFile,
-                            authLocation,
-                            authName,
-                            proxyPort)
-      }
-    } catch (err) {
-      configs.logger.error(`Error with SLA(s) ${element}: ${err}. Quitting`); // TODO: scope this more to help trace errors 
-      process.exit();
+  try{
+    if (utils.isAValidUrl(slaPath)){ // URL
+      configs.logger.debug(`Getting SLAs from ${slaPath}...`);
+      getSLAsFromURL(slaPath, // This function getSLAsFromURL calls generateProxyConfig
+                     proxyType,
+                     oasDoc,
+                     apiServerURL,
+                     customTemplate,
+                     outFile);
     }
-  });
+    else {
+      if (fs.lstatSync(slaPath).isDirectory()) { // FOLDER
+        fs.readdirSync(slaPath).forEach(file => {
+          var partialSlaPath = path.join(slaPath, file); // add base path to SLA paths
+          configs.logger.debug(`File in directory: ${partialSlaPath}`);
+          SLAs.push(jsyaml.load(fs.readFileSync(path.join('', partialSlaPath), 'utf8')));
+        });
+      } else { // FILE
+        configs.logger.debug(`File: ${slaPath}`);
+        var slaPath = slaPath; // add base path to SLA paths
+        SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
+      }
+
+      // Validate SLAs
+      var SLAsFiltered = utils.validateSLAs(SLAs);
+
+      // Generate and write to file proxy config according to SLA
+      generateProxyConfig(proxyType,
+                          SLAsFiltered,
+                          oasDoc,
+                          apiServerURL,
+                          customTemplate,
+                          outFile,
+                          authLocation,
+                          authName,
+                          proxyPort)
+    }
+  } catch (err) {
+    configs.logger.error(`Error with SLA(s) ${slaPath}: ${err}. Quitting`); // TODO: scope this more to help trace errors 
+    process.exit();
+  }
 }
 
 

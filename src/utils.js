@@ -30,7 +30,7 @@ function loadAndValidateOAS(file){
   try {
     var spec = fs.readFileSync(path.join('', file), 'utf8');
     var oasDoc = jsyaml.load(spec);
-    configs.logger.info('Input oas-doc %s: %s', file, oasDoc);
+    configs.logger.debug('Input oas-doc %s: %s', file, oasDoc);
   } catch (err) {
     configs.logger.error("Error loading OAS file: " + err);
     process.exit();

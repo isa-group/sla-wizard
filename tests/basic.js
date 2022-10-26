@@ -4,7 +4,10 @@ var configs = require("../src/configs.js");
 
 var testConfig = "tests/basicTestConfig.yaml"
 var oas4Test = "tests/specs/simple_api_oas.yaml"
-var cmd = `node ./src/index.js runTest --specs $PWD/${testConfig} --oas $PWD/${oas4Test}`;
+var slasPath = "tests/specs/slas/"
+
+// the output of this command is what is analyzed with chai, meaning it must be json only hence the LOGGER_LEVEL env. variable set to 'error'
+var cmd = `export LOGGER_LEVEL=error ; node ./src/index.js runTest --specs $PWD/${testConfig} --oas $PWD/${oas4Test} --sla ${slasPath}`; 
 var globalTimeout = 10000;
 
 function processRes(){
@@ -34,16 +37,19 @@ describe(`Testing based on ${testConfig}`, function () {
   }
 
   try {
-    apipeckerLogs = JSON.parse(apipeckerLogs);
+    apipeckerLogs = JSON.parse(apipeckerLogs.replace(/\]\n\[/g,","));
   } catch (error) {
     configs.logger.error(`Error parsing APIPecker logs: ${error.message} (logs where: ${apipeckerLogs})`);
     process.exit();
   }
 
-  console.log(JSON.stringify(apipeckerLogs))
-
-  it('Just an obvious test', function () { // TODO: 1st ver. one of these per endpoint
-
-    chai.expect(apipeckerLogs).to.have.lengthOf.above(2000); // TODO: process the JSON produced by runTest
+  it('Check number of endpoints tested', function () { // TODO: 1st ver. one of these per endpoint
+    chai.expect(apipeckerLogs).to.have.lengthOf(4); // TODO: process the JSON produced by runTest
+  });
+  it('Check all requests succeeded', function () { 
+    apipeckerLogs.forEach(result => {
+      chai.expect(result["result"]["stats"][0]["statusCode"]).to.equal(200); // TODO: process the JSON produced by runTest
+    });
+    
   });
 });
