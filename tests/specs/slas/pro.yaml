@@ -11,8 +11,8 @@ context:
     - RCwyJs35QzVV6y1EmQFb-p
     - H8Fv6UmGcj9y3Bb9TVF9-p
   validity:
-    from: "2022-11-23T20:20:40+00:00"
-    to: "2023-11-23T20:20:40+00:00"
+    from: "2022-09-23T20:20:40+00:00"
+    to: "2023-09-23T20:20:40+00:00"
 metrics:
   requests:
     type: integer
@@ -24,7 +24,7 @@ plan:
       cost: 15
       currency: EUR
       billing: monthly
-  availability: "2022-11-23T20:20:40+00:00"
+  availability: R/00:00:00Z/23:59:59Z	
   rates:
     /pets:
       get:

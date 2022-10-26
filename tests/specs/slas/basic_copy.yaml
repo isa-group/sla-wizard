@@ -11,8 +11,8 @@ context:
     - QzVV6y1EmQFbbxOfRCwy-b  
     - mGcjH8Fv6U9y3BVF9H3Y-b 
   validity:
-    from: "2022-11-23T20:20:40+00:00"
-    to: "2023-11-23T20:20:40+00:00"
+    from: "2022-09-23T20:20:40+00:00"
+    to: "2023-09-23T20:20:40+00:00"
 metrics:
   requests:
     type: integer
@@ -20,11 +20,11 @@ metrics:
     description: "Number of requests"
 plan:
   name: basic
+  availability: R/00:00:00Z/23:59:59Z	
   pricing:
       cost: 5
       currency: EUR
       billing: monthly
-  availability: "2022-11-23T20:20:40+00:00"
   rates:
     /pets:
       get:
