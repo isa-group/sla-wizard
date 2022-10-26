@@ -7,6 +7,7 @@
 1. The user provides to SLA Wizard an OpenAPI Specification v3 and one or more SLAs agreement. 
 2. SLA Wizard generates a proxy configuration file which includes the rate limiting indicated in the SLA(s). 
 3. The obtained configuration is provided to the proxy server when launching it. The proxy can be one of: Envoy, HAProxy, Nginx or Traefik.
+4. The API requests will be rate-limited according to the proxy configuratin file, which matches what the API SLA(s) indicate. 
 
 ## Usage
 
