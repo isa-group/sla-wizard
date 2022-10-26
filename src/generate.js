@@ -161,7 +161,10 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
             matcher["match"]["headers"].push({
               "name": authName,
               "string_match": {
-                "exact": slaApikeys[i]
+                "safe_regex": {
+                  "google_re2": null,
+                  "regex": `^(${allProxyApikeys.join('|')})$`
+                }
               }
             });
           } else if (authLocation == "query") { // For free endpoints, all the apikeys are added to a single string_match, hence using safe_regex instead exact
