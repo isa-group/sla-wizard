@@ -1,84 +1,84 @@
 ##### HEADER
 
 # Open
-curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint
-curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint
-curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint
-curl -X POST -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint
-curl -X POST -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint
-curl -X POST -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint
+curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint; echo 
+curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint; echo 
+curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint; echo 
+curl -X POST -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint; echo 
+curl -X POST -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint; echo 
+curl -X POST -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint; echo 
 
 # Open with parameters
-curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint/paramA/paramB
-curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint/paramA/paramB
-curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint/paramA/paramB
+curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/open-endpoint/paramA/paramB; echo 
+curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/open-endpoint/paramA/paramB; echo 
+curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/open-endpoint/paramA/paramB; echo 
 
 # 1 per second
-curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets
-curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets
-curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets
+curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets; echo 
+curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets; echo 
+curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets; echo 
 
 # 2 per minute
-curl -X POST -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets
-curl -X POST -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets
-curl -X POST -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets
+curl -X POST -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets; echo 
+curl -X POST -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets; echo 
+curl -X POST -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets; echo 
 
 # 3 per second
-curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets/id01
-curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets/id01
-curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets/id01
+curl -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets/id01; echo 
+curl -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets/id01; echo 
+curl -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets/id01; echo 
 
 # 4 per minute
-curl -X PUT -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets/id01
-curl -X PUT -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets/id01
-curl -X PUT -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets/id01
+curl -X PUT -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets/id01; echo 
+curl -X PUT -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets/id01; echo 
+curl -X PUT -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets/id01; echo 
 
 # 5 per second
-curl -X DELETE -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets/id01
-curl -X DELETE -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets/id01
-curl -X DELETE -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets/id01
+curl -X DELETE -H "apikey: 7B5zIqmRGXmrJTFmKa99-b" localhost/pets/id01; echo 
+curl -X DELETE -H "apikey: QzVV6y1EmQFbbxOfRCwy-b" localhost/pets/id01; echo 
+curl -X DELETE -H "apikey: mGcjH8Fv6U9y3BVF9H3Y-b" localhost/pets/id01; echo 
 
 #####################################################################
 
 ##### QUERY
 
 # Open
-curl localhost/open-endpoint?apikey=7B5zIqmRGXmrJTFmKa99-b
-curl localhost/open-endpoint?apikey=QzVV6y1EmQFbbxOfRCwy-b
-curl localhost/open-endpoint?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
-curl -X POST localhost/open-endpoint?apikey=7B5zIqmRGXmrJTFmKa99-b
-curl -X POST localhost/open-endpoint?apikey=QzVV6y1EmQFbbxOfRCwy-b
-curl -X POST localhost/open-endpoint?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+curl localhost/open-endpoint?apikey=7B5zIqmRGXmrJTFmKa99-b; echo 
+curl localhost/open-endpoint?apikey=QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl localhost/open-endpoint?apikey=mGcjH8Fv6U9y3BVF9H3Y-b; echo 
+curl -X POST localhost/open-endpoint?apikey=7B5zIqmRGXmrJTFmKa99-b; echo 
+curl -X POST localhost/open-endpoint?apikey=QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl -X POST localhost/open-endpoint?apikey=mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # Open with parameters
-curl localhost/open-endpoint/paramA/paramB?apikey=7B5zIqmRGXmrJTFmKa99-b
-curl localhost/open-endpoint/paramA/paramB?apikey=QzVV6y1EmQFbbxOfRCwy-b
-curl localhost/open-endpoint/paramA/paramB?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+curl localhost/open-endpoint/paramA/paramB?apikey=7B5zIqmRGXmrJTFmKa99-b; echo 
+curl localhost/open-endpoint/paramA/paramB?apikey=QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl localhost/open-endpoint/paramA/paramB?apikey=mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 1 per second
-curl localhost/pets?apikey=7B5zIqmRGXmrJTFmKa99-b
-curl localhost/pets?apikey=QzVV6y1EmQFbbxOfRCwy-b
-curl localhost/pets?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+curl localhost/pets?apikey=7B5zIqmRGXmrJTFmKa99-b; echo 
+curl localhost/pets?apikey=QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl localhost/pets?apikey=mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 2 per minute
-curl -X POST localhost/pets?apikey=7B5zIqmRGXmrJTFmKa99-b
-curl -X POST localhost/pets?apikey=QzVV6y1EmQFbbxOfRCwy-b
-curl -X POST localhost/pets?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+curl -X POST localhost/pets?apikey=7B5zIqmRGXmrJTFmKa99-b; echo 
+curl -X POST localhost/pets?apikey=QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl -X POST localhost/pets?apikey=mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 3 per second
-curl localhost/pets/id01?apikey=7B5zIqmRGXmrJTFmKa99-b
-curl localhost/pets/id01?apikey=QzVV6y1EmQFbbxOfRCwy-b
-curl localhost/pets/id01?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+curl localhost/pets/id01?apikey=7B5zIqmRGXmrJTFmKa99-b; echo 
+curl localhost/pets/id01?apikey=QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl localhost/pets/id01?apikey=mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 4 per minute
-curl -X PUT localhost/pets/id01?apikey=7B5zIqmRGXmrJTFmKa99-b
-curl -X PUT localhost/pets/id01?apikey=QzVV6y1EmQFbbxOfRCwy-b
-curl -X PUT localhost/pets/id01?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+curl -X PUT localhost/pets/id01?apikey=7B5zIqmRGXmrJTFmKa99-b; echo 
+curl -X PUT localhost/pets/id01?apikey=QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl -X PUT localhost/pets/id01?apikey=mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 # 5 per second
-curl -X DELETE localhost/pets/id01?apikey=7B5zIqmRGXmrJTFmKa99-b
-curl -X DELETE localhost/pets/id01?apikey=QzVV6y1EmQFbbxOfRCwy-b
-curl -X DELETE localhost/pets/id01?apikey=mGcjH8Fv6U9y3BVF9H3Y-b
+curl -X DELETE localhost/pets/id01?apikey=7B5zIqmRGXmrJTFmKa99-b; echo 
+curl -X DELETE localhost/pets/id01?apikey=QzVV6y1EmQFbbxOfRCwy-b; echo 
+curl -X DELETE localhost/pets/id01?apikey=mGcjH8Fv6U9y3BVF9H3Y-b; echo 
 
 #####################################################################
 

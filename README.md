@@ -235,13 +235,13 @@ providers:
 Where `provider.file.filename` contains the path to the dynamic configuration file created by SLA Wizard. When spinning up the containers as in the command below, the variable `D_CFG_PATH` indicates the path to the dynamic configuration file:
 
 ```bash
-sudo D_CFG_PATH=../proxy-configuration-traefik CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
+sudo D_CFG_PATH=../proxy-configuration-traefik.yaml CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
 ```
 
 #### Envoy
 
 ```bash
-sudo CFG_PATH=../proxy-configuration-envoy docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
+sudo CFG_PATH=../proxy-configuration-envoy.yaml docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
 ```
 
 

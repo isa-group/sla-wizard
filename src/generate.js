@@ -307,7 +307,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
           }
         } else if (authLocation == "url") {
           routersDefinition[`${sanitized_endpoint}_${method}`] = {
-            rule: `Path(\`${endpoint}/${slaApikeys[i]}\`) && Method(\`${method.toUpperCase()}\`)`, 
+            rule: `Path(\`${endpoint}/{${allProxyApikeys_regex}}\`) && Method(\`${method.toUpperCase()}\`)`, 
             service: "main-service",
             middlewares: ["removeApikeyFromURL"] 
           }
@@ -540,8 +540,8 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
       planBased = "";
       /////////////// LOCATIONS
       var location = ` 
-        location ~ ${endpoint}_(${methods}) {
-            rewrite ${endpoint}_(${methods}) $uri_original break;
+        location ~ /${utils.sanitizeEndpoint(endpoint)}_(${methods}) {
+            rewrite /${utils.sanitizeEndpoint(endpoint)}_(${methods}) $uri_original break;
             proxy_pass ${apiServerURL};
         }`
       locationDefinitions += location;
