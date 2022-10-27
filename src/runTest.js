@@ -12,10 +12,39 @@ var apipecker = require("apipecker");
 var commander = require('commander');
 var program = new commander.Command();
 
-const authName = "apikey";
+const authLocation = "header";
 
 function customResultsHandler(results) {
     console.log(JSON.stringify(results.lotStats));
+}
+
+function customRequestBuilder(method, apikey, authLocation) {
+    var data = { user: apikey }; // TODO: data is not needed
+    var jsonData = JSON.stringify(data);
+    var requestConfig = {
+        options: {
+            method: method.toUpperCase(),
+            headers: {
+                'apikey': `'${apikey}'`, // TODO: take from SLA's context.apikeys
+                'Content-Type': 'application/json',
+                'Content-Length': jsonData.length
+            }
+        },
+        data: jsonData
+    }
+    return requestConfig;
+}
+
+function customUrlBuilder(authLocation, endpoint, apikey) { // TODO: the function argument here is used if the apikey is a query parameter
+    
+    if (authLocation == "header"){
+        var url = `http://localhost${endpoint}`;
+    } else if (authLocation == "query"){
+        var url =  `http://localhost${endpoint}?apikey=${apikey}`;    
+    } else if (authLocation == "url"){
+        var url =  `http://localhost${endpoint}/${apikey}`;    
+    }
+    return url
 }
 
 function runTest(oasPath, slaPath, testOptions) {
@@ -65,37 +94,13 @@ function runTest(oasPath, slaPath, testOptions) {
                     // for testing
                     console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
 
-                    function customRequestBuilder() {
-                        var data = { user: slaApikeys[apikey] }; // TODO: data is not needed
-                        var jsonData = JSON.stringify(data);
-                        var requestConfig = {
-                            options: {
-                                method: method.toUpperCase(),
-                                headers: {
-                                    [authName]: `'${slaApikeys[apikey]}'`, // TODO: take from SLA's context.apikeys
-                                    'Content-Type': 'application/json',
-                                    'Content-Length': jsonData.length
-                                }
-                            },
-                            data: jsonData
-                        }
-                        return requestConfig;
-                    }
-
-                    function customUrlBuilder(apikey) { // TODO: the function argument here is used if the apikey is a query parameter
-                        //var url =  `http://localhost${endpoint}?apikey=${apikey}`;
-                        var url = `http://localhost${endpoint}`;
-                        //console.log("Got: " + url);
-                        return url
-                    }
-
                     apipecker.run({ // TODO: the logs produced by this are not in the same order as 'endpoint's because of the async
                         concurrentUsers: 1,
                         iterations: 1,
                         delay: 1100, // in ms
                         verbose: true,
-                        urlBuilder: customUrlBuilder,
-                        requestBuilder: customRequestBuilder,
+                        urlBuilder: customUrlBuilder, //(endpoint, slaApikeys[apikey]),
+                        requestBuilder: customRequestBuilder, //(method, slaApikeys[apikey]),
                         resultsHandler: customResultsHandler
                     });
                 }
@@ -114,39 +119,14 @@ function runTest(oasPath, slaPath, testOptions) {
 
                         // for testing
                         console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
-
-                        function customRequestBuilder() {
-                            var data = { user: allProxyApikeys[apikey] }; // TODO: data is not needed
-                            var jsonData = JSON.stringify(data);
-                            var requestConfig = {
-                                options: {
-                                    method: method.toUpperCase(),
-                                    headers: {
-                                        [authName]: `'${allProxyApikeys[apikey]}'`, // TODO: take from SLA's context.apikeys
-                                        'Content-Type': 'application/json',
-                                        'Content-Length': jsonData.length
-                                    }
-                                },
-                                data: jsonData
-                            }
-                            return requestConfig;
-                        }
-
-                        function customUrlBuilder(apikey) { // TODO: the function argument here is used if the apikey is a query parameter
-                            //var url =  `http://localhost${endpoint}?apikey=${apikey}`;
-                            var url = `http://localhost${endpoint}`;
-                            //console.log("Got: " + url);
-                            return url
-                        }
-
                         
                         apipecker.run({ // TODO: the logs produced by this are not in the same order as 'endpoint's because of the async
                             concurrentUsers: 1,
                             iterations: 1,
                             delay: 1100, // in ms
                             verbose: true,
-                            urlBuilder: customUrlBuilder,
-                            requestBuilder: customRequestBuilder,
+                            urlBuilder: customUrlBuilder, //(endpoint, slaApikeys[apikey]),
+                            requestBuilder: customRequestBuilder, //(method, slaApikeys[apikey]),
                             resultsHandler: customResultsHandler
                         });
                     }
