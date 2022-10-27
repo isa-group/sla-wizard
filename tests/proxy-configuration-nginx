@@ -1,0 +1,38 @@
+events {}
+http {
+
+    limit_req_zone $http_apikey zone=basic_pets_POST:10m rate=1r/m;
+
+    limit_req_status 429;
+
+    map_hash_bucket_size 128;
+
+    map $http_apikey $api_client_name {
+     default "";
+     "~(7B5zIqmRGXmrJTFmKa99-b|QzVV6y1EmQFbbxOfRCwy-b|mGcjH8Fv6U9y3BVF9H3Y-b)" "basic";
+    }
+
+    server {
+
+        listen 80;
+
+        if ($http_apikey = "") {
+            return 401; # Unauthorized
+        }
+        if ($api_client_name = "") {
+            return 403; # Forbidden
+        }
+
+        set $uri_original $uri; 
+        
+        if ($uri = /pets) {
+          rewrite /pets "/${api_client_name}_pets_${request_method}" break; 
+        }
+        
+        location /basic_pets_POST {
+            rewrite /basic_pets_POST $uri_original break;
+            proxy_pass http://api:9999;
+            limit_req zone=basic_pets_POST burst=4 nodelay;
+        }
+    }
+}

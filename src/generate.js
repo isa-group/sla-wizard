@@ -644,7 +644,7 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
     }
     else {
       if (fs.lstatSync(slaPath).isDirectory()) { // FOLDER
-        fs.readdirSync(slaPath).forEach(file => {
+        fs.readdirSync(slaPath).forEach(file => { // TODO: if there's a folder inside the folder this will fail
           var partialSlaPath = path.join(slaPath, file); // add base path to SLA paths
           configs.logger.debug(`File in directory: ${partialSlaPath}`);
           SLAs.push(jsyaml.load(fs.readFileSync(path.join('', partialSlaPath), 'utf8')));
@@ -654,6 +654,8 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
         var slaPath = slaPath; // add base path to SLA paths
         SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
       }
+
+      
 
       // Validate SLAs
       var SLAsFiltered = utils.validateSLAs(SLAs);

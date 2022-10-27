@@ -160,12 +160,11 @@ function getLimitPeriod(period, proxy) {
         'day': 'd'
       };
       break;
-    case 'traefik': // Traefik does not support month and year
+    case 'traefik': // Traefik does not support day, month and year
       periodMap = {
         'second': 's',
         'minute': 'm',
-        'hour': 'h',
-        'day': 'd'
+        'hour': 'h'
       };
       break;
     case 'envoy':
@@ -174,7 +173,7 @@ function getLimitPeriod(period, proxy) {
         'minute': '60s',
         'hour': '3600s',
         'day': '86400s',
-        'month': '2592000s',
+        'month': '2628000s', // (365 * 86400) / 12
         'year': '31536000s'
       };
       break;
