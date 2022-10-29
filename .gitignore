@@ -1,4 +1,3 @@
 *node_modules*
 *package-lock.json*
-test/proxy-configuration*
-*proxy_examples*
+tests/proxy-configuration*

@@ -2,93 +2,105 @@
 
 ## Header
 
-sudo CFG_PATH=../proxy-configuration-envoy.yaml docker-compose --file tests/envoy/docker-compose-envoy.yaml down
-node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-envoy.yaml
-sudo CFG_PATH=../proxy-configuration-envoy.yaml docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
-gio trash tests/proxy-configuration-envoy.yaml
+PROXY_CONF_FILE=proxy-configuration-envoy-header.yaml
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/envoy/docker-compose-envoy.yaml down
+node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 ## Query
 
-sudo CFG_PATH=../proxy-configuration-envoy.yaml docker-compose --file tests/envoy/docker-compose-envoy.yaml down
-node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-envoy.yaml --authLocation query
-sudo CFG_PATH=../proxy-configuration-envoy.yaml docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
-gio trash tests/proxy-configuration-envoy.yaml
+PROXY_CONF_FILE=proxy-configuration-envoy-query.yaml
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/envoy/docker-compose-envoy.yaml down
+node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE --authLocation query
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 ## Url
 
-sudo CFG_PATH=../proxy-configuration-envoy.yaml docker-compose --file tests/envoy/docker-compose-envoy.yaml down
-node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-envoy.yaml --authLocation url
-sudo CFG_PATH=../proxy-configuration-envoy.yaml docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
-gio trash tests/proxy-configuration-envoy.yaml
+PROXY_CONF_FILE=proxy-configuration-envoy-url.yaml
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/envoy/docker-compose-envoy.yaml down
+node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE --authLocation url
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/envoy/docker-compose-envoy.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 
 ######### HAProxy
 
 ## Header
 
-sudo CFG_PATH=../proxy-configuration-haproxy.cfg docker-compose --file tests/haproxy/docker-compose-haproxy.yaml down
-node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-haproxy.cfg
-sudo CFG_PATH=../proxy-configuration-haproxy.cfg docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up --build
-gio trash tests/proxy-configuration-haproxy.cfg
+PROXY_CONF_FILE=proxy-configuration-haproxy-header.cfg
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/haproxy/docker-compose-haproxy.yaml down
+node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 ## Query
 
-sudo CFG_PATH=../proxy-configuration-haproxy.cfg docker-compose --file tests/haproxy/docker-compose-haproxy.yaml down
-node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-haproxy.cfg --authLocation query
-sudo CFG_PATH=../proxy-configuration-haproxy.cfg docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up --build
-gio trash tests/proxy-configuration-haproxy.cfg
+PROXY_CONF_FILE=proxy-configuration-haproxy-query.cfg
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/haproxy/docker-compose-haproxy.yaml down
+node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE --authLocation query
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 ## Url
 
-sudo CFG_PATH=../proxy-configuration-haproxy.cfg docker-compose --file tests/haproxy/docker-compose-haproxy.yaml down
-node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-haproxy.cfg --authLocation url
-sudo CFG_PATH=../proxy-configuration-haproxy.cfg docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up --build
-gio trash tests/proxy-configuration-haproxy.cfg
+PROXY_CONF_FILE=proxy-configuration-haproxy-url.cfg
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/haproxy/docker-compose-haproxy.yaml down
+node src/index.js config haproxy --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE --authLocation url
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/haproxy/docker-compose-haproxy.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 
 ######### NGINX
 
 ## Header
 
-sudo CFG_PATH=../proxy-configuration-nginx.conf docker-compose --file tests/nginx/docker-compose-nginx.yaml down
-node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-nginx.conf
-sudo CFG_PATH=../proxy-configuration-nginx.conf docker-compose --file tests/nginx/docker-compose-nginx.yaml up --build
-gio trash tests/proxy-configuration-nginx.conf
+PROXY_CONF_FILE=proxy-configuration-nginx-header.conf
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/nginx/docker-compose-nginx.yaml down
+node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/nginx/docker-compose-nginx.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 ## Query
 
-sudo CFG_PATH=../proxy-configuration-nginx.conf docker-compose --file tests/nginx/docker-compose-nginx.yaml down
-node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-nginx.conf --authLocation query
-sudo CFG_PATH=../proxy-configuration-nginx.conf docker-compose --file tests/nginx/docker-compose-nginx.yaml up --build
-gio trash tests/proxy-configuration-nginx.conf
+PROXY_CONF_FILE=proxy-configuration-nginx-query.conf
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/nginx/docker-compose-nginx.yaml down
+node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE --authLocation query
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/nginx/docker-compose-nginx.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 ## Url
 
-sudo CFG_PATH=../proxy-configuration-nginx.conf docker-compose --file tests/nginx/docker-compose-nginx.yaml down
-node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-nginx.conf --authLocation url
-sudo CFG_PATH=../proxy-configuration-nginx.conf docker-compose --file tests/nginx/docker-compose-nginx.yaml up --build
-gio trash tests/proxy-configuration-nginx.conf
+PROXY_CONF_FILE=proxy-configuration-nginx-url.conf
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/nginx/docker-compose-nginx.yaml down
+node src/index.js config nginx --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE --authLocation url
+sudo CFG_PATH=../$PROXY_CONF_FILE docker-compose --file tests/nginx/docker-compose-nginx.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 
 ######### TRAEFIK
 
 ## Header
 
-sudo D_CFG_PATH=../proxy-configuration-traefik.yaml CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml down
-node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-traefik.yaml
-sudo D_CFG_PATH=../proxy-configuration-traefik.yaml CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
-gio trash tests/proxy-configuration-traefik.yaml
+PROXY_CONF_FILE=proxy-configuration-traefik-header.yaml
+sudo D_CFG_PATH=../$PROXY_CONF_FILE CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml down
+node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE
+sudo D_CFG_PATH=../$PROXY_CONF_FILE CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 ## Query
 
-sudo D_CFG_PATH=../proxy-configuration-traefik.yaml CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml down
-node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-traefik.yaml --authLocation query
-sudo D_CFG_PATH=../proxy-configuration-traefik.yaml CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
-gio trash tests/proxy-configuration-traefik.yaml
+PROXY_CONF_FILE=proxy-configuration-traefik-query.yaml
+sudo D_CFG_PATH=../$PROXY_CONF_FILE CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml down
+node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE --authLocation query
+sudo D_CFG_PATH=../$PROXY_CONF_FILE CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
 
 ## Url
 
-sudo D_CFG_PATH=../proxy-configuration-traefik.yaml CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml down
-node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/proxy-configuration-traefik.yaml --authLocation url
-sudo D_CFG_PATH=../proxy-configuration-traefik.yaml CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
-gio trash tests/proxy-configuration-traefik.yaml
+PROXY_CONF_FILE=proxy-configuration-traefik-url.yaml
+sudo D_CFG_PATH=../$PROXY_CONF_FILE CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml down
+node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --outFile tests/$PROXY_CONF_FILE --authLocation url
+sudo D_CFG_PATH=../$PROXY_CONF_FILE CFG_PATH=./traefik.yaml docker-compose --file tests/traefik/docker-compose-traefik.yaml up --build
+gio trash tests/$PROXY_CONF_FILE
