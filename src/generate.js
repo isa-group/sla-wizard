@@ -266,7 +266,7 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
               service: "main-service",
               middlewares: ["removeApikeyFromURL", `${planName}_addApikeyHeader_ak${i}`, `${planName}_${sanitized_endpoint}_${method}`]
             }
-          } else if (authLocation == "header") { // TODO: no loop needed in this case
+          } else if (authLocation == "header") { // only 1 iteration needed in this case, hence the 'break'
             routersDefinition[`${planName}_${sanitized_endpoint}_${method}`] = {
               rule: `Path(\`${endpoint}\`) && Method(\`${method.toUpperCase()}\`) && HeadersRegexp(\`${authName}\`, \`${slaApikeys.join('|')}\`)`,
               service: "main-service",
@@ -424,7 +424,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
         for (var method in oasDoc.paths[endpoint]) {
           method = method.toUpperCase();
           var paramsCount = (endpoint.match(/{/g) || []).length;
-          var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd TODO: 
+          var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
           frontendDefinition += `use_backend no_ratelimit_endpoints if METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ }\n    `;
         }
       }
@@ -439,7 +439,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
     apikeyChecks += ` !${element}_valid_apikey`;
   });
 
-  if (authLocation == "hdr" && authCheckMethod == "sub") { // TODO: doing two checks because authLocation is modified above 
+  if (authLocation == "hdr" && authCheckMethod == "sub") { // doing two checks because authLocation is modified above 
     removeApikeyFromURL = `
     # Remove apikey from url
     http-request replace-path (.*)/(${allProxyApikeys.join('|')}) \\1`;
@@ -467,9 +467,9 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/nginx.conf', authLocation, authName, proxyPort) { // TODO: improve resulting file format (i.e beautify)
+function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/nginx.conf', authLocation, authName, proxyPort) {
 
-  var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString(); // TODO: should simplify the template 
+  var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
   var limitsDefinition = "";
   var locationDefinitions = "";
   var uriRewrites = "";
@@ -579,13 +579,13 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
 /**
  * Given a URL, makes a GET request to get an array of SLAs.
  * @param {string} slasURL - A URL.
+ * @param {string} proxyType - Proxy type, one of: envoy, haproxy, nginx, traefik.
+ * @param {object} oasDoc - Open API definition.
+ * @param {string} apiServerURL - API server url.
+ * @param {string} customTemplate - Path to proxy config template.
+ * @param {string} outFile - Path where to save the produced proxy configuration.
  */
-function getSLAsFromURL(slasURL,
-  proxyType,
-  oasDoc,
-  apiServerURL,
-  customTemplate,
-  outFile) {
+function getSLAsFromURL(slasURL, proxyType, oasDoc, apiServerURL, customTemplate, outFile) {
   axios
     .get(slasURL)
     .then(res => {
@@ -632,19 +632,20 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
 
   // Load all SLA path(s)
   var SLAs = [];
-  try {
-    if (utils.isAValidUrl(slaPath)) { // URL
-      configs.logger.debug(`Getting SLAs from ${slaPath}...`);
-      getSLAsFromURL(slaPath, // This function getSLAsFromURL calls generateProxyConfig
-        proxyType,
-        oasDoc,
-        apiServerURL,
-        customTemplate,
-        outFile);
-    }
-    else {
-      if (fs.lstatSync(slaPath).isDirectory()) { // FOLDER
-        fs.readdirSync(slaPath).forEach(file => { // TODO: if there's a folder inside the folder this will fail
+
+  if (utils.isAValidUrl(slaPath)) { // URL
+    configs.logger.debug(`Getting SLAs from ${slaPath}...`);
+    getSLAsFromURL(slaPath, // This function getSLAsFromURL calls generateProxyConfig
+      proxyType,
+      oasDoc,
+      apiServerURL,
+      customTemplate,
+      outFile);
+  }
+  else {
+    try {
+      if (fs.lstatSync(slaPath).isDirectory()) { // FOLDER (if there's a folder inside the folder this will fail)
+        fs.readdirSync(slaPath).forEach(file => {
           var partialSlaPath = path.join(slaPath, file); // add base path to SLA paths
           configs.logger.debug(`File in directory: ${partialSlaPath}`);
           SLAs.push(jsyaml.load(fs.readFileSync(path.join('', partialSlaPath), 'utf8')));
@@ -654,26 +655,24 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
         var slaPath = slaPath; // add base path to SLA paths
         SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
       }
-
-      
-
-      // Validate SLAs
-      var SLAsFiltered = utils.validateSLAs(SLAs);
-
-      // Generate and write to file proxy config according to SLA
-      generateProxyConfig(proxyType,
-        SLAsFiltered,
-        oasDoc,
-        apiServerURL,
-        customTemplate,
-        outFile,
-        authLocation,
-        authName,
-        proxyPort)
+    } catch (err) {
+      configs.logger.error(`Error with SLA(s) ${slaPath}: ${err}. Quitting`);
+      process.exit();
     }
-  } catch (err) {
-    configs.logger.error(`Error with SLA(s) ${slaPath}: ${err}. Quitting`); // TODO: scope this more to help trace errors 
-    process.exit();
+
+    // Validate SLAs
+    var SLAsFiltered = utils.validateSLAs(SLAs);
+
+    // Generate and write to file proxy config according to SLA
+    generateProxyConfig(proxyType,
+      SLAsFiltered,
+      oasDoc,
+      apiServerURL,
+      customTemplate,
+      outFile,
+      authLocation,
+      authName,
+      proxyPort)
   }
 }
 
@@ -690,15 +689,7 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateProxyConfig(proxyType,
-  SLAsFiltered,
-  oasDoc,
-  apiServerURL,
-  customTemplate,
-  outFile,
-  authLocation,
-  authName,
-  proxyPort) {
+function generateProxyConfig(proxyType, SLAsFiltered, oasDoc, apiServerURL, customTemplate, outFile, authLocation, authName, proxyPort) {
   switch (proxyType) {
     case 'nginx':
       var proxyConf = generateNginxConfig(SLAsFiltered,

@@ -44,11 +44,11 @@ describe(`Testing based on ${testConfig}`, function () {
   }
 
   it('Check number of endpoints tested', function () { // TODO: 1st ver. one of these per endpoint
-    chai.expect(apipeckerLogs).to.have.lengthOf(48); // TODO: process the JSON produced by runTest
+    chai.expect(apipeckerLogs).to.have.lengthOf(48); // process the JSON produced by runTest
   });
   it('Check all requests succeeded', function () { // TODO: this will happen only in the first iteration. The second will get some 429 already
     apipeckerLogs.forEach(result => {
-      chai.expect(result["result"]["stats"][0]["statusCode"]).to.equal(200); // TODO: process the JSON produced by runTest
+      chai.expect(result["result"]["stats"][0]["statusCode"]).to.equal(200); // process the JSON produced by runTest
     });
 
   });

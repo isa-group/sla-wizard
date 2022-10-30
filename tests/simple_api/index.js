@@ -8,7 +8,6 @@ app.listen(port, function () {
 });
 
 app.get("/open-endpoint", function (req, res) {
-  //res.send(JSON.stringify(req.headers));
   res.send({ "endpoint": req.originalUrl, "description": "GET" });
 });
 app.post("/open-endpoint", function (req, res) {

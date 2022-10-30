@@ -6,7 +6,6 @@ var url = require("url");
 var nameValidator = require('validator');
 var assert = require("assert");
 var configs = require("./configs");
-var generate = require("./generate");
 
 
 /**
@@ -14,7 +13,15 @@ var generate = require("./generate");
  * @param {object} proxy - Proxy type.
  * @param {object} options - CLI options.
  */
-function validateParamsCLI(proxy, options) { // TODO
+function validateParamsCLI(proxy, options) {
+  if (["header", "query", "url"].indexOf(options.authLocation) == -1) {
+    configs.logger.error("Wrong value for --authLocation");
+    process.exit();
+  }
+  if (!Number.isInteger(options.proxyPort) || options.proxyPort < 0 || options.proxyPort > 65536) {
+    configs.logger.error("The value provided to --proxyPort must be an integer in the range 0-65536");
+    process.exit();
+  }
   return proxy, options;
 }
 
@@ -49,11 +56,11 @@ function loadAndValidateOAS(file) {
 
 
 /**
- * Checks if an array contains an (complex) object.
+ * Checks if an array contains an (nested) object.
  * @param {array} arrayOfObjects - An array of objects.
  * @param {object} objectToCheck - An SLA to validate.
  */
-function arrayContainsObject(arrayOfObjects, objectToCheck) { // TODO: not performant if the array is large
+function arrayContainsObject(arrayOfObjects, objectToCheck) {
   var res = false
   arrayOfObjects.forEach(element => {
     try {

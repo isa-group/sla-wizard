@@ -3,21 +3,28 @@
 var fs = require('fs');
 var path = require('path');
 var jsyaml = require('js-yaml');
-var jsonschema = require('jsonschema');
 var configs = require("../src/configs");
 var utils = require("../src/utils");
-
-
 var apipecker = require("apipecker");
-var commander = require('commander');
-var program = new commander.Command();
 
 const authLocation = "header";
 
+
+/**
+ * Receives the results obtained by APIPecker and outputs a valid JSON.
+ * @param {object} results - Results obtained by APIPecker.
+ */
 function customResultsHandler(results) {
     console.log(JSON.stringify(results.lotStats));
 }
 
+
+/**
+ * Builds an HTTP request to be used by API Pecker.
+ * @param {string} method - HTTP method.
+ * @param {string} apikey - An API key.
+ * @param {string} authLocation - One of "header", "query", "url".
+ */
 function customRequestBuilder(method, apikey, authLocation) {
     var data = { user: apikey }; // TODO: data is not needed
     var jsonData = JSON.stringify(data);
@@ -35,18 +42,32 @@ function customRequestBuilder(method, apikey, authLocation) {
     return requestConfig;
 }
 
-function customUrlBuilder(authLocation, endpoint, apikey) { // TODO: the function argument here is used if the apikey is a query parameter
-    
-    if (authLocation == "header"){
+
+/**
+ * Builds a URL to be used in the request that API Pecker will perform.
+ * @param {string} authLocation - One of "header", "query", "url".
+ * @param {string} endpoint - Endpoint (including server and path) for the URL to be formed. 
+ * @param {string} apikey - An API key (not used if authLocation is "header" ).
+ */
+function customUrlBuilder(authLocation, endpoint, apikey = "") {
+
+    if (authLocation == "header") {
         var url = `http://localhost${endpoint}`;
-    } else if (authLocation == "query"){
-        var url =  `http://localhost${endpoint}?apikey=${apikey}`;    
-    } else if (authLocation == "url"){
-        var url =  `http://localhost${endpoint}/${apikey}`;    
+    } else if (authLocation == "query") {
+        var url = `http://localhost${endpoint}?apikey=${apikey}`;
+    } else if (authLocation == "url") {
+        var url = `http://localhost${endpoint}/${apikey}`;
     }
     return url
 }
 
+
+/**
+ * Tests the correctness of a proxy configuration made by SLA Wizard using API Pecker.
+ * @param {string} oasPath - Path to an OpenAPI Specification document.
+ * @param {string} slaPath - Path to SLA agreement(s).
+ * @param {string} testOptions - Configuration of the test to be run.
+ */
 function runTest(oasPath, slaPath, testOptions) {
 
     var limitedPaths = [];
@@ -108,7 +129,6 @@ function runTest(oasPath, slaPath, testOptions) {
         }
     }
 
-
     if (limitedPaths.length != Object.keys(oasDoc.paths).length) { // "ratelimiting-less" endpoints testing
         for (var endpoint in oasDoc.paths) { // TODO: this should be done for each plan in testOptions (for 'npm test' it should be all the plans in the SLAs linked to the provided OAS)
             if (!limitedPaths.includes(endpoint)) { // "ratelimiting-less" endpoints 
@@ -119,7 +139,7 @@ function runTest(oasPath, slaPath, testOptions) {
 
                         // for testing
                         console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
-                        
+
                         apipecker.run({ // TODO: the logs produced by this are not in the same order as 'endpoint's because of the async
                             concurrentUsers: 1,
                             iterations: 1,
@@ -135,6 +155,7 @@ function runTest(oasPath, slaPath, testOptions) {
         }
     }
 }
+
 
 module.exports = {
     runTest: runTest

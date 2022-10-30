@@ -1,12 +1,12 @@
 # Testing
 
-TODO: this should be done with `runTest`
+For testing SLA Wizard, `npm test` should be used, which under the hood runs a similar command to the one following (based on the tool's `runTest` command):
 
 ```bash
 node src/index.js runTest --oas tests/specs/simple_api_oas.yaml --sla tests/specs/slas/ --specs tests/basicTestConfig.yaml 
 ```
 
-The following steps indicate how to create proxy configuration files and validate they work as expected. SLA Wizard uses both the API's OAS and SLA definitions for that.
+Otherwise, the testing can be done in a more manual fashion. The following steps indicate how to create proxy configuration files and validate they work as expected. SLA Wizard uses both the API's OAS and SLA definitions for that.
 
 ## 1. Create proxy config
 

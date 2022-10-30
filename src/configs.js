@@ -1,5 +1,6 @@
 var winston = require('winston');
 
+
 /**
  * Create a Winston logger.
  */
@@ -48,6 +49,7 @@ function createNewLogger() {
     exitOnError: false,
   });
 }
+
 
 module.exports = {
   logger: createNewLogger() // Create logger
