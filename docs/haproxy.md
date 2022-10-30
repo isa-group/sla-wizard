@@ -1,8 +1,11 @@
 # HAProxy
 
-Rate limiting in HAProxy is based in its stick tables functionality: the server stores information from a client, allowing it to track user activities and differentiate between clients. The requests can be categorizing by client IP, for example but also other keys such as headers or query parameters. SLA Wizard uses such keys instead of client addresses.
+Rate limiting in HAProxy is based primarly in its stick tables functionality: the server stores information from a client, allowing it to track user activities and differentiate between clients. The requests can be categorizing by client IP, for example but also other keys such as headers or query parameters. SLA Wizard uses such keys instead of client addresses.
 
-Different ACLs are used to validate the request: 1) check apikey was provided and is valid 2) check the combination method+path is valid
+Different ACLs are used to validate the request:
+
+1. Check apikey was provided and verify it is valid
+2. Check the combination method+path of the request is valid (i.e is available in the API server)
 
 If the request is valid it is forwarded to its right backend, where the stick-table directive will apply the rate limiting.
 
@@ -31,3 +34,11 @@ Refer to [`templates/haproxy.cfg`](../templates/haproxy.cfg). The placeholders a
 | `%%FRONTEND_PH%%`            | Yes                                                | Definition of the [frontend](https://www.haproxy.com/documentation/hapee/latest/onepage/#4).                                             |
 | `%%DEFAULT_BACKEND_PH%%`     | Yes, if there are endpoints without rate limiting. | Definition of the default [backend](https://www.haproxy.com/documentation/hapee/latest/onepage/#4), for which there is no rate limiting. |
 | `%%BACKENDS_PH%%`            | Yes                                                | Definition of the backends (one for each plan-path-method combination) with rate limiting.                                               |
+
+## Fixed Time Window Rate Limiting
+
+In addition to what has been explained here so far, which is the implemantation for sliding window rate limiting (i.e SLA's `rates`), in HAProxy it is possible to have also [fixed or static window](https://www.haproxy.com/blog/four-examples-of-haproxy-rate-limiting/#rate-limit-by-fixed-time-window) for rate limiting (i.e SLA's `quotas`).
+
+However, an external service is required to reset the status at the end of the period. For example, if the ra quotas indicate it is possible to do 2 POST to /pets per minute, the service will be in charge of reseting the counter to 0 after one minute is over. The reason for that is that `http_req_cnt` does not take a period, which http_req_rate does. That is the period when the counter should be reset.
+
+Having an external service does not scale well. Supose there are quotas for 5 different endpoints, then 5 different services would be needed. These could be simply cron jobs, but still, is an extra thing that SLA Wizard can't take care of.
