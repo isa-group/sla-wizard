@@ -362,6 +362,12 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
   var removeApikeyFromURL = "";
   var apikeyChecks = "";
   var authCheckMethod = "str";
+  var penalizing = false;
+  var counter = "conn_cnt"
+  
+  if (penalizing){
+    var counter = "http_req_cnt"
+  }
 
   if (authLocation == "header") {
     authLocation = "hdr";
@@ -409,8 +415,8 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
         frontendDefinition += `use_backend ${planName}_${sanitized_endpoint}_${method} if ${planName}_valid_apikey METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ } \n    `
         backendDefinition +=
           `backend ${planName}_${sanitized_endpoint}_${method}
-    stick-table type binary len 20 size 100k expire 1${period} store http_req_cnt
-    acl exceeds_limit ${authLocation}(${authName}),table_http_req_cnt() gt ${max}
+    stick-table type binary len 20 size 100k expire 1${period} store ${counter}
+    acl exceeds_limit ${authLocation}(${authName}),table_${counter}() gt ${max}
     http-request track-sc0 ${authLocation}(${authName}) unless exceeds_limit
     http-request deny deny_status 429 if exceeds_limit
     server ${sanitized_endpoint} ${apiServerURL.replace("http://", "")}\n` // the protocol is removed as it's not allowed here
