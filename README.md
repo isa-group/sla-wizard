@@ -58,7 +58,7 @@ The following table describes all the options that SLA Wizard includes for its c
 | `--customTemplate <customTemplate>` | `config`             | No       | Custom proxy configuration template.                                                                                                                                                     |
 | `--authLocation <authLocation>`     | `config`             | No       | Where to look for the authentication parameter. (default: "header")                                                                                                                      |
 | `--authName <authName>`             | `config`             | No       | Name of the authentication parameter, such as "token" or "apikey". (default: "apikey")                                                                                                   |
-| `--specs <testSpecs>`               | `runTest`            | Yes      | Path to a test config file.                                                                                                                                                              |
+| `--specs <testSpecs>`               | `runTest`            | No       | Path to a test config file. (default: "./specs/testSpecs.yaml") file.                                                                                                                                                              |
 
 ## Considerations
 
