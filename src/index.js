@@ -36,7 +36,7 @@ program.command('config')
 // 'runTest': test command
 program.command('runTest')
   .description('Run test with APIPecker.')
-  .requiredOption('--specs <testSpecs>', 'Path to a test config file.')
+  .option('--specs <testSpecs>', 'Path to a test config file.', './specs/testSpecs.yaml')
   .option('--sla <slaPath>', 'One of: 1) single SLA, 2) folder of SLAs, 3) URL returning an array of SLA objects', './specs/sla.yaml')
   .option('--oas <pathToOAS>', 'Path to an OAS v3 file.', './specs/oas.yaml')
   .action((options) => {
