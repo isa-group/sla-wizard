@@ -9,6 +9,7 @@ var apipecker = require("apipecker");
 
 const authLocation = "query";
 
+
 /**
  * Receives the results obtained by APIPecker and outputs a valid JSON.
  * Note this does not do anything else because the actual results processing
@@ -17,6 +18,47 @@ const authLocation = "query";
  */
 function customResultsHandler(results) {
     console.log(JSON.stringify(results.lotStats));
+}
+
+
+/**
+ * Gets an HTTP request builder to be used by API Pecker.
+ * @param {string} method - HTTP method.
+ * @param {string} apikey - API key.
+ */
+function getCustomRequestBuilder(method, apikey) {
+    return function () {
+        var customRequest = {
+            options: {
+                method: method.toUpperCase(),
+                headers: {
+                    'apikey': `${apikey}`
+                }
+            }
+        }
+        console.log(customRequest)
+        return customRequest
+    }
+}
+
+
+/**
+ * Gets a URL builder to be used in the request that API Pecker will perform.
+ * @param {string} endpoint - API endpoint.
+ * @param {string} apikey - API key.
+ */
+function getCustomUrlBuilder(endpoint, apikey) {
+    return function () {
+        if (authLocation == "header") {
+            var url = `http://localhost${endpoint}`;
+        } else if (authLocation == "query") {
+            var url = `http://localhost${endpoint}?apikey=${apikey}`;
+        } else if (authLocation == "url") {
+            var url = `http://localhost${endpoint}/${apikey}`;
+        }
+        console.log("Url: " + url)
+        return url
+    }
 }
 
 
@@ -57,7 +99,6 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
         process.exit();
     }
 
-
     var SLAsFiltered = utils.validateSLAs(SLAs);
 
     for (var subSLA of SLAsFiltered) {
@@ -80,6 +121,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                     /**
                      * Builds a URL to be used in the request that API Pecker will perform.
                      */
+                    /*
                     function customUrlBuilder() {
                         if (authLocation == "header") {
                             var url = `http://localhost${endpoint}`;
@@ -91,30 +133,35 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                         console.log("Url: " + url)
                         return url
                     }
+                    */
 
                     /**
                      * Builds an HTTP request to be used by API Pecker.
                      */
+                    /*
                     function customRequestBuilder() {
+                        //console.log(method)
+                        //console.log(slaApikeys[apikey])
                         var customRequest = {
                             options: {
                                 method: method.toUpperCase(),
                                 headers: {
-                                    'apikey': `'${slaApikeys[apikey]}'`
+                                    'apikey': `${slaApikeys[apikey]}`
                                 }
                             }
                         }
                         console.log(customRequest)
-                        return customRequest;
+                        return customRequest
                     }
+                    */
 
                     apipecker.run({
                         concurrentUsers: 1,
                         iterations: testSpecs["clients"].find(item => item.type == planName)["count"],
                         delay: 1100, // in ms
                         verbose: true,
-                        urlBuilder: customUrlBuilder,
-                        requestBuilder: customRequestBuilder, 
+                        urlBuilder: getCustomUrlBuilder(endpoint, slaApikeys[apikey]),
+                        requestBuilder: getCustomRequestBuilder(method, slaApikeys[apikey]),
                         resultsHandler: customResultsHandler
                     });
                 }
