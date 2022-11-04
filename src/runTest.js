@@ -36,7 +36,6 @@ function getCustomRequestBuilder(method, apikey) {
                 }
             }
         }
-        console.log(customRequest)
         return customRequest
     }
 }
@@ -56,7 +55,6 @@ function getCustomUrlBuilder(endpoint, apikey) {
         } else if (authLocation == "url") {
             var url = `http://localhost${endpoint}/${apikey}`;
         }
-        console.log("Url: " + url)
         return url
     }
 }
@@ -116,44 +114,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                     endpoint = endpoint.replace(/{|}/g, "");
 
                     // for testing
-                    console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
-
-                    /**
-                     * Builds a URL to be used in the request that API Pecker will perform.
-                     */
-                    /*
-                    function customUrlBuilder() {
-                        if (authLocation == "header") {
-                            var url = `http://localhost${endpoint}`;
-                        } else if (authLocation == "query") {
-                            var url = `http://localhost${endpoint}?apikey=${slaApikeys[apikey]}`;
-                        } else if (authLocation == "url") {
-                            var url = `http://localhost${endpoint}/${slaApikeys[apikey]}`;
-                        }
-                        console.log("Url: " + url)
-                        return url
-                    }
-                    */
-
-                    /**
-                     * Builds an HTTP request to be used by API Pecker.
-                     */
-                    /*
-                    function customRequestBuilder() {
-                        //console.log(method)
-                        //console.log(slaApikeys[apikey])
-                        var customRequest = {
-                            options: {
-                                method: method.toUpperCase(),
-                                headers: {
-                                    'apikey': `${slaApikeys[apikey]}`
-                                }
-                            }
-                        }
-                        console.log(customRequest)
-                        return customRequest
-                    }
-                    */
+                    //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
 
                     apipecker.run({
                         concurrentUsers: 1,
@@ -169,7 +130,6 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
         }
     }
 
-    /*
     if (limitedPaths.length != Object.keys(oasDoc.paths).length) { // "ratelimiting-less" endpoints testing // TODO: these should always get 20X
         for (var endpoint in oasDoc.paths) { // TODO: this should be done for each plan in testOptions (for 'npm test' it should be all the plans in the SLAs linked to the provided OAS)
             if (!limitedPaths.includes(endpoint)) { // "ratelimiting-less" endpoints 
@@ -179,15 +139,15 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                         endpoint = endpoint.replace(/{|}/g, "");
 
                         // for testing
-                        console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
+                        //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${allProxyApikeys[apikey]}" localhost${endpoint}; echo`)
 
                         apipecker.run({
                             concurrentUsers: 1,
                             iterations: 1,
                             delay: 1100, // in ms
                             verbose: true,
-                            urlBuilder: customUrlBuilder, //(endpoint, slaApikeys[apikey]),
-                            requestBuilder: customRequestBuilder, //(method, slaApikeys[apikey]),
+                            urlBuilder: getCustomUrlBuilder(endpoint, allProxyApikeys[apikey]),
+                            requestBuilder: getCustomRequestBuilder(method, allProxyApikeys[apikey]),
                             resultsHandler: customResultsHandler
                         });
                     }
@@ -195,7 +155,6 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
             }
         }
     }
-    */
 }
 
 
