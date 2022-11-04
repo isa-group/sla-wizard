@@ -1,3 +1,4 @@
+authLocation: header
 duration: 36000
 clients:
   - type: pro

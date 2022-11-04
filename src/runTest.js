@@ -7,8 +7,6 @@ var configs = require("../src/configs");
 var utils = require("../src/utils");
 var apipecker = require("apipecker");
 
-const authLocation = "query";
-
 
 /**
  * Receives the results obtained by APIPecker and outputs a valid JSON.
@@ -23,19 +21,20 @@ function customResultsHandler(results) {
 
 /**
  * Gets an HTTP request builder to be used by API Pecker.
+ * @param {string} authLocation - One of 'header', 'query' or 'url'. 
  * @param {string} method - HTTP method.
  * @param {string} apikey - API key.
  */
-function getCustomRequestBuilder(method, apikey) {
+function getCustomRequestBuilder(authLocation, method, apikey) {
     return function () {
         var customRequest = {
             options: {
-                method: method.toUpperCase(),
-                headers: {
-                    'apikey': `${apikey}`
-                }
+                method: method.toUpperCase()
             }
         }
+        //if (authLocation == "header") {
+        //    customRequest["options"]["headers"]["apikey"] = "apikey" // TODO: this is wrong
+        //}    
         return customRequest
     }
 }
@@ -43,10 +42,11 @@ function getCustomRequestBuilder(method, apikey) {
 
 /**
  * Gets a URL builder to be used in the request that API Pecker will perform.
+ * @param {string} authLocation - One of 'header', 'query' or 'url'.  
  * @param {string} endpoint - API endpoint.
  * @param {string} apikey - API key.
  */
-function getCustomUrlBuilder(endpoint, apikey) {
+function getCustomUrlBuilder(authLocation, endpoint, apikey) {
     return function () {
         if (authLocation == "header") {
             var url = `http://localhost${endpoint}`;
@@ -73,6 +73,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
 
     // Load test configuration
     var testSpecs = jsyaml.load(fs.readFileSync(path.join('', testOptions), 'utf8'));
+    var authLocation = testSpecs["authLocation"]
 
     // Load OAS from oasPath
     var oasDoc = utils.loadAndValidateOAS(oasPath);
@@ -121,8 +122,8 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                         iterations: testSpecs["clients"].find(item => item.type == planName)["count"],
                         delay: 1100, // in ms
                         verbose: true,
-                        urlBuilder: getCustomUrlBuilder(endpoint, slaApikeys[apikey]),
-                        requestBuilder: getCustomRequestBuilder(method, slaApikeys[apikey]),
+                        urlBuilder: getCustomUrlBuilder(authLocation, endpoint, slaApikeys[apikey]),
+                        requestBuilder: getCustomRequestBuilder(authLocation, method, slaApikeys[apikey]),
                         resultsHandler: customResultsHandler
                     });
                 }
@@ -146,8 +147,8 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                             iterations: 1,
                             delay: 1100, // in ms
                             verbose: true,
-                            urlBuilder: getCustomUrlBuilder(endpoint, allProxyApikeys[apikey]),
-                            requestBuilder: getCustomRequestBuilder(method, allProxyApikeys[apikey]),
+                            urlBuilder: getCustomUrlBuilder(authLocation, endpoint, allProxyApikeys[apikey]),
+                            requestBuilder: getCustomRequestBuilder(authLocation, method, allProxyApikeys[apikey]),
                             resultsHandler: customResultsHandler
                         });
                     }
