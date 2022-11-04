@@ -49,16 +49,16 @@ To control log levels define the environment variable `LOGGER_LEVEL` prior to th
 
 The following table describes all the options that SLA Wizard includes for its commands:
 
-| Option/Argument                     | Command              | Required | Explanation                                                                                                                                                                              |
-| ----------------------------------- | -------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `proxy`                             | `config`             | Yes      | Proxy for which the configuration should be generated. (choices: "nginx", "haproxy", "traefik", "envoy")                                                                                 |
-| `-o`, `--outFile <configFile>`      | `config`             | Yes      | Config output file.                                                                                                                                                                      |
-| `--sla <slaPath>`                   | `config` & `runTest` | No       | One of: 1) single SLA, 2) folder containing SLAs, 3) URL returning an array of SLA objects (default: "./specs/sla.yaml"). Note in the case of `runTest` the URL option is not supported. |
-| `--oas <pathToOAS>`                 | `config` & `runTest` | No       | Path to an OAS v3 file. (default: "./specs/oas.yaml")                                                                                                                                    |
-| `--customTemplate <customTemplate>` | `config`             | No       | Custom proxy configuration template.                                                                                                                                                     |
-| `--authLocation <authLocation>`     | `config`             | No       | Where to look for the authentication parameter. (default: "header")                                                                                                                      |
-| `--authName <authName>`             | `config`             | No       | Name of the authentication parameter, such as "token" or "apikey". (default: "apikey")                                                                                                   |
-| `--specs <testSpecs>`               | `runTest`            | No       | Path to a test config file. (default: "./specs/testSpecs.yaml") file.                                                                                                                                                              |
+| Option/Argument                     | Command              | Required | Explanation | Default Value |
+| ----------------------------------- | -------------------- | -------- |-------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `proxy`                             | `config`             | Yes      | Proxy for which the configuration should be generated. (choices: "nginx", "haproxy", "traefik", "envoy")                                                                                 | - |
+| `-o`, `--outFile <configFile>`      | `config`             | Yes      | Config output file.                                                                                                                                                                      | - |
+| `--sla <slaPath>`                   | `config` & `runTest` | No       | One of: 1) single SLA, 2) folder containing SLAs, 3) URL returning an array of SLA objects. Note in the case of `runTest` the URL option is not supported. | _./specs/sla.yaml_ |
+| `--oas <pathToOAS>`                 | `config` & `runTest` | No       | Path to an OAS v3 file.                                                                                                                                     | _./specs/oas.yaml_ |
+| `--customTemplate <customTemplate>` | `config`             | No       | Custom proxy configuration template.                                                                                                                                                     | - |
+| `--authLocation <authLocation>`     | `config`             | No       | Where to look for the authentication parameter.                                                                                                                      | _header_ |
+| `--authName <authName>`             | `config`             | No       | Name of the authentication parameter, for example "token" or "apikey".                                                                                                   | _apikey_ |
+| `--specs <testSpecs>`               | `runTest`            | No       | Path to a test config file.                                                                                                                                      | _./specs/testSpecs.yaml_ |
 
 ## Considerations
 
