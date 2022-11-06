@@ -48,7 +48,8 @@ describe(`Testing based on ${testConfig}`, function () {
   });
   it('Check all requests succeeded', function () { // TODO: this will happen only in the first iteration. The second will get some 429 already
     apipeckerLogs.forEach(result => {
-      chai.expect(result["result"]["stats"][0]["statusCode"]).to.equal(200); // process the JSON produced by runTest
+      //chai.expect(result["result"]["stats"][0]["statusCode"]).to.equal(200); // process the JSON produced by runTest
+      chai.expect(result["results"][0]["result"]["stats"][0]["statusCode"]).to.equal(200); // process the JSON produced by runTest
     });
 
   });

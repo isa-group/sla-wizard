@@ -9,13 +9,23 @@ var apipecker = require("apipecker");
 
 
 /**
- * Receives the results obtained by APIPecker and outputs a valid JSON.
- * Note this does not do anything else because the actual results processing
- * is done in the script that is run with Mocha (check package.json).
+ * Gets a function that receives the results obtained by 
+ * APIPecker, adds the method, plan name and endpoint and 
+ * outputs a valid JSON.
+ * Note this does not do anything else because the actual results 
+ * analyzing is done in the script that is run with Mocha 
+ * (check package.json).
  * @param {object} results - Results obtained by APIPecker.
  */
-function customResultsHandler(results) {
-    console.log(JSON.stringify(results.lotStats));
+function getCustomResultsHandler(method, planName, endpoint) {
+    return function (results) {
+        console.log(JSON.stringify([{
+            method: method,
+            planName: planName,
+            endpoint: endpoint,
+            results: results.lotStats
+        }]));
+    }
 }
 
 
@@ -32,9 +42,11 @@ function getCustomRequestBuilder(authLocation, method, apikey) {
                 method: method.toUpperCase()
             }
         }
-        //if (authLocation == "header") {
-        //    customRequest["options"]["headers"]["apikey"] = "apikey" // TODO: this is wrong
-        //}    
+        if (authLocation == "header") {
+            customRequest["options"]["headers"] = {
+                apikey: apikey
+            }  
+        }      
         return customRequest
     }
 }
@@ -116,7 +128,6 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
 
                     // for testing
                     //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
-
                     apipecker.run({
                         concurrentUsers: 1,
                         iterations: testSpecs["clients"].find(item => item.type == planName)["count"],
@@ -124,7 +135,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                         verbose: true,
                         urlBuilder: getCustomUrlBuilder(authLocation, endpoint, slaApikeys[apikey]),
                         requestBuilder: getCustomRequestBuilder(authLocation, method, slaApikeys[apikey]),
-                        resultsHandler: customResultsHandler
+                        resultsHandler: getCustomResultsHandler(method, planName, endpoint)
                     });
                 }
             }
@@ -149,7 +160,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                             verbose: true,
                             urlBuilder: getCustomUrlBuilder(authLocation, endpoint, allProxyApikeys[apikey]),
                             requestBuilder: getCustomRequestBuilder(authLocation, method, allProxyApikeys[apikey]),
-                            resultsHandler: customResultsHandler
+                            resultsHandler: getCustomResultsHandler(method, planName, endpoint)
                         });
                     }
                 }
