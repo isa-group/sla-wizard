@@ -9,6 +9,21 @@ var apipecker = require("apipecker");
 
 
 /**
+ * Receives "minute" or "second" and returns the delay (in ms) to 
+ * accommodate the requested iterations in a unit of that period of time. 
+ * @param {string} period - One of: second or minute.
+ * @param {string} iterations - Iterations to do in the given period.
+ */
+function getDelay(period, iterations = 10){
+    if (period == "minute"){
+        return 60000/iterations;
+    } else {
+        return 1000/iterations;
+    }
+}
+
+
+/**
  * Gets a function that receives the results obtained by 
  * APIPecker, adds the method, plan name and endpoint and 
  * outputs a valid JSON.
@@ -124,18 +139,19 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
             for (var method in subSLARates[endpoint]) {
                 for (var apikey in slaApikeys) {
                     // If the endpoint has params these are "parametrized"
-                    endpoint = endpoint.replace(/{|}/g, "");
+                    var endpoint_sanitized = endpoint.replace(/{|}/g, "");
 
                     // for testing
                     //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
+                    var iterations = subSLARates[endpoint][method]["requests"][0]["max"]*3;
                     apipecker.run({
                         concurrentUsers: 1,
-                        iterations: testSpecs["clients"].find(item => item.type == planName)["count"],
-                        delay: 1100, // in ms
+                        iterations: iterations,
+                        delay: getDelay(subSLARates[endpoint][method]["requests"][0]["period"],iterations),
                         verbose: true,
-                        urlBuilder: getCustomUrlBuilder(authLocation, endpoint, slaApikeys[apikey]),
+                        urlBuilder: getCustomUrlBuilder(authLocation, endpoint_sanitized, slaApikeys[apikey]),
                         requestBuilder: getCustomRequestBuilder(authLocation, method, slaApikeys[apikey]),
-                        resultsHandler: getCustomResultsHandler(method, planName, endpoint)
+                        resultsHandler: getCustomResultsHandler(method, planName, endpoint_sanitized)
                     });
                 }
             }
@@ -155,8 +171,8 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
 
                         apipecker.run({
                             concurrentUsers: 1,
-                            iterations: 1,
-                            delay: 1100, // in ms
+                            iterations: 100,
+                            delay: 100, // in ms
                             verbose: true,
                             urlBuilder: getCustomUrlBuilder(authLocation, endpoint, allProxyApikeys[apikey]),
                             requestBuilder: getCustomRequestBuilder(authLocation, method, allProxyApikeys[apikey]),
