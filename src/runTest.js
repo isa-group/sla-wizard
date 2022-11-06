@@ -143,10 +143,10 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
 
                     // for testing
                     //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
-                    var iterations = subSLARates[endpoint][method]["requests"][0]["max"]*3;
+                    var iterations = subSLARates[endpoint][method]["requests"][0]["max"]*3; // extra requests to trigger 429s
                     apipecker.run({
                         concurrentUsers: 1,
-                        iterations: iterations,
+                        iterations: iterations*2, // runs for two units of "period" to check rates are reset
                         delay: getDelay(subSLARates[endpoint][method]["requests"][0]["period"],iterations),
                         verbose: true,
                         urlBuilder: getCustomUrlBuilder(authLocation, endpoint_sanitized, slaApikeys[apikey]),
