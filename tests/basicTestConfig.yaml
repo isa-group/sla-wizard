@@ -1,8 +1,1 @@
 authLocation: header
-duration: 36000
-clients:
-  - type: pro
-    count: 1 # 20
-    misbehaviour: 1
-  - type: basic
-    count:  1 # 100

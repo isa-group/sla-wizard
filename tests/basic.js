@@ -12,12 +12,13 @@ var globalTimeout = 10000;
 
 
 /**
- * 
- * @param {object} apipeckerLogs 
- * @param {string} planName 
- * @param {string} endpoint 
- * @param {string} method 
- * @param {string} expectedSuccess 
+ * Runs a Chai test checking that the given plan-endpoint-method combination got 
+ * the expected accepted requests according to the SLA. 
+ * @param {object} apipeckerLogs - Logs from API Pecker.
+ * @param {string} planName - Plan name, such as "pro".
+ * @param {string} endpoint - An API endpoint (without host).
+ * @param {string} method - A CRUD method. 
+ * @param {string} expectedSuccess - The number of requests that should get HTTP 200. 
  */
 function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSuccess) {
   // TODO: got 48 results, not performant to use forEach for each it() here below
@@ -29,25 +30,11 @@ function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSucc
           http200++;
         }
       });
-      chai.expect(http200).to.equal(expectedSuccess);
     }
   });
+  chai.expect(http200).to.equal(expectedSuccess);
 }
 
-function processRes() {
-  var deniedRequests = 0;
-  for (var stats in results.lotStats) {
-    var statusCode = results.lotStats[stats].result.stats[0].statusCode;
-    if (statusCode != 200) {
-      deniedRequests++;
-    }
-    var userID = results.lotStats[stats].result.stats[0].id;
-    var iterationId = results.lotStats[stats].id
-    configs.logger.info(`${iterationId}: ${userID} - ${statusCode}`);
-  }
-  var totalRequests = results.lotStats.length;
-  configs.logger.info("Sucess: " + (100 - (deniedRequests / totalRequests * 100)) + "%");
-}
 
 describe(`Testing based on ${testConfig}`, function () {
 
