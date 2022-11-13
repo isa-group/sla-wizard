@@ -24,7 +24,7 @@ function getDelay(period, iterations = 10){
 
 
 /**
- * Gets a function that receives the results obtained by 
+ * Returns a function that receives the results obtained by 
  * APIPecker, adds the method, plan name and endpoint and 
  * outputs a valid JSON.
  * Note this does not do anything else because the actual results 
@@ -45,7 +45,7 @@ function getCustomResultsHandler(method, planName, endpoint) {
 
 
 /**
- * Gets an HTTP request builder to be used by API Pecker.
+ * Returns an HTTP request builder to be used by API Pecker.
  * @param {string} authLocation - One of 'header', 'query' or 'url'. 
  * @param {string} method - HTTP method.
  * @param {string} apikey - API key.
@@ -68,7 +68,7 @@ function getCustomRequestBuilder(authLocation, method, apikey) {
 
 
 /**
- * Gets a URL builder to be used in the request that API Pecker will perform.
+ * Returns a URL builder to be used in the request that API Pecker will perform.
  * @param {string} authLocation - One of 'header', 'query' or 'url'.  
  * @param {string} endpoint - API endpoint.
  * @param {string} apikey - API key.
@@ -100,7 +100,8 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
 
     // Load test configuration
     var testSpecs = jsyaml.load(fs.readFileSync(path.join('', testOptions), 'utf8'));
-    var authLocation = testSpecs["authLocation"]
+    var authLocation = testSpecs["authLocation"];
+    var iterationsPerEndpoint = testSpecs["iterations"];
 
     // Load OAS from oasPath
     var oasDoc = utils.loadAndValidateOAS(oasPath);
@@ -146,7 +147,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                     var iterations = subSLARates[endpoint][method]["requests"][0]["max"]*3; // extra requests to trigger 429s
                     apipecker.run({
                         concurrentUsers: 1,
-                        iterations: iterations*2, // runs for two units of "period" to check rates are reset
+                        iterations: iterations*iterationsPerEndpoint, // runs for X units of "period" to check rates are reset
                         delay: getDelay(subSLARates[endpoint][method]["requests"][0]["period"],iterations),
                         verbose: true,
                         urlBuilder: getCustomUrlBuilder(authLocation, endpoint_sanitized, slaApikeys[apikey]),
@@ -158,9 +159,9 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
         }
     }
 
-    if (limitedPaths.length != Object.keys(oasDoc.paths).length) { // "ratelimiting-less" endpoints testing // TODO: these should always get 20X
-        for (var endpoint in oasDoc.paths) { // TODO: this should be done for each plan in testOptions (for 'npm test' it should be all the plans in the SLAs linked to the provided OAS)
-            if (!limitedPaths.includes(endpoint)) { // "ratelimiting-less" endpoints 
+    if (limitedPaths.length != Object.keys(oasDoc.paths).length) { // "ratelimiting-less" endpoints testing 
+        for (var endpoint in oasDoc.paths) { 
+            if (!limitedPaths.includes(endpoint)) { 
                 for (var method in oasDoc.paths[endpoint]) {
                     for (var apikey in allProxyApikeys) {
                         // If the endpoint has params these are "parametrized"

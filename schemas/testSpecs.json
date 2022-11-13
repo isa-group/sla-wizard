@@ -4,57 +4,24 @@
     "description": "SLA Wizard Test Specs Schema",
     "type": "object",
     "required": [
-        "duration",
-        "clients"
+        "authLocation",
+        "iterations"
     ],"properties": {
-        "duration": {
-            "$ref": "#/definitions/duration",
-            "description": "Holds the main information of the SLA context.",
-            "title": "context"
+        "authLocation": {
+            "description": "Where to look for the authentication token.",
+            "enum": [
+                "header",
+                "query",
+                "url"
+            ],
+            "title": "authLocation",
+            "type": "string"
         },
-        "clients": {
-            "$ref": "#/definitions/clients",
-            "description": "A list of metrics to use in the context of the SLA.",
-            "title": "metrics"
+        "iterations": {
+            "description": "Units of time to perform the test. If a rate limiting is 'per minute' and this is set to 2, then that specific rate limiting testing will run for 2 minutes.",
+            "title": "iterations",
+            "type": "number"
         }
     },
-    "additionalProperties": false,
-    "definitions": {
-        "duration": {
-            "description": "Duration of the test.",
-            "title": "duration",
-            "type": "number"
-        },
-        "clients": {
-            "description": "Available API plans.",
-            "title": "clients",
-            "type": "array",
-            "items": {
-                "$ref": "#/definitions/client"
-            }            
-        },
-        "client": {
-            "description": "Available API plans.",
-            "title": "clients",
-            "type": "object",
-            "required": ["type","count"],
-            "properties": {
-                "type": {
-                    "description": "Plan name",
-                    "title": "type",
-                    "type": "string"
-                },
-                "count": {
-                    "description": "???",
-                    "title": "count",
-                    "type": "number"
-                },
-                "misbehaviour": {
-                    "description": "???",
-                    "title": "misbehaviour",
-                    "type": "number"
-                }
-            }
-        }
-    }
+    "additionalProperties": false
 }

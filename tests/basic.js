@@ -21,7 +21,6 @@ var globalTimeout = 10000;
  * @param {string} expectedSuccess - The number of requests that should get HTTP 200. 
  */
 function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSuccess) {
-  // TODO: got 48 results, not performant to use forEach for each it() here below
   var http200 = 0;
   apipeckerLogs.forEach(result => {
     if (result["planName"] == planName && result["endpoint"] == endpoint && result["method"] == method) {

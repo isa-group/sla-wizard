@@ -1,0 +1,60 @@
+{
+    "id": "testSpecsSchema",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "SLA Wizard Test Specs Schema",
+    "type": "object",
+    "required": [
+        "duration",
+        "clients"
+    ],"properties": {
+        "duration": {
+            "$ref": "#/definitions/duration",
+            "description": "Holds the main information of the SLA context.",
+            "title": "context"
+        },
+        "clients": {
+            "$ref": "#/definitions/clients",
+            "description": "A list of metrics to use in the context of the SLA.",
+            "title": "metrics"
+        }
+    },
+    "additionalProperties": false,
+    "definitions": {
+        "duration": {
+            "description": "Duration of the test.",
+            "title": "duration",
+            "type": "number"
+        },
+        "clients": {
+            "description": "Available API plans.",
+            "title": "clients",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/client"
+            }            
+        },
+        "client": {
+            "description": "Available API plans.",
+            "title": "clients",
+            "type": "object",
+            "required": ["type","count"],
+            "properties": {
+                "type": {
+                    "description": "Plan name",
+                    "title": "type",
+                    "type": "string"
+                },
+                "count": {
+                    "description": "???",
+                    "title": "count",
+                    "type": "number"
+                },
+                "misbehaviour": {
+                    "description": "???",
+                    "title": "misbehaviour",
+                    "type": "number"
+                }
+            }
+        }
+    }
+}
