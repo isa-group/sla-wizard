@@ -66,6 +66,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
                 "stat_prefix": "route_rate_limit",
                 "token_bucket": {
                   "max_tokens": max,
+                  "tokens_per_fill": max,
                   "fill_interval": period
                 },
                 "filter_enabled": {
@@ -288,8 +289,8 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
           rateLimit: {
             sourceCriterion: { requestHeaderName: authName },
             average: max,
-            period: `1${period}`,
-            burst: max
+            period: `1${period}`//,
+            //burst: max
           }
         }
       }
