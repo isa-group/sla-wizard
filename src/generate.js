@@ -518,7 +518,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
         var period = utils.getLimitPeriod(method_specs["requests"][0]["period"], "nginx");
 
         var zone_name = `${planName}_${utils.sanitizeEndpoint(endpoint)}_${method.toUpperCase()}`;
-        var zone_size = "10m" // 1 megabyte = 16k IPs
+        var zone_size = "10m" // 1m = 1 megabyte = 16k IPs
 
         /////////////// LIMITS
         var limit = `limit_req_zone $${authLocation}_${authName} ` +
@@ -530,7 +530,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
         location /${zone_name} {
             rewrite /${zone_name} $uri_original break;
             proxy_pass ${apiServerURL};
-            limit_req zone=${zone_name};
+            limit_req zone=${zone_name} burst=${max} delay=${max};
         }`
         locationDefinitions += location;
       }
