@@ -1,2 +1,5 @@
-authLocation: header
-iterations: 2
+authLocation: header # Where to look for API keys
+extraRequests: 5 # Multiplies the expected successful amount of requests
+minutesToRun: 4 # How many iterations to do for rate limiting per minute (i.e how many minutes to run)
+secondsToRun: 40 # How many iterations to do for rate limiting per second (i.e how many seconds to run)
+

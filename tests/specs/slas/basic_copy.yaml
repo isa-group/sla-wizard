@@ -20,11 +20,11 @@ metrics:
     description: "Number of requests"
 plan:
   name: basic
-  availability: R/00:00:00Z/23:59:59Z	
   pricing:
       cost: 5
       currency: EUR
       billing: monthly
+  availability: R/00:00:00Z/23:59:59Z	
   rates:
     /pets:
       get:
@@ -35,6 +35,7 @@ plan:
         requests: 
           - max: 2
             period: minute
+            type: burst
     /pets/{id}:
       get:
         requests:
@@ -44,6 +45,7 @@ plan:
         requests:
           - max: 4
             period: minute
+            type: average
       delete:
         requests:
           - max: 5

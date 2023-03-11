@@ -1,15 +1,13 @@
-const { execSync } = require("child_process");
+var cp = require('child_process');
 var chai = require("chai");
 var configs = require("../src/configs.js");
-
+var jsyaml = require('js-yaml');
+var fs = require('fs');
 var testConfig = "tests/basicTestConfig.yaml"
 var oas4Test = "tests/specs/simple_api_oas.yaml"
 var slasPath = "tests/specs/slas/"
 
-// the output of this command is what is analyzed with chai, meaning it must be json only hence the LOGGER_LEVEL env. variable set to 'error'
-var cmd = `export LOGGER_LEVEL=error ; node ./src/index.js runTest --specs $PWD/${testConfig} --oas $PWD/${oas4Test} --sla ${slasPath}`;
 var globalTimeout = 10000;
-
 
 /**
  * Runs a Chai test checking that the given plan-endpoint-method combination got 
@@ -45,15 +43,29 @@ function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSucc
   chai.expect(http200).to.equal(expectedSuccess) //&& chai.expect(http429).to.equal(expectedFailure);
 }
 
-
 describe(`Testing based on ${testConfig}`, function () {
 
   this.timeout(globalTimeout);
 
   try {
-    var apipeckerLogs = execSync(cmd).toString()
+    //var apipeckerLogs = execSync(cmd, maxBuffer=2000000000000000).toString() // TODO: using maxBuffer is useless
+
+    // the output of this command is what is analyzed with chai, meaning it must be json only hence the LOGGER_LEVEL env. variable set to 'error'
+    //var cmd = `export LOGGER_LEVEL=error ; node ./src/index.js runTest --specs $PWD/${testConfig} --oas $PWD/${oas4Test} --sla ${slasPath}`;
+    
+    var apipeckerLogs = cp.spawnSync("node", 
+                                    ["./src/index.js", 
+                                     "runTest", 
+                                     "--specs",
+                                     `${testConfig}`,
+                                     "--oas",
+                                     `${oas4Test}`,
+                                     "--sla",`${slasPath}`], 
+                                     { encoding : 'utf8',
+                                       env: {LOGGER_LEVEL:"error"},
+                                       maxBuffer: 1024 * 1024 * 1024 }).stdout;
   } catch (error) {
-    configs.logger.error(`Ran runTest but: ${error.status} with '${error.message}'`);
+    configs.logger.error(`Ran runTest but: ${error.status} with '${error.message}'`); // TODO - error after the first 30s (due to output being too big, could sent to a log file instead): null with 'spawnSync /bin/sh ENOBUFS'
     process.exit();
   }
 
@@ -78,35 +90,53 @@ describe(`Testing based on ${testConfig}`, function () {
     });
   });
 
+  var testSpecs = jsyaml.load(fs.readFileSync(testConfig, 'utf8'));
+  var extraRequests = testSpecs["extraRequests"];
+  var minutesToRun = testSpecs["minutesToRun"];
+  var secondsToRun = testSpecs["secondsToRun"];
+  
+  // TODO: the number of API keys can be read from the SLAs. For now hardcoded: 3 (per plan)
+  var numApikeys = 3;
+
   it('BASIC PLAN: GET to /pets - 1 per second', function () {
-    chaiModularized(apipeckerLogs, "basic", "/pets", "get", 6, 12); // 3 apikeys, 2 seconds, 1 request accepted
+    var allowed = 1;
+    chaiModularized(apipeckerLogs, "basic", "/pets", "get", allowed*numApikeys*secondsToRun);
   });
   it('BASIC PLAN: POST to /pets - 2 per minute', function () {
-    chaiModularized(apipeckerLogs, "basic", "/pets", "post", 12, 24); // 3 apikeys, 2 minutes, 2 requests accepted
+    var allowed = 2;
+    chaiModularized(apipeckerLogs, "basic", "/pets", "post", allowed*numApikeys*minutesToRun);
   });
   it('BASIC PLAN: GET to /pets/id - 3 per second', function () {
-    chaiModularized(apipeckerLogs, "basic", "/pets/id", "get", 18, 36); // 3 apikeys, 2 seconds, 3 requests accepted
+    var allowed = 3;
+    chaiModularized(apipeckerLogs, "basic", "/pets/id", "get", allowed*numApikeys*secondsToRun);
   });
   it('BASIC PLAN: PUT to /pets/id - 4 per minute', function () {
-    chaiModularized(apipeckerLogs, "basic", "/pets/id", "put", 24, 48); // 3 apikeys, 2 minutes, 4 requests accepted
+    var allowed = 4;
+    chaiModularized(apipeckerLogs, "basic", "/pets/id", "put", allowed*numApikeys*minutesToRun);
   });
   it('BASIC PLAN: DELETE to /pets/id - 5 per second', function () {
-    chaiModularized(apipeckerLogs, "basic", "/pets/id", "delete", 30, 60); // 3 apikeys, 2 seconds, 5 requests accepted
+    var allowed = 5;
+    chaiModularized(apipeckerLogs, "basic", "/pets/id", "delete", allowed*numApikeys*secondsToRun);
   });
 
   it('PRO PLAN: GET to /pets - 10 per second', function () {
-    chaiModularized(apipeckerLogs, "pro", "/pets", "get", 60, 120); // 3 apikeys, 2 seconds, 10 requests accepted
+    var allowed = 10;
+    chaiModularized(apipeckerLogs, "pro", "/pets", "get", allowed*numApikeys*secondsToRun);
   });
   it('PRO PLAN: POST to /pets - 20 per minute', function () {
-    chaiModularized(apipeckerLogs, "pro", "/pets", "post", 120, 240); // 3 apikeys, 2 minutes, 20 requests accepted
+    var allowed = 20;
+    chaiModularized(apipeckerLogs, "pro", "/pets", "post", allowed*numApikeys*minutesToRun);
   });
   it('PRO PLAN: GET to /pets/id - 30 per second', function () {
-    chaiModularized(apipeckerLogs, "pro", "/pets/id", "get", 180, 360); // 3 apikeys, 2 seconds, 30 requests accepted
+    var allowed = 30;
+    chaiModularized(apipeckerLogs, "pro", "/pets/id", "get", allowed*numApikeys*secondsToRun);
   });
   it('PRO PLAN: PUT to /pets/id - 40 per minute', function () {
-    chaiModularized(apipeckerLogs, "pro", "/pets/id", "put", 240, 480); // 3 apikeys, 2 minutes, 40 requests accepted
+    var allowed = 40;
+    chaiModularized(apipeckerLogs, "pro", "/pets/id", "put", allowed*numApikeys*minutesToRun);
   });
   it('PRO PLAN: DELETE to /pets/id - 50 per second', function () {
-    chaiModularized(apipeckerLogs, "pro", "/pets/id", "delete", 300, 600); // 3 apikeys, 2 seconds, 50 requests accepted
+    var allowed = 50;
+    chaiModularized(apipeckerLogs, "pro", "/pets/id", "delete", allowed*numApikeys*secondsToRun);
   });
 });

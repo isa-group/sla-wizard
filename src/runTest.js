@@ -12,13 +12,15 @@ var apipecker = require("apipecker");
  * Receives "minute" or "second" and returns the delay (in ms) to 
  * accommodate the requested iterations in a unit of that period of time. 
  * @param {string} period - One of: second or minute.
- * @param {string} iterations - Iterations to do in the given period.
+ * @param {string} requestsToSendPerTimeUnit - Iterations to do in the given period (total requests to send in 1 minute or second)
+ * @param {string} timeUnitsToRun - Time units (for example, 20 seconds or 4 minutes) to run
  */
-function getDelay(period, iterations = 10){
+function getDelay(period, requestsToSendPerTimeUnit, timeUnitsToRun){
+    var totalNumberOfRequestsToSend = requestsToSendPerTimeUnit*timeUnitsToRun;
     if (period == "minute"){
-        return 60000/iterations;
+        return (timeUnitsToRun*60000)/totalNumberOfRequestsToSend;
     } else {
-        return 1000/iterations;
+        return (timeUnitsToRun*1000)/totalNumberOfRequestsToSend;
     }
 }
 
@@ -101,7 +103,9 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
     // Load test configuration
     var testSpecs = jsyaml.load(fs.readFileSync(path.join('', testOptions), 'utf8'));
     var authLocation = testSpecs["authLocation"];
-    var iterationsPerEndpoint = testSpecs["iterations"];
+    var extraRequests = testSpecs["extraRequests"];
+    var minutesToRun = testSpecs["minutesToRun"];
+    var secondsToRun = testSpecs["secondsToRun"];
 
     // Load OAS from oasPath
     var oasDoc = utils.loadAndValidateOAS(oasPath);
@@ -142,13 +146,29 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                     // If the endpoint has params these are "parametrized"
                     var endpoint_sanitized = endpoint.replace(/{|}/g, "");
 
+                    var period = subSLARates[endpoint][method]["requests"][0]["period"];
+                    if (period == "minute"){
+                        var timeUnitsToRun = minutesToRun;
+                    } else {
+                        var timeUnitsToRun = secondsToRun;
+                    }
+
                     // for testing
                     //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
-                    var iterations = subSLARates[endpoint][method]["requests"][0]["max"]*3; // extra requests to trigger 429s
+                    var requestsToSendPerTimeUnit = subSLARates[endpoint][method]["requests"][0]["max"]*extraRequests; // extra requests to trigger 429s
+
+                    /*
+                    if (period == "second" && planName == "basic"){
+                        console.log(`${planName} - ${endpoint_sanitized} - ${method} - ${slaApikeys[apikey]}`)
+                        console.log(`Will perform ${requestsToSendPerTimeUnit*timeUnitsToRun} requests with a delay of ${getDelay(period,timeUnitsToRun,requestsToSendPerTimeUnit)} milliseconds`);
+                        console.log("------------------------")
+                    }
+                    */
+                    
                     apipecker.run({
                         concurrentUsers: 1,
-                        iterations: iterations*iterationsPerEndpoint, // runs for X units of "period" to check rates are reset
-                        delay: getDelay(subSLARates[endpoint][method]["requests"][0]["period"],iterations),
+                        iterations: requestsToSendPerTimeUnit*timeUnitsToRun, // runs for X units of "period" to check rates are reset
+                        delay: getDelay(period,requestsToSendPerTimeUnit,timeUnitsToRun),
                         verbose: true,
                         urlBuilder: getCustomUrlBuilder(authLocation, endpoint_sanitized, slaApikeys[apikey]),
                         requestBuilder: getCustomRequestBuilder(authLocation, method, slaApikeys[apikey]),
@@ -184,6 +204,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
             }
         }
     }
+    
 }
 
 

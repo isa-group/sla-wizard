@@ -363,7 +363,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
   var removeApikeyFromURL = "";
   var apikeyChecks = "";
   var authCheckMethod = "str";
-  var penalizing = false;
+  var penalizing = true; // false;
   var counter = "conn_cnt"
   
   if (penalizing){
@@ -416,10 +416,16 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
         frontendDefinition += `use_backend ${planName}_${sanitized_endpoint}_${method} if ${planName}_valid_apikey METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ } \n    `
         backendDefinition +=
           `backend ${planName}_${sanitized_endpoint}_${method}
-    stick-table type binary len 20 size 100k expire 1${period} store ${counter}
-    acl exceeds_limit ${authLocation}(${authName}),table_${counter}() gt ${max}
-    http-request track-sc0 ${authLocation}(${authName}) unless exceeds_limit
-    http-request deny deny_status 429 if exceeds_limit
+    stick-table type string len 100 size 100k expire 1${period} store http_req_rate(1${period})
+    
+    #acl exceeds_limit ${authLocation}(${authName}),table_${counter}() gt ${max}
+
+    http-request deny deny_status 429 if { ${authLocation}(${authName}),table_http_req_rate() gt ${max} }
+
+    http-request track-sc0 ${authLocation}(${authName}) # unless exceeds_limit # track-sc0 is required for tracking but at the same time it updates the expire time
+
+    #http-request deny deny_status 429 if { sc_http_req_rate(0) gt 20 }
+    
     server ${sanitized_endpoint} ${apiServerURL.replace("http://", "")}\n` // the protocol is removed as it's not allowed here
       }
     }
@@ -530,7 +536,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
         location /${zone_name} {
             rewrite /${zone_name} $uri_original break;
             proxy_pass ${apiServerURL};
-            limit_req zone=${zone_name} burst=${max} delay=${max};
+            limit_req zone=${zone_name} burst=1 nodelay; # ${max} delay=${max}; 
         }`
         locationDefinitions += location;
       }
