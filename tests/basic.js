@@ -48,10 +48,9 @@ describe(`Testing based on ${testConfig}`, function () {
   this.timeout(globalTimeout);
 
   try {
-    //var apipeckerLogs = execSync(cmd, maxBuffer=2000000000000000).toString() // TODO: using maxBuffer is useless
-
-    // the output of this command is what is analyzed with chai, meaning it must be json only hence the LOGGER_LEVEL env. variable set to 'error'
-    //var cmd = `export LOGGER_LEVEL=error ; node ./src/index.js runTest --specs $PWD/${testConfig} --oas $PWD/${oas4Test} --sla ${slasPath}`;
+    
+    // The output of this command is what is analyzed with chai, meaning it must be JSON only hence the LOGGER_LEVEL variable set to 'error'
+    // `export LOGGER_LEVEL=error ; node ./src/index.js runTest --specs $PWD/${testConfig} --oas $PWD/${oas4Test} --sla ${slasPath}`
     
     var apipeckerLogs = cp.spawnSync("node", 
                                     ["./src/index.js", 
@@ -65,7 +64,7 @@ describe(`Testing based on ${testConfig}`, function () {
                                        env: {LOGGER_LEVEL:"error"},
                                        maxBuffer: 1024 * 1024 * 1024 }).stdout;
   } catch (error) {
-    configs.logger.error(`Ran runTest but: ${error.status} with '${error.message}'`); // TODO - error after the first 30s (due to output being too big, could sent to a log file instead): null with 'spawnSync /bin/sh ENOBUFS'
+    configs.logger.error(`Ran runTest but: ${error.status} with '${error.message}'`); 
     process.exit();
   }
 

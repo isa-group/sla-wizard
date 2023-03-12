@@ -363,13 +363,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
   var removeApikeyFromURL = "";
   var apikeyChecks = "";
   var authCheckMethod = "str";
-  var penalizing = true; // false;
-  var counter = "conn_cnt"
   
-  if (penalizing){
-    var counter = "http_req_cnt"
-  }
-
   if (authLocation == "header") {
     authLocation = "hdr";
   } else if (authLocation == "query") {
@@ -417,15 +411,8 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
         backendDefinition +=
           `backend ${planName}_${sanitized_endpoint}_${method}
     stick-table type string len 100 size 100k expire 1${period} store http_req_rate(1${period})
-    
-    #acl exceeds_limit ${authLocation}(${authName}),table_${counter}() gt ${max}
-
-    http-request deny deny_status 429 if { ${authLocation}(${authName}),table_http_req_rate() gt ${max} }
-
+    http-request deny deny_status 429 if { ${authLocation}(${authName}),table_http_req_rate() ge ${max} }
     http-request track-sc0 ${authLocation}(${authName}) # unless exceeds_limit # track-sc0 is required for tracking but at the same time it updates the expire time
-
-    #http-request deny deny_status 429 if { sc_http_req_rate(0) gt 20 }
-    
     server ${sanitized_endpoint} ${apiServerURL.replace("http://", "")}\n` // the protocol is removed as it's not allowed here
       }
     }
