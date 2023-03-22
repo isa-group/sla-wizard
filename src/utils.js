@@ -184,6 +184,16 @@ function getLimitPeriod(period, proxy) {
         'year': '31536000s'
       };
       break;
+    case 'envoy_translate':
+      periodMap = {
+        'second': '1000',
+        'minute': '60000',
+        'hour': '3600000',
+        'day': '86400000',
+        'month': '2628000000', // (365 * 86400) / 12
+        'year': '31536000000'
+      };
+      break;
   }
   return periodMap[period];
 }

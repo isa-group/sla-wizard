@@ -158,9 +158,9 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                     var requestsToSendPerTimeUnit = subSLARates[endpoint][method]["requests"][0]["max"]*extraRequests; // extra requests to trigger 429s
 
                     /*
-                    if (period == "second" && planName == "basic"){
+                    if (period == "second" && planName == "pro" && endpoint_sanitized == "/pets/id" && method == "delete"){
                         console.log(`${planName} - ${endpoint_sanitized} - ${method} - ${slaApikeys[apikey]}`)
-                        console.log(`Will perform ${requestsToSendPerTimeUnit*timeUnitsToRun} requests with a delay of ${getDelay(period,timeUnitsToRun,requestsToSendPerTimeUnit)} milliseconds`);
+                        console.log(`Will perform ${requestsToSendPerTimeUnit*timeUnitsToRun} requests with a delay of ${getDelay(period,requestsToSendPerTimeUnit,timeUnitsToRun)} milliseconds`);
                         console.log("------------------------")
                     }
                     */

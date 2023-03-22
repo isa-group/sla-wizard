@@ -162,7 +162,7 @@
                     "to": {
                       "description": "The contractual ending date.",
                       "examples": [
-                          "2022-11-23T20:20:40+00:00"
+                          "2024-11-23T20:20:40+00:00"
                       ],
                       "format": "date-time",
                       "title": "from",

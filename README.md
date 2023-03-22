@@ -110,7 +110,7 @@ For more information on how to use the tool for each of the four proxies, refer 
 
 ## License
 
-Copyright 2022, [ISA Group](http://www.isa.us.es), [University of Sevilla](http://www.us.es)
+Copyright 2023, [ISA Group](http://www.isa.us.es), [University of Sevilla](http://www.us.es)
 
 [![ISA Group](http://www.isa.us.es/2.0/assets/img/theme/logo2.png)](http://www.isa.us.es)
 

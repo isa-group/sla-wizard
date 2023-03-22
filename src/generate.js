@@ -32,6 +32,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
+    rl_translation = true;
 
     for (var endpoint in subSLARates) {
       limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {};
@@ -39,8 +40,22 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
       for (var method in subSLARates[endpoint]) {
         var method_specs = subSLARates[endpoint][method];
         var max = method_specs["requests"][0]["max"];
-        var period = utils.getLimitPeriod(method_specs["requests"][0]["period"], "envoy");
 
+        // Rate Limiting translation is applied here
+        if (rl_translation == true){
+          var period = parseInt(utils.getLimitPeriod(method_specs["requests"][0]["period"], "envoy_translate"),10) / max;
+          var new_period = period;
+          var new_max = 1;
+          while (new_period < 50){
+            new_period += period; 
+            new_max++;
+          }
+          period = (new_period / 1000).toFixed(9) + "s"; // convert ms to seconds (note Envoy takes up to 9 decimals but not more)
+          max = new_max;
+        } else {
+          var period = utils.getLimitPeriod(method_specs["requests"][0]["period"], "envoy");
+        }
+        
         var paramsCount = (endpoint.match(/{/g) || []).length;
         var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
 
@@ -211,6 +226,9 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
   envoyTemplate.static_resources
     .listeners[0].filter_chains[0].filters[0]
     .typed_config.route_config.virtual_hosts[0].routes = routesDefinition
+  envoyTemplate.static_resources
+    .listeners[0].filter_chains[0].filters[0]
+    .typed_config.access_log[0].typed_config.format = `[%START_TIME%] \"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %REQ(${authName})% %PROTOCOL%\" %RESPONSE_CODE% %RESPONSE_FLAGS% \n`
   envoyTemplate.static_resources
     .clusters[0].load_assignment.endpoints[0].lb_endpoints[0]
     .endpoint.address.socket_address.address = apiServerURL.hostname
