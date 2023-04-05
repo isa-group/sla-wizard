@@ -19,8 +19,11 @@ const { match } = require('assert');
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/envoy.yaml', authLocation, authName, proxyPort) {
+function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, authLocation, authName, proxyPort) {
 
+  if (configTemplatePath == null){
+    configTemplatePath = path.join(__dirname, '../templates/envoy.yaml');
+  }
   var envoyTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
   var routesDefinition = [];
   var limitedPaths = [];
@@ -249,8 +252,11 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 't
  * @param {string} authLocation - Where to look for the authentication parameter: 'header','query' or 'url'
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  */
-function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/traefik.yaml', authLocation, authName) {
+function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, authLocation, authName) {
 
+  if (configTemplatePath == null){
+    configTemplatePath = path.join(__dirname, '../templates/traefik.yaml');
+  }
   var traefikTemplate = jsyaml.load(utils.getProxyConfigTemplate(configTemplatePath));
   var routersDefinition = {};
   var middlewaresDefinition = {};
@@ -368,8 +374,11 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/haproxy.cfg', authLocation, authName, proxyPort) {
+function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, authLocation, authName, proxyPort) {
 
+  if (configTemplatePath == null){
+    configTemplatePath = path.join(__dirname, '../templates/haproxy.cfg');
+  }
   var haproxyTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
   var frontendDefinition = "";
   var backendDefinition = "";
@@ -485,8 +494,11 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 
  * @param {string} authName - Name of the authentication parameter, such as "token" or "apikey".
  * @param {string} proxyPort - Port on which the proxy is running.
  */
-function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath = 'templates/nginx.conf', authLocation, authName, proxyPort) {
+function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, authLocation, authName, proxyPort) {
 
+  if (configTemplatePath == null){
+    configTemplatePath = path.join(__dirname, '../templates/nginx.conf');
+  }
   var nginxTemplate = utils.getProxyConfigTemplate(configTemplatePath).toString();
   var limitsDefinition = "";
   var locationDefinitions = "";
