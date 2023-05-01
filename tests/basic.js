@@ -3,13 +3,31 @@ var chai = require("chai");
 var configs = require("../src/configs.js");
 var jsyaml = require('js-yaml');
 var fs = require('fs');
-var testConfig = "tests/basicTestConfig.yaml"
-var oas4Test = "tests/specs/simple_api_oas.yaml"
-var slasPath = "tests/specs/slas/"
+var path = require('path');
 
 var globalTimeout = 10000;
-var numApikeys = 3;
+var testConfig = process.env.TEST_CONFIG; 
+var oas4Test = process.env.OAS4TEST;
+var slasPath = process.env.SLAS_PATH;
 
+if (testConfig == undefined){ // "tests/basicTestConfig.yaml"
+  console.log("TEST_CONFIG not defined");
+  process.exit(1)
+} 
+if (oas4Test == undefined){ // "tests/specs/simple_api_oas.yaml"
+  console.log("OAS4TEST not defined")
+  process.exit(1)
+} 
+if (slasPath == undefined){ // "tests/specs/slas/"
+  console.log("SLAS_PATH not defined")
+  process.exit(1)
+} 
+
+// Load one of the SLAs to count the API keys
+var slaFileNames = fs.readdirSync(slasPath);
+var numApikeys = jsyaml.load(fs.readFileSync(path.join(slasPath, slaFileNames[0]), 
+                              'utf8')).context.apikeys.length;
+var slasPerPlan = slaFileNames.length/2; // divided by two because there are two plans: basic and pro
 
 /**
  * Runs a Chai test checking that the given plan-endpoint-method combination got 
@@ -98,43 +116,43 @@ describe(`Testing based on ${testConfig}`, function () {
   
   it('BASIC PLAN: GET to /pets - 1 per second', function () {
     var allowed = 1;
-    chaiModularized(apipeckerLogs, "basic", "/pets", "get", allowed*numApikeys*secondsToRun);
+    chaiModularized(apipeckerLogs, "basic", "/pets", "get", allowed*numApikeys*secondsToRun*slasPerPlan);
   });
   it('BASIC PLAN: POST to /pets - 2 per minute', function () {
     var allowed = 2;
-    chaiModularized(apipeckerLogs, "basic", "/pets", "post", allowed*numApikeys*minutesToRun);
+    chaiModularized(apipeckerLogs, "basic", "/pets", "post", allowed*numApikeys*minutesToRun*slasPerPlan);
   });
   it('BASIC PLAN: GET to /pets/id - 3 per second', function () {
     var allowed = 3;
-    chaiModularized(apipeckerLogs, "basic", "/pets/id", "get", allowed*numApikeys*secondsToRun);
+    chaiModularized(apipeckerLogs, "basic", "/pets/id", "get", allowed*numApikeys*secondsToRun*slasPerPlan);
   });
   it('BASIC PLAN: PUT to /pets/id - 4 per minute', function () {
     var allowed = 4;
-    chaiModularized(apipeckerLogs, "basic", "/pets/id", "put", allowed*numApikeys*minutesToRun);
+    chaiModularized(apipeckerLogs, "basic", "/pets/id", "put", allowed*numApikeys*minutesToRun*slasPerPlan);
   });
   it('BASIC PLAN: DELETE to /pets/id - 5 per second', function () {
     var allowed = 5;
-    chaiModularized(apipeckerLogs, "basic", "/pets/id", "delete", allowed*numApikeys*secondsToRun);
+    chaiModularized(apipeckerLogs, "basic", "/pets/id", "delete", allowed*numApikeys*secondsToRun*slasPerPlan);
   });
 
   it('PRO PLAN: GET to /pets - 10 per second', function () {
     var allowed = 10;
-    chaiModularized(apipeckerLogs, "pro", "/pets", "get", allowed*numApikeys*secondsToRun);
+    chaiModularized(apipeckerLogs, "pro", "/pets", "get", allowed*numApikeys*secondsToRun*slasPerPlan);
   });
   it('PRO PLAN: POST to /pets - 20 per minute', function () {
     var allowed = 20;
-    chaiModularized(apipeckerLogs, "pro", "/pets", "post", allowed*numApikeys*minutesToRun);
+    chaiModularized(apipeckerLogs, "pro", "/pets", "post", allowed*numApikeys*minutesToRun*slasPerPlan);
   });
   it('PRO PLAN: GET to /pets/id - 30 per second', function () {
     var allowed = 30;
-    chaiModularized(apipeckerLogs, "pro", "/pets/id", "get", allowed*numApikeys*secondsToRun);
+    chaiModularized(apipeckerLogs, "pro", "/pets/id", "get", allowed*numApikeys*secondsToRun*slasPerPlan);
   });
   it('PRO PLAN: PUT to /pets/id - 40 per minute', function () {
     var allowed = 40;
-    chaiModularized(apipeckerLogs, "pro", "/pets/id", "put", allowed*numApikeys*minutesToRun);
+    chaiModularized(apipeckerLogs, "pro", "/pets/id", "put", allowed*numApikeys*minutesToRun*slasPerPlan);
   });
   it('PRO PLAN: DELETE to /pets/id - 50 per second', function () {
     var allowed = 50;
-    chaiModularized(apipeckerLogs, "pro", "/pets/id", "delete", allowed*numApikeys*secondsToRun);
+    chaiModularized(apipeckerLogs, "pro", "/pets/id", "delete", allowed*numApikeys*secondsToRun*slasPerPlan);
   });
 });
