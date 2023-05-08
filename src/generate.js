@@ -267,6 +267,7 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
     var planName = subSLA["plan"]["name"];
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
+    var slaContextID = subSLA["context"]["id"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
 
     for (var endpoint in subSLARates) {
@@ -280,22 +281,25 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
 
         for (var i in slaApikeys) {
           if (authLocation == "query") {
-            routersDefinition[`${planName}_${sanitized_endpoint}_ak${i}_${method}`] = {
+            routersDefinition[`${slaContextID}_${planName}_${sanitized_endpoint}_ak${i}_${method}`] = {
               rule: `Path(\`${endpoint}\`) && Method(\`${method.toUpperCase()}\`) && Query(\`${authName}=${slaApikeys[i]}\`)`,
               service: "main-service",
-              middlewares: [`${planName}_addApikeyHeader_ak${i}`, `${planName}_${sanitized_endpoint}_${method}`]
+              middlewares: [`${planName}_addApikeyHeader_ak${i}`, 
+                            `${slaContextID}_${planName}_${sanitized_endpoint}_${method}`]
             }
           } else if (authLocation == "url") {
-            routersDefinition[`${planName}_${sanitized_endpoint}_ak${i}_${method}`] = {
+            routersDefinition[`${slaContextID}_${planName}_${sanitized_endpoint}_ak${i}_${method}`] = {
               rule: `Path(\`${endpoint}/${slaApikeys[i]}\`) && Method(\`${method.toUpperCase()}\`)`,
               service: "main-service",
-              middlewares: ["removeApikeyFromURL", `${planName}_addApikeyHeader_ak${i}`, `${planName}_${sanitized_endpoint}_${method}`]
+              middlewares: ["removeApikeyFromURL", 
+                            `${planName}_addApikeyHeader_ak${i}`, 
+                            `${slaContextID}_${planName}_${sanitized_endpoint}_${method}`]
             }
           } else if (authLocation == "header") { // only 1 iteration needed in this case, hence the 'break'
-            routersDefinition[`${planName}_${sanitized_endpoint}_${method}`] = {
+            routersDefinition[`${slaContextID}_${planName}_${sanitized_endpoint}_${method}`] = {
               rule: `Path(\`${endpoint}\`) && Method(\`${method.toUpperCase()}\`) && HeadersRegexp(\`${authName}\`, \`${slaApikeys.join('|')}\`)`,
               service: "main-service",
-              middlewares: [`${planName}_${sanitized_endpoint}_${method}`]
+              middlewares: [`${slaContextID}_${planName}_${sanitized_endpoint}_${method}`]
             }
             break;
           }
@@ -309,7 +313,7 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
           }
         }
 
-        middlewaresDefinition[`${planName}_${sanitized_endpoint}_${method}`] = { // This one is always added, regardless of authLocation 'header', 'query' or 'url'
+        middlewaresDefinition[`${slaContextID}_${planName}_${sanitized_endpoint}_${method}`] = { // This one is always added, regardless of authLocation 'header', 'query' or 'url'
           rateLimit: {
             sourceCriterion: { requestHeaderName: authName },
             average: max,
@@ -418,8 +422,9 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
+    var slaContextID = subSLA["context"]["id"]
 
-    apikeyChecks += `    acl ${planName}_valid_apikey ${authLocation}(${authName}) -m ${authCheckMethod} ${slaApikeys.join(' ')}\n`;
+    apikeyChecks += `    acl ${slaContextID}_${planName}_valid_apikey ${authLocation}(${authName}) -m ${authCheckMethod} ${slaApikeys.join(' ')}\n`;
 
     for (var endpoint in subSLARates) {
       limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {}; // only add if it is not already there (multiple SLAs agreements on a proxy have the same endpoints)
@@ -434,9 +439,9 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
         var paramsCount = (endpoint.match(/{/g) || []).length;
         var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
 
-        frontendDefinition += `use_backend ${planName}_${sanitized_endpoint}_${method} if ${planName}_valid_apikey METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ } \n    `
+        frontendDefinition += `use_backend ${slaContextID}_${planName}_${sanitized_endpoint}_${method} if ${slaContextID}_${planName}_valid_apikey METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ } \n    `
         backendDefinition +=
-          `backend ${planName}_${sanitized_endpoint}_${method}
+          `backend ${slaContextID}_${planName}_${sanitized_endpoint}_${method}
     stick-table type string len 100 size 100k expire 1${period} store http_req_rate(1${period})
     http-request deny deny_status 429 if { ${authLocation}(${authName}),table_http_req_rate() ge ${max} }
     http-request track-sc0 ${authLocation}(${authName}) # unless exceeds_limit # track-sc0 is required for tracking but at the same time it updates the expire time
@@ -529,6 +534,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
     var planName = subSLA["plan"]["name"];
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
+    var slaContextID = subSLA["context"]["id"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
     mapApikeysDefinition += `     "~(${slaApikeys.join('|')})" "${planName}";\n`;
 
@@ -540,7 +546,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
         var max = method_specs["requests"][0]["max"];
         var period = utils.getLimitPeriod(method_specs["requests"][0]["period"], "nginx");
 
-        var zone_name = `${planName}_${utils.sanitizeEndpoint(endpoint)}_${method.toUpperCase()}`;
+        var zone_name = `${slaContextID}_${planName}_${utils.sanitizeEndpoint(endpoint)}_${method.toUpperCase()}`;
         var zone_size = "10m" // 1m = 1 megabyte = 16k IPs
 
         /////////////// LIMITS
