@@ -418,12 +418,12 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
 
   for (var subSLA of SLAs) {
     var planName = subSLA["plan"]["name"];
-    allProxyPlanNames.push(planName);
+    var slaContextID = subSLA["context"]["id"]
+    allProxyPlanNames.push(`${slaContextID}_${planName}`);
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
-    var slaContextID = subSLA["context"]["id"]
-
+    
     apikeyChecks += `    acl ${slaContextID}_${planName}_valid_apikey ${authLocation}(${authName}) -m ${authCheckMethod} ${slaApikeys.join(' ')}\n`;
 
     for (var endpoint in subSLARates) {
@@ -536,7 +536,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
     var slaApikeys = subSLA["context"]["apikeys"]
     var slaContextID = subSLA["context"]["id"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
-    mapApikeysDefinition += `     "~(${slaApikeys.join('|')})" "${planName}";\n`;
+    mapApikeysDefinition += `     "~(${slaApikeys.join('|')})" "${slaContextID}_${planName}";\n`;
 
     for (var endpoint in subSLARates) {
       limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {};
