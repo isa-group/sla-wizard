@@ -197,7 +197,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                             verbose: true,
                             urlBuilder: getCustomUrlBuilder(authLocation, endpoint, allProxyApikeys[apikey]),
                             requestBuilder: getCustomRequestBuilder(authLocation, method, allProxyApikeys[apikey]),
-                            resultsHandler: getCustomResultsHandler(method, planName, endpoint)
+                            resultsHandler: getCustomResultsHandler(method, undefined, endpoint)
                         });
                     }
                 }

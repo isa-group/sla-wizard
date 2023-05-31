@@ -26,7 +26,7 @@ if (slasPath == undefined){ // "tests/specs/slas/"
 // Load one of the SLAs to count the API keys
 var slaFileNames = fs.readdirSync(slasPath);
 var numApikeys = jsyaml.load(fs.readFileSync(path.join(slasPath, slaFileNames[0]), 
-                              'utf8')).context.apikeys.length;
+                              'utf8')).context.apikeys.length; // this is the number of API keys of a single SLA
 var slasPerPlan = slaFileNames.length/2; // divided by two because there are two plans: basic and pro
 
 /**
@@ -95,8 +95,13 @@ describe(`Testing based on ${testConfig}`, function () {
     process.exit();
   }
 
+  // process the JSON produced by runTest
+
   it('Check number of tests performed', function () {
-    chai.expect(apipeckerLogs).to.have.lengthOf(48); // process the JSON produced by runTest
+    // 144 - (6 SLAs * 3 apikeys per sla * 5 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [All endpoints' RL]
+    // 108 - (6 SLAs * 3 apikeys per sla * 3 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [Only 'per second' RL endpoints]
+    // 90 - (6 SLAs * 3 apikeys per sla * 2 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [Only 'per minute' RL endpoints]
+    chai.expect(apipeckerLogs).to.have.lengthOf(144); // 
   });
 
   it('Check all requests to rate limiting-less endpoints succeeded', function () {
