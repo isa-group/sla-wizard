@@ -108,6 +108,26 @@ For more information on how to use the tool for each of the four proxies, refer 
 - [Nginx](docs/nginx.md)
 - [Traefik](docs/traefik.md)
 
+
+## Testing
+
+After creating the proxy configuration file and launching it (i.e, only perform the steps in this section if the proxy is up), it's behavior can be validated with:  
+
+```bash
+TEST_CONFIG=../sla-gateway-benchmark/config/basicTestConfig.yaml \
+OAS4TEST=../sla-gateway-benchmark/specs/simple_api_oas.yaml \
+SLAS_PATH=../sla-gateway-benchmark/specs/slas/ \
+npm test
+```
+
+The variables for configuring the `npm run`, used above, are:
+
+- TEST_CONFIG: Path to the test run configuration file. 
+- OAS4TEST: Path to the API's OAS document.
+- SLAS_PATH: Path to the API's SLAs.
+
+With that being said, we __strongly advise for testing__ to make use of [sla-gateway-benchmark](https://github.com/isa-group/sla-gateway-benchmark).
+
 ## License
 
 Copyright 2023, [ISA Group](http://www.isa.us.es), [University of Sevilla](http://www.us.es)
