@@ -66,10 +66,13 @@ function arrayContainsObject(arrayOfObjects, objectToCheck) {
     try {
       assert.deepStrictEqual(element, objectToCheck)
       res = true;
-    } catch (err) { }
+    } catch (err) { 
+      return;
+    }
   });
   return res;
 }
+
 
 
 /**
@@ -142,7 +145,7 @@ function isAValidUrl(potentialURL) {
   } catch (err) {
     return false;
   }
-};
+}
 
 
 /**

@@ -77,12 +77,13 @@ function getCustomRequestBuilder(authLocation, method, apikey) {
  */
 function getCustomUrlBuilder(authLocation, endpoint, apikey) {
     return function () {
+        var url;
         if (authLocation == "header") {
-            var url = `http://localhost${endpoint}`;
+            url = `http://localhost${endpoint}`;
         } else if (authLocation == "query") {
-            var url = `http://localhost${endpoint}?apikey=${apikey}`;
+            url = `http://localhost${endpoint}?apikey=${apikey}`;
         } else if (authLocation == "url") {
-            var url = `http://localhost${endpoint}/${apikey}`;
+            url = `http://localhost${endpoint}/${apikey}`;
         }
         return url
     }
@@ -122,7 +123,6 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
             });
         } else { // FILE
             configs.logger.debug(`File: ${slaPath}`);
-            var slaPath = slaPath; // add base path to SLA paths
             SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
         }
     } catch (err) {
@@ -147,10 +147,11 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                     var endpoint_sanitized = endpoint.replace(/{|}/g, "");
 
                     var period = subSLARates[endpoint][method]["requests"][0]["period"];
+                    var timeUnitsToRun;
                     if (period == "minute"){
-                        var timeUnitsToRun = minutesToRun;
+                        timeUnitsToRun = minutesToRun;
                     } else {
-                        var timeUnitsToRun = secondsToRun;
+                        timeUnitsToRun = secondsToRun;
                     }
 
                     // for testing

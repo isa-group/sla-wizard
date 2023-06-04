@@ -5,7 +5,6 @@ var url = require("url");
 var axios = require("axios");
 var configs = require("./configs");
 var utils = require("./utils");
-const { match } = require('assert');
 
 
 /**
@@ -29,13 +28,16 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
   var limitedPaths = [];
   var allProxyApikeys = [];
   var apikeysAtTheEndOfURL = "";
+  var paramsCount;
+  var endpoint_paramsRegexd;
+  var matcher;
   apiServerURL = url.parse(apiServerURL)
 
   for (var subSLA of SLAs) {
     var subSLARates = subSLA["plan"]["rates"];
     var slaApikeys = subSLA["context"]["apikeys"]
     allProxyApikeys = allProxyApikeys.concat(slaApikeys);
-    rl_translation = true;
+    var rl_translation = true;
 
     for (var endpoint in subSLARates) {
       limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {};
@@ -45,8 +47,9 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
         var max = method_specs["requests"][0]["max"];
 
         // Rate Limiting translation is applied here
+        var period;
         if (rl_translation == true){
-          var period = parseInt(utils.getLimitPeriod(method_specs["requests"][0]["period"], "envoy_translate"),10) / max;
+          period = parseInt(utils.getLimitPeriod(method_specs["requests"][0]["period"], "envoy_translate"),10) / max;
           var new_period = period;
           var new_max = 1;
           while (new_period < 50){
@@ -56,15 +59,15 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
           period = (new_period / 1000).toFixed(9) + "s"; // convert ms to seconds (note Envoy takes up to 9 decimals but not more)
           max = new_max;
         } else {
-          var period = utils.getLimitPeriod(method_specs["requests"][0]["period"], "envoy");
+          period = utils.getLimitPeriod(method_specs["requests"][0]["period"], "envoy");
         }
         
-        var paramsCount = (endpoint.match(/{/g) || []).length;
-        var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+        paramsCount = (endpoint.match(/{/g) || []).length;
+        endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
 
         for (var i in slaApikeys) {
 
-          var matcher = {
+          matcher = {
             "match": {
               "headers": [
                 {
@@ -152,14 +155,14 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
       if (!limitedPaths.includes(endpoint)) {
         for (var method in oasDoc.paths[endpoint]) {
 
-          var paramsCount = (endpoint.match(/{/g) || []).length;
-          var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+          paramsCount = (endpoint.match(/{/g) || []).length;
+          endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
 
-          var matcher = {
+          matcher = {
             "match": {
               "headers": [
                 {
-                  "name": "\:method",
+                  "name": ":method",
                   "string_match": {
                     "safe_regex": {
                       "google_re2": null,
@@ -231,7 +234,7 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
     .typed_config.route_config.virtual_hosts[0].routes = routesDefinition
   envoyTemplate.static_resources
     .listeners[0].filter_chains[0].filters[0]
-    .typed_config.access_log[0].typed_config.format = `[%START_TIME%] \"%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %REQ(${authName})% %PROTOCOL%\" %RESPONSE_CODE% %RESPONSE_FLAGS% \n`
+    .typed_config.access_log[0].typed_config.format = `[%START_TIME%] "%REQ(:METHOD)% %REQ(X-ENVOY-ORIGINAL-PATH?:PATH)% %REQ(${authName})% %PROTOCOL%" %RESPONSE_CODE% %RESPONSE_FLAGS% \n`
   envoyTemplate.static_resources
     .clusters[0].load_assignment.endpoints[0].lb_endpoints[0]
     .endpoint.address.socket_address.address = apiServerURL.hostname
@@ -262,6 +265,7 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
   var middlewaresDefinition = {};
   var limitedPaths = [];
   var allProxyApikeys = [];
+  var sanitized_endpoint;
 
   for (var subSLA of SLAs) {
     var planName = subSLA["plan"]["name"];
@@ -272,7 +276,7 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
 
     for (var endpoint in subSLARates) {
       limitedPaths.indexOf(endpoint) === -1 ? limitedPaths.push(endpoint) : {};
-      var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+      sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
 
       for (var method in subSLARates[endpoint]) {
         var method_specs = subSLARates[endpoint][method];
@@ -327,7 +331,7 @@ function generateTraefikConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
 
   var allProxyApikeys_regex = allProxyApikeys.join('|');
   for (var endpoint in oasDoc.paths) { // "ratelimiting-less" endpoints are taken from OAS as they're missing from SLA
-    var sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
+    sanitized_endpoint = utils.sanitizeEndpoint(endpoint);
     if (!limitedPaths.includes(endpoint)) {
       for (var method in oasDoc.paths[endpoint]) {
         if (authLocation == "query") {
@@ -394,6 +398,8 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
   var removeApikeyFromURL = "";
   var apikeyChecks = "";
   var authCheckMethod = "str";
+  var paramsCount;
+  var endpoint_paramsRegexd;
   
   if (authLocation == "header") {
     authLocation = "hdr";
@@ -401,7 +407,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
     authLocation = "url_param";
   } else if (authLocation == "url") {
     authLocation = "hdr";
-    var authCheckMethod = "sub";
+    authCheckMethod = "sub";
 
     getApikeyFromUrl = `
     # Create a header with the last part of the path (includes auth key)
@@ -436,8 +442,8 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
         var max = method_specs["requests"][0]["max"];
         var period = utils.getLimitPeriod(method_specs["requests"][0]["period"], "traefik");
         method = method.toUpperCase();
-        var paramsCount = (endpoint.match(/{/g) || []).length;
-        var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+        paramsCount = (endpoint.match(/{/g) || []).length;
+        endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
 
         frontendDefinition += `use_backend ${slaContextID}_${planName}_${sanitized_endpoint}_${method} if ${slaContextID}_${planName}_valid_apikey METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ } \n    `
         backendDefinition +=
@@ -455,8 +461,8 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
       if (!limitedPaths.includes(endpoint)) {
         for (var method in oasDoc.paths[endpoint]) {
           method = method.toUpperCase();
-          var paramsCount = (endpoint.match(/{/g) || []).length;
-          var endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
+          paramsCount = (endpoint.match(/{/g) || []).length;
+          endpoint_paramsRegexd = endpoint.replace(/(\/{(.*?)\})+/g, `(?:\\/[^/]+){${paramsCount}}`); // If the endpoint has parameters these are regex'd
           frontendDefinition += `use_backend no_ratelimit_endpoints if METH_${method} { path_reg \\${endpoint_paramsRegexd}\\/?$ }\n    `;
         }
       }
@@ -512,6 +518,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
   var allProxyApikeys = [];
   var uriOriginalSave = "set $uri_original $uri;"
   var getApikeyFromUrl = "";
+  var location;
 
   if (authLocation == "header") {
     authLocation = "http";
@@ -524,7 +531,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
           set $from_url_apikey  $1;
         }`;
     uriOriginalSave = `
-        if ($request_uri ~* "((.*)\/)" ) { # Gets the url w/o apikey
+        if ($request_uri ~* "((.*)/)" ) { # Gets the url w/o apikey
           set $uri_original  $1;
         }`;
   }
@@ -555,7 +562,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
         limitsDefinition += limit;
 
         /////////////// LOCATIONS
-        var location = `
+        location = `
         location /${zone_name} {
             rewrite /${zone_name} $uri_original break;
             proxy_pass ${apiServerURL};
@@ -563,7 +570,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
         }`
         locationDefinitions += location;
       }
-    };
+    }
   }
 
   for (var endpoint in oasDoc.paths) {
@@ -576,7 +583,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
       var methods = Object.keys(oasDoc.paths[endpoint]).join('|').toUpperCase();
       planBased = "";
       /////////////// LOCATIONS
-      var location = ` 
+      location = ` 
         location ~ /${utils.sanitizeEndpoint(endpoint)}_(${methods}) {
             rewrite /${utils.sanitizeEndpoint(endpoint)}_(${methods}) $uri_original break;
             proxy_pass ${apiServerURL};
@@ -688,7 +695,6 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
         });
       } else { // FILE
         configs.logger.debug(`File: ${slaPath}`);
-        var slaPath = slaPath; // add base path to SLA paths
         SLAs.push(jsyaml.load(fs.readFileSync(path.join('', slaPath), 'utf8')));
       }
     } catch (err) {
@@ -726,9 +732,10 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
  * @param {string} proxyPort - Port on which the proxy is running.
  */
 function generateProxyConfig(proxyType, SLAsFiltered, oasDoc, apiServerURL, customTemplate, outFile, authLocation, authName, proxyPort) {
+  var proxyConf;
   switch (proxyType) {
     case 'nginx':
-      var proxyConf = generateNginxConfig(SLAsFiltered,
+      proxyConf = generateNginxConfig(SLAsFiltered,
         oasDoc,
         apiServerURL,
         customTemplate,
@@ -737,7 +744,7 @@ function generateProxyConfig(proxyType, SLAsFiltered, oasDoc, apiServerURL, cust
         proxyPort);
       break;
     case 'haproxy':
-      var proxyConf = generateHAproxyConfig(SLAsFiltered,
+      proxyConf = generateHAproxyConfig(SLAsFiltered,
         oasDoc,
         apiServerURL,
         customTemplate,
@@ -746,7 +753,7 @@ function generateProxyConfig(proxyType, SLAsFiltered, oasDoc, apiServerURL, cust
         proxyPort);
       break;
     case 'traefik':
-      var proxyConf = generateTraefikConfig(SLAsFiltered,
+      proxyConf = generateTraefikConfig(SLAsFiltered,
         oasDoc,
         apiServerURL,
         customTemplate,
@@ -754,7 +761,7 @@ function generateProxyConfig(proxyType, SLAsFiltered, oasDoc, apiServerURL, cust
         authName);
       break;
     case 'envoy':
-      var proxyConf = generateEnvoyConfig(SLAsFiltered,
+      proxyConf = generateEnvoyConfig(SLAsFiltered,
         oasDoc,
         apiServerURL,
         customTemplate,

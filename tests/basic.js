@@ -37,9 +37,8 @@ var slasPerPlan = slaFileNames.length/2; // divided by two because there are two
  * @param {string} endpoint - An API endpoint (without host).
  * @param {string} method - A CRUD method. 
  * @param {string} expectedSuccess - The number of requests that should get HTTP 200. 
- * @param {string} expectedFailure - The number of requests that should get HTTP 429. 
  */
-function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSuccess, expectedFailure) {
+function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSuccess) {
   var http200 = 0;
   var http429 = 0;
   var httpOther = [];
@@ -60,7 +59,7 @@ function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSucc
   console.log(`Received 429s: ${http429}`);
   console.log(`(Sum: ${http200+http429})`);
   console.log(`Other codes: ${httpOther}`);
-  chai.expect(http200).to.equal(expectedSuccess) //&& chai.expect(http429).to.equal(expectedFailure);
+  chai.expect(http200).to.equal(expectedSuccess);
 }
 
 describe(`Testing based on ${testConfig}`, function () {
@@ -115,7 +114,6 @@ describe(`Testing based on ${testConfig}`, function () {
   });
 
   var testSpecs = jsyaml.load(fs.readFileSync(testConfig, 'utf8'));
-  var extraRequests = testSpecs["extraRequests"];
   var minutesToRun = testSpecs["minutesToRun"];
   var secondsToRun = testSpecs["secondsToRun"];
   
