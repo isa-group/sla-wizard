@@ -15,12 +15,12 @@ var apipecker = require("apipecker");
  * @param {string} requestsToSendPerTimeUnit - Iterations to do in the given period (total requests to send in 1 minute or second)
  * @param {string} timeUnitsToRun - Time units (for example, 20 seconds or 4 minutes) to run
  */
-function getDelay(period, requestsToSendPerTimeUnit, timeUnitsToRun){
-    var totalNumberOfRequestsToSend = requestsToSendPerTimeUnit*timeUnitsToRun;
-    if (period == "minute"){
-        return (timeUnitsToRun*60000)/totalNumberOfRequestsToSend;
+function getDelay(period, requestsToSendPerTimeUnit, timeUnitsToRun) {
+    var totalNumberOfRequestsToSend = requestsToSendPerTimeUnit * timeUnitsToRun;
+    if (period == "minute") {
+        return (timeUnitsToRun * 60000) / totalNumberOfRequestsToSend;
     } else {
-        return (timeUnitsToRun*1000)/totalNumberOfRequestsToSend;
+        return (timeUnitsToRun * 1000) / totalNumberOfRequestsToSend;
     }
 }
 
@@ -35,7 +35,7 @@ function getDelay(period, requestsToSendPerTimeUnit, timeUnitsToRun){
  * @param {object} results - Results obtained by APIPecker.
  */
 function getCustomResultsHandler(method, planName, endpoint) {
-    return function (results) {
+    return function(results) {
         console.log(JSON.stringify([{
             method: method,
             planName: planName,
@@ -53,7 +53,7 @@ function getCustomResultsHandler(method, planName, endpoint) {
  * @param {string} apikey - API key.
  */
 function getCustomRequestBuilder(authLocation, method, apikey) {
-    return function () {
+    return function() {
         var customRequest = {
             options: {
                 method: method.toUpperCase()
@@ -62,8 +62,8 @@ function getCustomRequestBuilder(authLocation, method, apikey) {
         if (authLocation == "header") {
             customRequest["options"]["headers"] = {
                 apikey: apikey
-            }  
-        }      
+            }
+        }
         return customRequest
     }
 }
@@ -76,7 +76,7 @@ function getCustomRequestBuilder(authLocation, method, apikey) {
  * @param {string} apikey - API key.
  */
 function getCustomUrlBuilder(authLocation, endpoint, apikey) {
-    return function () {
+    return function() {
         var url;
         if (authLocation == "header") {
             url = `http://localhost${endpoint}`;
@@ -148,7 +148,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
 
                     var period = subSLARates[endpoint][method]["requests"][0]["period"];
                     var timeUnitsToRun;
-                    if (period == "minute"){
+                    if (period == "minute") {
                         timeUnitsToRun = minutesToRun;
                     } else {
                         timeUnitsToRun = secondsToRun;
@@ -156,7 +156,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
 
                     // for testing
                     //console.log(`curl -X ${method.toUpperCase()} -H "apikey: ${slaApikeys[apikey]}" localhost${endpoint}; echo`)
-                    var requestsToSendPerTimeUnit = subSLARates[endpoint][method]["requests"][0]["max"]*extraRequests; // extra requests to trigger 429s
+                    var requestsToSendPerTimeUnit = subSLARates[endpoint][method]["requests"][0]["max"] * extraRequests; // extra requests to trigger 429s
 
                     /*
                     if (period == "second" && planName == "pro" && endpoint_sanitized == "/pets/id" && method == "delete"){
@@ -165,11 +165,11 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
                         console.log("------------------------")
                     }
                     */
-                    
+
                     apipecker.run({
                         concurrentUsers: 1,
-                        iterations: requestsToSendPerTimeUnit*timeUnitsToRun, // runs for X units of "period" to check rates are reset
-                        delay: getDelay(period,requestsToSendPerTimeUnit,timeUnitsToRun),
+                        iterations: requestsToSendPerTimeUnit * timeUnitsToRun, // runs for X units of "period" to check rates are reset
+                        delay: getDelay(period, requestsToSendPerTimeUnit, timeUnitsToRun),
                         verbose: true,
                         urlBuilder: getCustomUrlBuilder(authLocation, endpoint_sanitized, slaApikeys[apikey]),
                         requestBuilder: getCustomRequestBuilder(authLocation, method, slaApikeys[apikey]),
@@ -181,8 +181,8 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
     }
 
     if (limitedPaths.length != Object.keys(oasDoc.paths).length) { // "ratelimiting-less" endpoints testing 
-        for (var endpoint in oasDoc.paths) { 
-            if (!limitedPaths.includes(endpoint)) { 
+        for (var endpoint in oasDoc.paths) {
+            if (!limitedPaths.includes(endpoint)) {
                 for (var method in oasDoc.paths[endpoint]) {
                     for (var apikey in allProxyApikeys) {
                         // If the endpoint has params these are "parametrized"
@@ -205,7 +205,7 @@ function runTest(oasPath, slaPath, testOptions = "./specs/testSpecs.yaml") {
             }
         }
     }
-    
+
 }
 
 
