@@ -26,13 +26,15 @@ function getDelay(period, requestsToSendPerTimeUnit, timeUnitsToRun) {
 
 
 /**
- * Returns a function that receives the results obtained by 
+ * Returns a function which: receives the results obtained by 
  * APIPecker, adds the method, plan name and endpoint and 
  * outputs a valid JSON.
  * Note this does not do anything else because the actual results 
  * analyzing is done in the script that is run with Mocha 
  * (check package.json).
- * @param {object} results - Results obtained by APIPecker.
+ * @param {object} method - HTTP method.
+ * @param {object} planName - SLA plan name.
+ * @param {object} endpoint - API endpoint.
  */
 function getCustomResultsHandler(method, planName, endpoint) {
     return function(results) {

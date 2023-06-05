@@ -93,7 +93,7 @@ function sanitizeEndpoint(input) {
  * If any of the SLAs in the array does not conform to those two requirements,
  * the execution stops. Additionally, if the array contains duplicated SLAs, those
  * will be ignored.
- * @param {object} slaToValidate - An SLA to validate.
+ * @param {object} SLAsToValidate - An SLA to validate.
  */
 function validateSLAs(SLAsToValidate) {
 

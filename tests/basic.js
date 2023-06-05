@@ -68,7 +68,7 @@ describe(`Testing based on ${testConfig}`, function() {
 
     try {
 
-        // The output of this command is what is analyzed with chai, meaning it must be JSON only hence the LOGGER_LEVEL variable set to 'error'
+        // The output of this command is what is analyzed with chai, meaning it must be JSON only, hence the LOGGER_LEVEL variable set to 'error'
         // `export LOGGER_LEVEL=error ; node ./src/index.js runTest --specs $PWD/${testConfig} --oas $PWD/${oas4Test} --sla ${slasPath}`
         console.log(new Date());
         var apipeckerLogs = cp.spawnSync("node",
