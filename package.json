@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "lint": "./node_modules/.bin/eslint .",
+    "prepare_test": "bash tests/prepare_test.sh",
     "test": "./node_modules/mocha/bin/mocha.js ./tests/basic.js",
+    "test_cleanup": "bash tests/test_cleanup.sh",
     "start": "node index.js"
   },
   "author": "Ignacio Peluaga / ISA Group",

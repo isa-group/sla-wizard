@@ -78,7 +78,8 @@ describe(`Testing based on ${testConfig}`, function() {
                 `${testConfig}`,
                 "--oas",
                 `${oas4Test}`,
-                "--sla", `${slasPath}`
+                "--sla", 
+                `${slasPath}`
             ], {
                 encoding: 'utf8',
                 env: {
