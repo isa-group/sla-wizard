@@ -454,7 +454,7 @@ function generateHAproxyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, a
                     `backend ${slaContextID}_${planName}_${sanitized_endpoint}_${method}
     stick-table type string len 100 size 100k expire 1${period} store http_req_rate(1${period})
     http-request deny deny_status 429 if { ${authLocation}(${authName}),table_http_req_rate() ge ${max} }
-    http-request track-sc0 ${authLocation}(${authName}) # unless exceeds_limit # track-sc0 is required for tracking but at the same time it updates the expire time
+    http-request track-sc0 ${authLocation}(${authName})
     server ${sanitized_endpoint} ${apiServerURL.replace("http://", "")}\n` // the protocol is removed as it's not allowed here
             }
         }
@@ -570,7 +570,7 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
         location /${zone_name} {
             rewrite /${zone_name} $uri_original break;
             proxy_pass ${apiServerURL};
-            limit_req zone=${zone_name} burst=1 nodelay; # ${max} delay=${max}; 
+            limit_req zone=${zone_name} burst=1 nodelay;
         }`
                 locationDefinitions += location;
             }

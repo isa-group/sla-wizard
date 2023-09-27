@@ -23,4 +23,4 @@ node src/index.js config traefik --oas tests/specs/simple_api_oas.yaml --sla tes
 
 ## Custom Template
 
-Refer to [`templates/traefik.yaml`](../templates/traefik.yaml). The template provided to SLA Wizard must follow that exact structure.
+Refer to [`templates/traefik.yaml`](../templates/traefik.yaml). The template provided to SLA Wizard must follow that exact structure. Note `sla-wizard` adds the rate limiting relateed configuration under `routers:` and `middlewares:`.

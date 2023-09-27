@@ -29,4 +29,4 @@ node src/index.js config envoy --oas tests/specs/simple_api_oas.yaml --sla tests
 
 ## Custom Template
 
-Refer to [`templates/envoy.yaml`](../templates/envoy.yaml). The template provided to SLA Wizard must follow that exact structure.
+Refer to [`templates/envoy.yaml`](../templates/envoy.yaml). The template provided to SLA Wizard must follow that exact structure. Note `sla-wizard` adds the rate limiting configuration under `routes:`.

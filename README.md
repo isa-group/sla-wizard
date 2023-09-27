@@ -126,6 +126,13 @@ The variables for configuring the `npm run`, used above, are:
 - OAS4TEST: Path to the API's OAS document.
 - SLAS_PATH: Path to the API's SLAs.
 
+The file `TEST_CONFIG` must be a YAML file with the following variables: 
+
+- `authLocation`: Indicates how the apikeys should be sent to the proxy during the testing: as a header, as a query parameter or as part of the url. Possible values are `header`, `query` and `url`, respectively.
+- `extraRequests`: An integer that will multiply the number of expected 200 HTTP responses for a given endpoint and will sent that amount of requests. For example, if an SLA allows a user to make 10 requests per second, if this variable is set to 3 `npm test` would send 30 requests per second for a single user. 
+- `minutesToRun`: Minutes to run (this applies to endpoints that have "per minute" rate limiting).
+- `secondsToRun`: Seconds to run (this applies to endpoints that have "per second" rate limiting).
+
 With that being said, we __strongly advise for testing__ to make use of [sla-gateway-benchmark](https://github.com/isa-group/sla-gateway-benchmark).
 
 ## License
