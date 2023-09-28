@@ -1,5 +1,6 @@
 # SLA Wizard
 Automated configuration of API rates and limits (specified in OpenAPI and SLA4OAI) for Envoy, HAProxy, NGinx and Traefik.
+
 ## How it works
 
 ![SLA Wizard workflow](img/workflow.png)
