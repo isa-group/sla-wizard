@@ -102,10 +102,11 @@ describe(`Testing based on ${testConfig}`, function() {
     // process the JSON produced by runTest
 
     it('Check number of tests performed', function() {
-        // 144 - (6 SLAs * 3 apikeys per sla * 5 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [All endpoints' RL]
-        // 108 - (6 SLAs * 3 apikeys per sla * 3 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [Only 'per second' RL endpoints]
-        // 90 - (6 SLAs * 3 apikeys per sla * 2 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [Only 'per minute' RL endpoints]
-        chai.expect(apipeckerLogs).to.have.lengthOf(144); // 
+        // 144 -> (6 SLAs * 3 apikeys per sla * 5 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [All endpoints' RL]
+        // 108 -> (6 SLAs * 3 apikeys per sla * 3 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [Only 'per second' RL endpoints]
+        // 90 ->  (6 SLAs * 3 apikeys per sla * 2 endpointsAndMethod API has) + (3 apikeys per SLA * 6 SLAs * 3 open endpointsAndMethod API has) [Only 'per minute' RL endpoints]
+        // 64 ->  (4 SLAs * 2 apikeys per sla * 5 endpointsAndMethod API has) + (2 apikeys per SLA * 4 SLAs * 3 open endpointsAndMethod API has) [All  RL endpoints]
+        chai.expect(apipeckerLogs).to.have.lengthOf(64); // 
     });
 
     it('Check all requests to rate limiting-less endpoints succeeded', function() {

@@ -1,8 +1,9 @@
 PROXY=$1
 
-set -xe
+set -e
 
-git clone https://github.com/isa-group/sla-gateway-benchmark /tmp/sla-gateway-benchmark
+echo "# Cloning https://github.com/isa-group/sla-gateway-benchmark" ;
+git clone https://github.com/isa-group/sla-gateway-benchmark /tmp/sla-gateway-benchmark &> /dev/null
 
 mkdir -p /tmp/generatedSLAs
 
@@ -12,6 +13,7 @@ GENERATED_LOCATION=/tmp/generatedSLAs \
 node /tmp/sla-gateway-benchmark/autoSLAs/index.js
 
 echo "# Creating proxy configuration file with sla-wizard for $PROXY" ;
+LOGGER_LEVEL=info \
 node src/index.js config --authLocation header $PROXY \
 			--oas /tmp/sla-gateway-benchmark/specs/simple_api_oas.yaml \
 			--sla /tmp/generatedSLAs/ \
