@@ -6,7 +6,7 @@ Automated configuration of API rates and limits (specified in OpenAPI and SLA4OA
 ![SLA Wizard workflow](https://raw.githubusercontent.com/isa-group/sla-wizard/master/img/workflow.png)
 
 1. The user provides to SLA Wizard an OpenAPI Specification v3 and one or more SLAs agreement.
-2. SLA Wizard generates a proxy configuration file which includes the rate limiting indicated in the SLA(s). Refer to section [Creating proxy configurations](#creating-proxy-configurations) for details on this.
+2. SLA Wizard generates a proxy configuration file which includes the rate limiting indicated in the SLA(s). Refer to section [Creating proxy configurations](https://github.com/isa-group/sla-wizard/tree/master#creating-proxy-configurations) for details on this.
 3. The obtained configuration is provided to the proxy server when launching it. The proxy can be one of: Envoy, HAProxy, Nginx or Traefik.
 4. The API requests will be rate-limited according to the proxy configuratin file, which matches what the API SLA(s) indicate.
 
@@ -104,10 +104,10 @@ SLA Wizard can create configuration files from scratch for four different proxy 
 
 For more information on how to use the tool for each of the four proxies, refer to their specific docs:
 
-- [Envoy](docs/envoy.md)
-- [HAProxy](docs/haproxy.md)
-- [Nginx](docs/nginx.md)
-- [Traefik](docs/traefik.md)
+- [Envoy](https://github.com/isa-group/sla-wizard/blob/master/docs/envoy.md)
+- [HAProxy](https://github.com/isa-group/sla-wizard/blob/master/docs/haproxy.md)
+- [Nginx](https://github.com/isa-group/sla-wizard/blob/master/docs/nginx.md)
+- [Traefik](https://github.com/isa-group/sla-wizard/blob/master/docs/traefik.md)
 
 
 ## Testing
