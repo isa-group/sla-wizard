@@ -3,7 +3,7 @@ Automated configuration of API rates and limits (specified in OpenAPI and SLA4OA
 
 ## How it works
 
-![SLA Wizard workflow](img/workflow.png)
+![SLA Wizard workflow](https://raw.githubusercontent.com/isa-group/sla-wizard/master/img/workflow.png)
 
 1. The user provides to SLA Wizard an OpenAPI Specification v3 and one or more SLAs agreement.
 2. SLA Wizard generates a proxy configuration file which includes the rate limiting indicated in the SLA(s). Refer to section [Creating proxy configurations](#creating-proxy-configurations) for details on this.
