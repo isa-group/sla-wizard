@@ -1,7 +1,5 @@
 PROXY=$1
 
-set -e
-
 echo "# Cloning https://github.com/isa-group/sla-gateway-benchmark" ;
 git clone https://github.com/isa-group/sla-gateway-benchmark /tmp/sla-gateway-benchmark &> /dev/null
 npm install --prefix /tmp/sla-gateway-benchmark/autoSLAs/
