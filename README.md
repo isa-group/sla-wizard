@@ -112,12 +112,52 @@ For more information on how to use the tool for each of the four proxies, refer 
 
 ## Testing
 
-After creating the proxy configuration file and launching it (i.e, only perform the steps in this section if the proxy is up), it's behavior can be validated with:  
+Perform the following steps to test SLA Wizard. For further testing we recommend making use of [sla-gateway-benchmark](https://github.com/isa-group/sla-gateway-benchmark).
+
+### 1. Clone repo and install dependencies
 
 ```bash
-TEST_CONFIG=../sla-gateway-benchmark/config/basicTestConfig.yaml \
-OAS4TEST=../sla-gateway-benchmark/specs/simple_api_oas.yaml \
-SLAS_PATH=../sla-gateway-benchmark/specs/slas/ \
+git clone https://github.com/isa-group/sla-wizard
+cd sla-wizard
+npm install
+```
+
+### 2. Prepare test bed: creates 4 SLAs, each with 2 apikeys and then creates a config file for Nginx, with rate limiting based on those 4 SLAs
+
+```bash
+npm run prepare_test nginx 4 2
+```
+
+See the config file created by the previous command
+
+```bash
+less /tmp/proxy-configuration-file
+```
+
+### 3. Create configuration file for the test
+
+It must be a YAML file with the following variables: 
+
+- `authLocation`: Indicates how the apikeys should be sent to the proxy during the testing: as a header, as a query parameter or as part of the url. Possible values are `header`, `query` and `url`, respectively.
+- `extraRequests`: An integer that will multiply the number of expected 200 HTTP responses for a given endpoint and will sent that amount of requests. For example, if an SLA allows a user to make 10 requests per second, if this variable is set to 3 `npm test` would send 30 requests per second for a single user. 
+- `minutesToRun`: Minutes to run (this applies to endpoints that have "per minute" rate limiting).
+- `secondsToRun`: Seconds to run (this applies to endpoints that have "per second" rate limiting).
+
+```bash
+cat > /tmp/sla-wizard-test-config.yaml <<EOL
+authLocation: header
+extraRequests: 3
+minutesToRun: 3
+secondsToRun: 30
+EOL
+```
+
+### 4. Launch test, providing paths to the test config file, OAS document and SLAs:
+
+```bash
+TEST_CONFIG=/tmp/sla-wizard-test-config.yaml \
+OAS4TEST=/tmp/sla-gateway-benchmark/specs/simple_api_oas.yaml \
+SLAS_PATH=/tmp/generatedSLAs/ \
 npm test
 ```
 
@@ -127,14 +167,21 @@ The variables for configuring the `npm run`, used above, are:
 - OAS4TEST: Path to the API's OAS document.
 - SLAS_PATH: Path to the API's SLAs.
 
-The file `TEST_CONFIG` must be a YAML file with the following variables: 
+When the previous command completes, the logs produced by "npm test" can be seen.
 
-- `authLocation`: Indicates how the apikeys should be sent to the proxy during the testing: as a header, as a query parameter or as part of the url. Possible values are `header`, `query` and `url`, respectively.
-- `extraRequests`: An integer that will multiply the number of expected 200 HTTP responses for a given endpoint and will sent that amount of requests. For example, if an SLA allows a user to make 10 requests per second, if this variable is set to 3 `npm test` would send 30 requests per second for a single user. 
-- `minutesToRun`: Minutes to run (this applies to endpoints that have "per minute" rate limiting).
-- `secondsToRun`: Seconds to run (this applies to endpoints that have "per second" rate limiting).
+While the test runs, you can check the containers are up and the proxy's logs:
 
-With that being said, we __strongly advise for testing__ to make use of [sla-gateway-benchmark](https://github.com/isa-group/sla-gateway-benchmark).
+```bash
+watch docker ps
+
+docker logs -f nginx_proxy_1
+```
+
+### 5. Remove testing resources (containers and generated files)
+
+```bash
+npm run test_cleanup
+```
 
 ## License
 
