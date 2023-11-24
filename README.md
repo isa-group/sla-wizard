@@ -122,13 +122,15 @@ cd sla-wizard
 npm install
 ```
 
-### 2. Prepare test bed: creates 4 SLAs, each with 2 apikeys and then creates a config file for Nginx, with rate limiting based on those 4 SLAs
+### 2. Prepare test bed
+
+The following command creates 4 SLAs, each with 2 apikeys and then creates a config file for Nginx, with rate limiting based on those 4 SLAs:
 
 ```bash
 npm run prepare_test nginx 4 2
 ```
 
-See the config file created by the previous command
+See the config file created by the previous command:
 
 ```bash
 less /tmp/proxy-configuration-file
@@ -152,7 +154,7 @@ secondsToRun: 30
 EOL
 ```
 
-### 4. Launch test, providing paths to the test config file, OAS document and SLAs:
+### 4. Launch test
 
 ```bash
 TEST_CONFIG=/tmp/sla-wizard-test-config.yaml \
@@ -163,21 +165,21 @@ npm test
 
 The variables for configuring the `npm run`, used above, are:
 
-- TEST_CONFIG: Path to the test run configuration file. 
-- OAS4TEST: Path to the API's OAS document.
-- SLAS_PATH: Path to the API's SLAs.
-
-When the previous command completes, the logs produced by "npm test" can be seen.
+- `TEST_CONFIG`: Path to the test run configuration file. 
+- `OAS4TEST`: Path to the API's OAS document.
+- `SLAS_PATH`: Path to the API's SLAs.
 
 While the test runs, you can check the containers are up and the proxy's logs:
 
 ```bash
-watch docker ps
+docker ps
 
 docker logs -f nginx_proxy_1
 ```
 
-### 5. Remove testing resources (containers and generated files)
+### 5. Remove testing resources
+
+Once testing completes, make use of the following command to remove containers and generated files:
 
 ```bash
 npm run test_cleanup
