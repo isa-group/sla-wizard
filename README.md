@@ -141,7 +141,7 @@ less /tmp/proxy-configuration-file
 It must be a YAML file with the following variables: 
 
 - `authLocation`: Indicates how the apikeys should be sent to the proxy during the testing: as a header, as a query parameter or as part of the url. Possible values are `header`, `query` and `url`, respectively.
-- `extraRequests`: An integer that will multiply the number of expected 200 HTTP responses for a given endpoint and will sent that amount of requests. For example, if an SLA allows a user to make 10 requests per second, if this variable is set to 3 `npm test` would send 30 requests per second for a single user. 
+- `extraRequests`: An integer that will multiply the number of expected 200 HTTP responses for a given endpoint and will send that amount of requests. For example, if an SLA allows a user to make 10 requests per second, if this variable is set to 3, `npm test` will send 30 requests per second for a single user. 
 - `minutesToRun`: Minutes to run (this applies to endpoints that have "per minute" rate limiting).
 - `secondsToRun`: Seconds to run (this applies to endpoints that have "per second" rate limiting).
 
@@ -163,13 +163,13 @@ SLAS_PATH=/tmp/generatedSLAs/ \
 npm test
 ```
 
-The variables for configuring the `npm run`, used above, are:
+The variables for configuring `npm run` are:
 
 - `TEST_CONFIG`: Path to the test run configuration file. 
 - `OAS4TEST`: Path to the API's OAS document.
 - `SLAS_PATH`: Path to the API's SLAs.
 
-While the test runs, you can check the containers are up and the proxy's logs:
+While the test is running you can check the containers are up and the proxy's logs:
 
 ```bash
 docker ps
@@ -179,7 +179,7 @@ docker logs -f nginx_proxy_1
 
 ### 5. Remove testing resources
 
-Once testing completes, make use of the following command to remove containers and generated files:
+Make use of the following command once testing completes to remove containers and generated files:
 
 ```bash
 npm run test_cleanup
