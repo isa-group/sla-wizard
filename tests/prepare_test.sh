@@ -4,8 +4,7 @@ set -e
 
 echo "# Cloning https://github.com/isa-group/sla-gateway-benchmark" ;
 git clone https://github.com/isa-group/sla-gateway-benchmark /tmp/sla-gateway-benchmark &> /dev/null
-cd /tmp/sla-gateway-benchmark/autoSLAs/
-npm install 
+npm install --prefix /tmp/sla-gateway-benchmark/autoSLAs/
 
 mkdir -p /tmp/generatedSLAs
 
