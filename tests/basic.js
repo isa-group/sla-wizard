@@ -36,9 +36,15 @@ var slasPerPlan = slaFileNames.length / 2; // divided by two because there are t
  * @param {string} planName - Plan name, such as "pro".
  * @param {string} endpoint - An API endpoint (without host).
  * @param {string} method - A CRUD method. 
- * @param {string} expectedSuccess - The number of requests that should get HTTP 200. 
+ * @param {number} expectedSuccess - The number of requests that should get HTTP 200 (ideal + burst bonus).
+ * @param {number} [tolerancePct=0] - Optional tolerance percentage (0-100) for a range check.
+ *   Use this for per-second endpoints where apipecker timing jitter is expected.
+ *   When 0 (default), an exact equality check is performed.
+ * @param {number} [allowed=0] - The SLA rate limit (requests per time unit).
+ * @param {string} [period=''] - The rate limit period: 'second' or 'minute'.
+ * @param {number} [burstBonus=0] - Extra 200s allowed by nginx burst (burst = rate-1, consumed once at test start).
  */
-function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSuccess) {
+function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSuccess, tolerancePct, allowed, period, burstBonus) {
     var http200 = 0;
     var http429 = 0;
     var httpOther = [];
@@ -55,11 +61,36 @@ function chaiModularized(apipeckerLogs, planName, endpoint, method, expectedSucc
             });
         }
     });
-    console.log(`Received 200s: ${http200}`);
-    console.log(`Received 429s: ${http429}`);
-    console.log(`(Sum: ${http200+http429})`);
-    console.log(`Other codes: ${httpOther}`);
-    chai.expect(http200).to.equal(expectedSuccess);
+
+    // --- Diagnostic block ---
+    var deviation    = http200 - expectedSuccess;
+    var deviationPct = expectedSuccess > 0 ? (deviation / expectedSuccess * 100).toFixed(2) : 'N/A';
+    var idealExpected = expectedSuccess - (burstBonus || 0);
+    var burstPerZone  = allowed != null ? (allowed - 1) : 'N/A';
+    console.log(`  Plan: ${planName}  |  Endpoint: ${endpoint}  |  Method: ${method.toUpperCase()}`);
+    if (allowed != null && period) {
+        console.log(`  SLA rate:           ${allowed} req/${period}`);
+        console.log(`  Burst per zone:     ${burstPerZone}  (= rate - 1)`);
+        console.log(`  Total burst bonus:  +${burstBonus || 0}  (burst/zone × zones)`);
+        console.log(`  Ideal expected:     ${idealExpected}  (rate × time × apikeys × SLAs, no burst)`);
+    }
+    console.log(`  Expected (w/burst): ${expectedSuccess}`);
+    if (tolerancePct) {
+        var delta = Math.ceil(expectedSuccess * tolerancePct / 100);
+        console.log(`  Tolerance:          ±${tolerancePct}%  →  range [${expectedSuccess - delta}, ${expectedSuccess + delta}]`);
+    }
+    console.log(`  Received 200s:      ${http200}  |  Deviation: ${deviation >= 0 ? '+' : ''}${deviation} (${deviationPct}%)`);
+    console.log(`  Received 429s:      ${http429}`);
+    console.log(`  Sum (200+429):      ${http200 + http429}`);
+    if (httpOther.length > 0) console.log(`  Other codes:        ${httpOther}`);
+    console.log('');
+
+    if (tolerancePct) {
+        var delta = Math.ceil(expectedSuccess * tolerancePct / 100);
+        chai.expect(http200).to.be.within(expectedSuccess - delta, expectedSuccess + delta);
+    } else {
+        chai.expect(http200).to.equal(expectedSuccess);
+    }
 }
 
 describe(`Testing based on ${testConfig}`, function() {
@@ -124,44 +155,64 @@ describe(`Testing based on ${testConfig}`, function() {
     var secondsToRun = testSpecs["secondsToRun"];
 
     it('BASIC PLAN: GET to /pets - 1 per second', function() {
-        var allowed = 1;
-        chaiModularized(apipeckerLogs, "basic", "/pets", "get", allowed * numApikeys * secondsToRun * slasPerPlan);
+        var allowed = 1, period = "second";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "basic", "/pets", "get",
+            allowed * numApikeys * secondsToRun * slasPerPlan + burstBonus, 25, allowed, period, burstBonus);
     });
     it('BASIC PLAN: POST to /pets - 2 per minute', function() {
-        var allowed = 2;
-        chaiModularized(apipeckerLogs, "basic", "/pets", "post", allowed * numApikeys * minutesToRun * slasPerPlan);
+        var allowed = 2, period = "minute";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "basic", "/pets", "post",
+            allowed * numApikeys * minutesToRun * slasPerPlan + burstBonus, 0, allowed, period, burstBonus);
     });
     it('BASIC PLAN: GET to /pets/id - 3 per second', function() {
-        var allowed = 3;
-        chaiModularized(apipeckerLogs, "basic", "/pets/id", "get", allowed * numApikeys * secondsToRun * slasPerPlan);
+        var allowed = 3, period = "second";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "basic", "/pets/id", "get",
+            allowed * numApikeys * secondsToRun * slasPerPlan + burstBonus, 5, allowed, period, burstBonus);
     });
     it('BASIC PLAN: PUT to /pets/id - 4 per minute', function() {
-        var allowed = 4;
-        chaiModularized(apipeckerLogs, "basic", "/pets/id", "put", allowed * numApikeys * minutesToRun * slasPerPlan);
+        var allowed = 4, period = "minute";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "basic", "/pets/id", "put",
+            allowed * numApikeys * minutesToRun * slasPerPlan + burstBonus, 0, allowed, period, burstBonus);
     });
     it('BASIC PLAN: DELETE to /pets/id - 5 per second', function() {
-        var allowed = 5;
-        chaiModularized(apipeckerLogs, "basic", "/pets/id", "delete", allowed * numApikeys * secondsToRun * slasPerPlan);
+        var allowed = 5, period = "second";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "basic", "/pets/id", "delete",
+            allowed * numApikeys * secondsToRun * slasPerPlan + burstBonus, 5, allowed, period, burstBonus);
     });
 
     it('PRO PLAN: GET to /pets - 10 per second', function() {
-        var allowed = 10;
-        chaiModularized(apipeckerLogs, "pro", "/pets", "get", allowed * numApikeys * secondsToRun * slasPerPlan);
+        var allowed = 10, period = "second";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "pro", "/pets", "get",
+            allowed * numApikeys * secondsToRun * slasPerPlan + burstBonus, 5, allowed, period, burstBonus);
     });
     it('PRO PLAN: POST to /pets - 20 per minute', function() {
-        var allowed = 20;
-        chaiModularized(apipeckerLogs, "pro", "/pets", "post", allowed * numApikeys * minutesToRun * slasPerPlan);
+        var allowed = 20, period = "minute";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "pro", "/pets", "post",
+            allowed * numApikeys * minutesToRun * slasPerPlan + burstBonus, 0, allowed, period, burstBonus);
     });
     it('PRO PLAN: GET to /pets/id - 30 per second', function() {
-        var allowed = 30;
-        chaiModularized(apipeckerLogs, "pro", "/pets/id", "get", allowed * numApikeys * secondsToRun * slasPerPlan);
+        var allowed = 30, period = "second";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "pro", "/pets/id", "get",
+            allowed * numApikeys * secondsToRun * slasPerPlan + burstBonus, 5, allowed, period, burstBonus);
     });
     it('PRO PLAN: PUT to /pets/id - 40 per minute', function() {
-        var allowed = 40;
-        chaiModularized(apipeckerLogs, "pro", "/pets/id", "put", allowed * numApikeys * minutesToRun * slasPerPlan);
+        var allowed = 40, period = "minute";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "pro", "/pets/id", "put",
+            allowed * numApikeys * minutesToRun * slasPerPlan + burstBonus, 0, allowed, period, burstBonus);
     });
     it('PRO PLAN: DELETE to /pets/id - 50 per second', function() {
-        var allowed = 50;
-        chaiModularized(apipeckerLogs, "pro", "/pets/id", "delete", allowed * numApikeys * secondsToRun * slasPerPlan);
+        var allowed = 50, period = "second";
+        var burstBonus = (allowed - 1) * numApikeys * slasPerPlan;
+        chaiModularized(apipeckerLogs, "pro", "/pets/id", "delete",
+            allowed * numApikeys * secondsToRun * slasPerPlan + burstBonus, 5, allowed, period, burstBonus);
     });
 });
