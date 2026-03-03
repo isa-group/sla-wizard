@@ -16,11 +16,12 @@ var configs = require("./configs");
 function validateParamsCLI(proxy, options) {
     if (["header", "query", "url"].indexOf(options.authLocation) == -1) {
         configs.logger.error("Wrong value for --authLocation");
-        process.exit();
+        process.exit(1);
     }
+    options.proxyPort = parseInt(options.proxyPort);
     if (!Number.isInteger(options.proxyPort) || options.proxyPort < 0 || options.proxyPort > 65536) {
         configs.logger.error("The value provided to --proxyPort must be an integer in the range 0-65536");
-        process.exit();
+        process.exit(1);
     }
     return proxy, options;
 }
@@ -37,10 +38,10 @@ function loadAndValidateOAS(file) {
     try {
         var spec = fs.readFileSync(path.join('', file), 'utf8');
         var oasDoc = jsyaml.load(spec);
-        configs.logger.debug('Input oas-doc %s: %s', file, oasDoc);
+        // configs.logger.debug('Input oas-doc %s: %s', file, oasDoc);
     } catch (err) {
         configs.logger.error("Error loading OAS file: " + err);
-        process.exit();
+        process.exit(1);
     }
 
     // Validate
@@ -48,8 +49,8 @@ function loadAndValidateOAS(file) {
     var validator = new jsonschema.Validator()
     var err = validator.validate(oasDoc, oas_schema);
     if (err.valid == false) {
-        configs.logger.error(`oasDoc is not valid: ${err.errors}, quitting`);
-        process.exit();
+        configs.logger.error(`oasDoc is not valid: ${JSON.stringify(err.errors)}, quitting`);
+        process.exit(1);
     }
     return oasDoc;
 }
@@ -106,13 +107,13 @@ function validateSLAs(SLAsToValidate) {
         var err = validator.validate(element, SLAschema);
         if (err.valid == false) {
             configs.logger.error(`SLA with id ${element.context.id} is not valid: ${JSON.stringify(err.errors)}, quitting`);
-            process.exit();
+            process.exit(1);
         } else if (element.context.type != "agreement") {
             configs.logger.error(`SLA with id ${element.context.id} is not of type 'agreement', quitting`);
-            process.exit();
+            process.exit(1);
         } else if (element.context.apikeys === undefined) {
             configs.logger.error(`SLA with id ${element.context.id} does not have property context.apikeys, quitting`);
-            process.exit();
+            process.exit(1);
         } else if (arrayContainsObject(SLAsFiltered, element)) { // else if (SLAsFiltered.includes(element)){
             configs.logger.warn(`SLA with id ${element.context.id} is duplicated`);
         } else {
@@ -122,7 +123,7 @@ function validateSLAs(SLAsToValidate) {
 
     if (SLAsFiltered.length == 0) {
         configs.logger.error("None of the provided SLAs is valid, nothing to do. ");
-        process.exit();
+        process.exit(1);
     }
     configs.logger.debug("Valid SLAs:");
     configs.logger.debug(JSON.stringify(SLAsFiltered));
@@ -136,8 +137,8 @@ function validateSLAs(SLAsToValidate) {
  */
 function isAValidUrl(potentialURL) {
     try {
-        new url.URL(potentialURL);
-        return true;
+        const u = new url.URL(potentialURL);
+        return u.protocol === 'http:' || u.protocol === 'https:';
     } catch (err) {
         return false;
     }

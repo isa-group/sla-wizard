@@ -146,8 +146,8 @@ function generateEnvoyConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
         }
     }
 
+    var allProxyApikeysJoined = allProxyApikeys.join('|');
     if (limitedPaths.length != Object.keys(oasDoc.paths).length) { // "ratelimiting-less" endpoints management
-        var allProxyApikeysJoined = allProxyApikeys.join('|')
         for (var endpoint in oasDoc.paths) {
             var methods = Object.keys(oasDoc.paths[endpoint]).join('|').toUpperCase();
             if (!limitedPaths.includes(endpoint)) {
@@ -560,18 +560,30 @@ function generateNginxConfig(SLAs, oasDoc, apiServerURL, configTemplatePath, aut
                 var zone_name = `${slaContextID}_${planName}_${utils.sanitizeEndpoint(endpoint)}_${method.toUpperCase()}`;
                 var zone_size = "10m" // 1m = 1 megabyte = 16k IPs
 
+                var endpointBurst = parseInt(max, 10) - 1
                 /////////////// LIMITS
                 var limit = `limit_req_zone $${authLocation}_${authName} ` +
                     `zone=${zone_name}:${zone_size} rate=${max}r/${period};\n    `
                 limitsDefinition += limit;
 
                 /////////////// LOCATIONS
+                if(endpointBurst > 0){
                 location = `
-        location /${zone_name} {
-            rewrite /${zone_name} $uri_original break;
-            proxy_pass ${apiServerURL};
-            limit_req zone=${zone_name} burst=1 nodelay;
-        }`
+                    location /${zone_name} {
+                        rewrite /${zone_name} $uri_original break;
+                        proxy_pass ${apiServerURL};
+                        limit_req zone=${zone_name} burst=${endpointBurst} nodelay;
+                    }`
+                } else if(endpointBurst === 0){
+                location = `
+                    location /${zone_name} {
+                        rewrite /${zone_name} $uri_original break;
+                        proxy_pass ${apiServerURL};
+                        limit_req zone=${zone_name} nodelay;
+                    }`
+                }
+
+
                 locationDefinitions += location;
             }
         }
@@ -648,7 +660,7 @@ function getSLAsFromURL(slasURL, proxyType, oasDoc, apiServerURL, customTemplate
                 outFile);
         }).catch(error => {
             configs.logger.error(error + ", quitting");
-            process.exit();
+            process.exit(1);
         });
 }
 
@@ -663,7 +675,7 @@ function checkEndpointIntersection(oasDocPaths, SLAsFiltered){
         for (var endpoint in subSLA["plan"]["rates"]) {
             if (Object.keys(oasDocPaths).includes(endpoint) == false){
                 configs.logger.error("There are paths in the SLAs that are not present in the OAS. Quitting");
-                process.exit();
+                process.exit(1);
             }
         }
     }
@@ -691,7 +703,7 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
         var apiServerURL = oasDoc.servers[0].url;
     } catch {
         configs.logger.error("OAS' servers property missing");
-        process.exit();
+        process.exit(1);
     }
 
     // Load all SLA path(s)
@@ -719,7 +731,7 @@ function generateConfigHandle(oasPath, proxyType, slaPath, outFile, customTempla
             }
         } catch (err) {
             configs.logger.error(`Error with SLA(s) ${slaPath}: ${err}. Quitting`);
-            process.exit();
+            process.exit(1);
         }
 
         // Validate SLAs

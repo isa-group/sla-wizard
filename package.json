@@ -6,7 +6,10 @@
   "scripts": {
     "lint": "./node_modules/.bin/eslint .",
     "prepare_test": "bash tests/prepare_test.sh",
-    "test": "./node_modules/mocha/bin/mocha.js ./tests/basic.js",
+    "test": "mocha ./tests/basic.js",
+    "test:core": "mocha ./tests/core/core.js",
+    "test:plugins": "mocha ./tests/core/plugin-system.js",
+    "test:all": "npm run test:core && npm run test:plugins",
     "test_cleanup": "bash tests/test_cleanup.sh",
     "start": "node index.js"
   },
@@ -23,8 +26,9 @@
     "winston": "^3.6.0"
   },
   "devDependencies": {
-    "eslint": "^8.42.0",
     "chai": "^4.3.6",
-    "mocha": "^10.0.0"
+    "eslint": "^8.42.0",
+    "mocha": "^10.0.0",
+    "sla-wizard-plugin-hello": "^1.0.2"
   }
 }

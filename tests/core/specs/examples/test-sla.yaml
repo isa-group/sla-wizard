@@ -1,0 +1,24 @@
+sla4oas: "1.0.0"
+context:
+  id: "sla-test"
+  type: "agreement"
+  api:
+    $ref: "./test-oas.yaml"
+  provider: "TestProvider"
+  customer: "TestCustomer"
+  apikeys: ["test-key"]
+metrics:
+  requests:
+    type: "integer"
+plan:
+  name: "test-plan"
+  rates:
+    /pets:
+      get:
+        requests:
+          - max: 10
+            period: "second"
+      post:
+        requests:
+          - max: 10
+            period: "minute"

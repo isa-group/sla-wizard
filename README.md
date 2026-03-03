@@ -1,4 +1,5 @@
 # SLA Wizard
+
 Automated configuration of API rates and limits (specified in OpenAPI and SLA4OAI) for Envoy, HAProxy, NGinx and Traefik.
 
 ## How it works
@@ -61,6 +62,37 @@ The following table describes all the options that SLA Wizard includes for its c
 | `--authName <authName>`             | `config`             | No       | Name of the authentication parameter, for example "token" or "apikey".                                                                                                   | _apikey_ |
 | `--specs <testSpecs>`               | `runTest`            | No       | Path to a test config file.                                                                                                                                      | _./specs/testSpecs.yaml_ |
 
+## Programmatic Usage
+
+`sla-wizard` can also be used as a Node.js module.
+
+```javascript
+const slaWizard = require("sla-wizard");
+
+// 1. Using the default function (config)
+slaWizard("nginx", {
+  outFile: "nginx.conf",
+  sla: "./specs/sla.yaml",
+  oas: "./specs/oas.yaml",
+});
+
+// 2. Using specific command methods
+slaWizard.runTest({
+  specs: "./specs/testSpecs.yaml",
+});
+
+// 3. Using plugin-specific methods
+slaWizard.configNginxConfd({
+  outDir: "./nginx-config",
+  sla: "./specs/sla.yaml",
+});
+
+slaWizard.addToConfd({
+  outDir: "./nginx-config",
+  sla: "./new-sla.yaml",
+});
+```
+
 ## Considerations
 
 ### SLA types
@@ -108,7 +140,6 @@ For more information on how to use the tool for each of the four proxies, refer 
 - [HAProxy](https://github.com/isa-group/sla-wizard/blob/master/docs/haproxy.md)
 - [Nginx](https://github.com/isa-group/sla-wizard/blob/master/docs/nginx.md)
 - [Traefik](https://github.com/isa-group/sla-wizard/blob/master/docs/traefik.md)
-
 
 ## Testing
 
@@ -184,6 +215,102 @@ Make use of the following command once testing completes to remove containers an
 ```bash
 npm run test_cleanup
 ```
+
+## Plugin System
+
+SLA Wizard features a powerful plugin system that allows extending both the CLI with new commands and the programmatic API with new methods.
+
+### Plugin Types
+
+1.  **Local Plugins**:
+    *   Stored in the `plugins/` directory of your project.
+    *   Can be a single `.js` file (e.g., `plugins/myCommand.js`) or a directory containing an index file (e.g., `plugins/my-complex-plugin/index.js`).
+    *   Discovered automatically by SLA Wizard.
+
+2.  **External (NPM) Plugins**:
+    *   Installed via `npm install <plugin-name>`.
+    *   Must be explicitly enabled in `sla-wizard.config.json`.
+
+---
+
+### Usage for Users
+
+#### 1. Enable external plugins
+Create a `sla-wizard.config.json` file in your project root to register and configure plugins:
+
+```json
+{
+  "plugins": [
+    {
+      "name": "sla-wizard-plugin-hello",
+      "config": {
+        "greeting": "Welcome"
+      }
+    }
+  ]
+}
+```
+
+#### 2. Install the plugin
+```bash
+npm install sla-wizard-plugin-hello
+```
+
+#### 3. Use via CLI
+Plugins can register new commands that appear in the help menu:
+```bash
+node index.js hello --name Developer
+# Output: Welcome, Developer! 👋
+```
+
+---
+
+### Usage for Developers (Programmatic)
+
+#### Using plugins as module methods
+When `sla-wizard` loads a plugin, it automatically attaches its exported functions (excluding `apply`) as methods to the main `sla-wizard` module.
+
+```javascript
+const slaWizard = require('sla-wizard');
+
+// 1. If configured in sla-wizard.config.json, it's ready to use:
+slaWizard.hello({ name: 'User' });
+
+// 2. Register plugins dynamically at runtime:
+const myLocalPlugin = require('./my-local-plugin');
+slaWizard.use(myLocalPlugin, { customSetting: 'active' });
+
+slaWizard.myPluginMethod();
+```
+
+---
+
+### Creating a Plugin
+
+A plugin is a Node.js module that can export an `apply` function and/or other utility methods.
+
+```javascript
+/**
+ * the 'apply' function is called during initialization.
+ * It receives the 'program' (Commander instance), 'ctx' (Core utilities), and 'config'.
+ */
+module.exports.apply = (program, ctx, config) => {
+  program
+    .command("my-command")
+    .description("Description for CLI help")
+    .action((options) => {
+      // CLI logic here
+    });
+};
+
+/**
+ * Any other exported function is automatically attached to the sla-wizard module.
+ */
+module.exports.myUtility = (options, ctx) => {
+  return "Result from plugin";
+};
+```
+
 
 ## License
 
